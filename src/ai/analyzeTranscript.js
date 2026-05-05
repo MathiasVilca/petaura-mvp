@@ -1,7 +1,15 @@
-export async function analyzeTranscriptWithAI(transcript) {
+import { generateAura } from '../services/groqService';
+
+export async function analyzeTranscriptWithAI(transcript, profile = '') {
   const text = transcript.trim();
   if (!text) {
     throw new Error('No hay texto para analizar');
+  }
+
+  const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
+  if (groqApiKey) {
+    const payload = await generateAura(profile, text);
+    return normalizeAIResponse(payload);
   }
 
   const endpoint = import.meta.env.VITE_AI_ENDPOINT;
@@ -38,7 +46,8 @@ function normalizeAIResponse(payload) {
     stress: parseNumber(payload.stress),
     warmth: parseNumber(payload.warmth),
     pattern: payload.pattern,
-    description: payload.description,
+    description: payload.description || payload.summary,
+    summary: payload.summary,
     actions: Array.isArray(payload.actions) ? payload.actions : undefined,
   };
 }

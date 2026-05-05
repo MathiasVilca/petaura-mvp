@@ -34,6 +34,81 @@ const mockStates = {
     ],
     exampleText: 'Hoy estuvo muy tranquilo, durmió bastante y se mostró relajado mientras paseábamos cerca de casa.'
   },
+  tired: {
+    mood: 'tired',
+    color: '#facc15',
+    energy: 0.22,
+    stress: 0.36,
+    warmth: 0.58,
+    pattern: 'pulse',
+    description: 'Baja energía y ritmo lento. El aura se siente suave, agotada y con movimiento pausado.',
+    actions: [
+      'Permítele descansar en su lugar favorito.',
+      'Reduce la actividad y evita estímulos intensos.',
+      'Asegura agua fresca y un ambiente calmado.'
+    ],
+    exampleText: 'Estuvo más quieto de lo normal, se acomodó a descansar y no mostró ganas de jugar mucho.'
+  },
+  anxious: {
+    mood: 'anxious',
+    color: '#fb7185',
+    energy: 0.42,
+    stress: 0.82,
+    warmth: 0.44,
+    pattern: 'orbit',
+    description: 'Nervioso y alerta. La aura se mueve con tensión, oscilando entre círculos pequeños y energía contenida.',
+    actions: [
+      'Crea un espacio seguro y sin ruido.',
+      'Habla con voz suave y acaricia lentamente.',
+      'Observa sus señales de calma antes de acercarte.'
+    ],
+    exampleText: 'Estuvo inquieto, se movía de un lado a otro y reaccionaba con sensibilidad a sonidos y movimientos.'
+  },
+  playful: {
+    mood: 'playful',
+    color: '#8b5cf6',
+    energy: 0.85,
+    stress: 0.22,
+    warmth: 0.88,
+    pattern: 'burst',
+    description: 'Lleno de ganas de jugar. El aura es brillante, expansiva y con destellos rápidos de energía positiva.',
+    actions: [
+      'Ofrece un juguete nuevo o una sesión de juegos corta.',
+      'Premia su entusiasmo con caricias y elogios.',
+      'Aprovecha para fortalecer el vínculo con actividades lúdicas.'
+    ],
+    exampleText: 'Jugó con gran energía, persiguió su juguete favorito y buscó atención para jugar más.'
+  },
+  affectionate: {
+    mood: 'affectionate',
+    color: '#ec4899',
+    energy: 0.62,
+    stress: 0.18,
+    warmth: 0.95,
+    pattern: 'flow',
+    description: 'Cariñoso y conectado. El aura es cálida, fluida y rodeada de una sensación acogedora.',
+    actions: [
+      'Ofrece un abrazo suave o caricias cerca de su cabeza.',
+      'Permite tiempo de calidad en contacto tranquilo.',
+      'Refuerza la conexión con palabras suaves y cercanía.'
+    ],
+    exampleText: 'Buscó estar cerca, se acomodó junto a ti y respondió con lamidos y caricias calmadas.'
+  },
+  curious: {
+    mood: 'curious',
+    color: '#38bdf8',
+    energy: 0.68,
+    stress: 0.28,
+    warmth: 0.72,
+    pattern: 'flow',
+    description: 'Interesado y atento. El aura se desplaza con curiosidad, explorando el entorno con movimientos suaves.',
+    actions: [
+      'Deja objetos seguros para que los inspeccione con calma.',
+      'Observa su lenguaje corporal antes de interactuar.',
+      'Ofrece estímulos nuevos de manera gradual.'
+    ],
+    exampleText: 'Estuvo olisqueando y atento a lo que pasaba, explorando objetos nuevos sin perder la calma.'
+  },
   sick: {
     mood: 'sick',
     color: '#581c87',
@@ -82,7 +157,8 @@ function App() {
     setAnalysisError('');
 
     try {
-      const result = await analyzeTranscriptWithAI(transcript);
+      const petProfile = `${auraState.description} ${auraState.exampleText || ''}`.trim();
+      const result = await analyzeTranscriptWithAI(transcript, petProfile);
       const mood = result.mood && mockStates[result.mood] ? result.mood : 'calm';
       const nextState = {
         ...mockStates[mood],
