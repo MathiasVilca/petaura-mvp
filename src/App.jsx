@@ -126,6 +126,12 @@ const mockStates = {
   }
 };
 
+const moodColors = {
+  happy: '#4ADE80', calm: '#60A5FA', tired: '#94A3B8',
+  anxious: '#F87171', playful: '#FB923C', affectionate: '#F472B6',
+  curious: '#A78BFA', sick: '#6B7280'
+};
+
 function App() {
   const [auraState, setAuraState] = useState(mockStates.calm);
   const [showLegend, setShowLegend] = useState(false);
@@ -162,6 +168,7 @@ function App() {
       const mood = result.mood && mockStates[result.mood] ? result.mood : 'calm';
       const nextState = {
         ...mockStates[mood],
+        color: moodColors[mood] || moodColors.calm,
         ...(result.energy !== undefined ? { energy: result.energy } : {}),
         ...(result.stress !== undefined ? { stress: result.stress } : {}),
         ...(result.warmth !== undefined ? { warmth: result.warmth } : {}),
