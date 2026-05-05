@@ -109,7 +109,7 @@ app.post('/api/analyze', async (req, res) => {
         Authorization: `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'llama3-8b-8192',
+        model: 'llama-3.1-8b-instant',
         messages: [
           {
             role: 'user',
@@ -130,12 +130,7 @@ app.post('/api/analyze', async (req, res) => {
     }
 
     const payload = await response.json();
-    const outputText =
-      payload?.choices?.[0]?.message?.content ||
-      payload?.output?.[0]?.content?.find((item) => item.type === 'output_text')?.text ||
-      payload?.output?.[0]?.content?.[0]?.text ||
-      payload?.output?.[0]?.text ||
-      (typeof payload?.output?.[0] === 'string' ? payload.output[0] : null);
+    const outputText = payload?.choices?.[0]?.message?.content;
 
     const parsed = parseOutputText(
       typeof outputText === 'string' ? outputText : JSON.stringify(outputText)
