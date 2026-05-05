@@ -64,29 +64,115 @@ function App() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: 'sans-serif', backgroundColor: '#0f172a', color: 'white', minHeight: '100vh', padding: '2rem' }}>
-      
-      <h1>PetAura MVP</h1>
-      <p>Simulación de interacción no convencional</p>
-      
-      {/* Nuestro Canvas interactivo */}
-      <div style={{ margin: '2rem 0' }}>
-        <AuraCanvas parameters={auraState} />
-      </div>
+    <div className="app-shell">
+      <header className="app-header">
+        <div className="hero-card">
+          <p className="app-tag">PetAura MVP</p>
+          <h1>Conecta con el aura de tu mascota</h1>
+          <p className="app-subtitle">
+            Simula la entrada por voz y observa cómo cambia la visualización de aura en tiempo real.
+            Este prototipo cumple el flujo inicial de interacción con feedback inmediato.
+          </p>
 
-      {/* Botones para simular los estados */}
-      <div style={{ display: 'flex', gap: '1rem' }}>
-        <button onClick={() => simulateVoiceInput('happy')} style={{ padding: '10px', backgroundColor: '#22c55e', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          Simular: "Muy feliz y activo"
-        </button>
-        <button onClick={() => simulateVoiceInput('calm')} style={{ padding: '10px', backgroundColor: '#14b8a6', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          Simular: "Tranquilo"
-        </button>
-        <button onClick={() => simulateVoiceInput('sick')} style={{ padding: '10px', backgroundColor: '#581c87', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          Simular: "Decaído / Enfermo"
-        </button>
-      </div>
+          <div className="state-buttons" role="group" aria-label="Simular estados de mascota">
+            <button
+              className="state-button happy"
+              onClick={() => simulateVoiceInput('happy')}
+            >
+              Muy feliz y activo
+            </button>
+            <button
+              className="state-button calm"
+              onClick={() => simulateVoiceInput('calm')}
+            >
+              Tranquilo
+            </button>
+            <button
+              className="state-button sick"
+              onClick={() => simulateVoiceInput('sick')}
+            >
+              Decaído / enfermo
+            </button>
+          </div>
 
+          <p className="voice-hint">Presiona un estado para cambiar la aura y ver recomendaciones instantáneas.</p>
+        </div>
+      </header>
+
+      <main className="app-main">
+        <section className="aura-section">
+          <article className="canvas-card" aria-labelledby="aura-title">
+            <h2 id="aura-title">Aura actual</h2>
+            <AuraCanvas parameters={auraState} />
+            <p className="canvas-caption">{auraState.description}</p>
+          </article>
+
+          <div className="status-panel">
+            <section className="status-card" aria-labelledby="status-title">
+              <h3 id="status-title">Resumen</h3>
+              <div className="status-row">
+                <span className="status-label">Estado</span>
+                <span className="status-value">{auraState.mood}</span>
+              </div>
+              <div className="parameter-bar">
+                <span>Energía</span>
+                <div className="meter">
+                  <span style={{ width: `${auraState.energy * 100}%`, background: auraState.color }} />
+                </div>
+              </div>
+              <div className="parameter-bar">
+                <span>Estrés</span>
+                <div className="meter">
+                  <span style={{ width: `${auraState.stress * 100}%`, background: '#f97316' }} />
+                </div>
+              </div>
+              <div className="parameter-bar">
+                <span>Calidez</span>
+                <div className="meter">
+                  <span style={{ width: `${auraState.warmth * 100}%`, background: '#facc15' }} />
+                </div>
+              </div>
+            </section>
+
+            <section className="detail-card" aria-labelledby="actions-title">
+              <h3 id="actions-title">Recomendaciones</h3>
+              <ul>
+                {auraState.actions.map((action, index) => (
+                  <li key={index}>{action}</li>
+                ))}
+              </ul>
+            </section>
+
+            <button
+              className="legend-toggle"
+              onClick={() => setShowLegend((current) => !current)}
+              aria-expanded={showLegend}
+            >
+              {showLegend ? 'Ocultar leyenda' : 'Ver leyenda de aura'}
+            </button>
+
+            {showLegend && (
+              <section className="legend-card" aria-labelledby="legend-title">
+                <h3 id="legend-title">Leyenda de aura</h3>
+                <div className="legend-grid">
+                  <div>
+                    <strong>Verde</strong>
+                    <p>Vitalidad, energía positiva, momento activo.</p>
+                  </div>
+                  <div>
+                    <strong>Turquesa</strong>
+                    <p>Calma, equilibrio y bienestar sereno.</p>
+                  </div>
+                  <div>
+                    <strong>Púrpura</strong>
+                    <p>Baja energía, estrés o molestia emocional.</p>
+                  </div>
+                </div>
+              </section>
+            )}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
