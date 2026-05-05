@@ -15,14 +15,25 @@ const AuraCanvas = ({ parameters }) => {
     canvas.height = height;
 
     const particleCount = 55 + Math.round(parameters.energy * 65);
-    const particles = Array.from({ length: particleCount }).map(() => ({
-      angle: Math.random() * Math.PI * 2,
-      speed: 0.4 + Math.random() * 0.8 + parameters.energy * 1.4,
-      radius: 1.2 + Math.random() * 2.8 + parameters.warmth * 2,
-      distance: 16 + Math.random() * 110,
-      offset: Math.random() * Math.PI * 2,
-      alpha: 0.35 + Math.random() * 0.55,
-    }));
+    const particles = Array.from({ length: particleCount }).map(() => {
+      
+      // 1. Calculamos la distancia inicial según el patrón activo
+      const initialDistance = parameters.pattern === 'burst' 
+        ? Math.random() * (width * 0.55) // Distribución amplia para evitar el "anillo"
+        : 16 + Math.random() * 110;      // Distribución agrupada original para flow, orbit y pulse
+
+      return {
+        angle: Math.random() * Math.PI * 2,
+        speed: 0.4 + Math.random() * 0.8 + parameters.energy * 1.4,
+        radius: 1.2 + Math.random() * 2.8 + parameters.warmth * 2,
+        
+        // 2. Asignamos la distancia condicionada
+        distance: initialDistance, 
+        
+        offset: Math.random() * Math.PI * 2,
+        alpha: 0.35 + Math.random() * 0.55,
+      };
+    });
 
     const backgroundGradient = ctx.createRadialGradient(
       width / 2,
@@ -51,44 +62,53 @@ const AuraCanvas = ({ parameters }) => {
 
       particles.forEach((p) => {
         const stressFactor = parameters.stress * 0.1;
-        const pulse = 1 + Math.sin(t * 2 + p.offset) * parameters.energy * 0.2;
-        const jitter = (Math.random() - 0.5) * stressFactor;
+        const pulseSpeed = 2 + parameters.stress * 3;
+        //const pulse = 1 + Math.sin(t * pulseSpeed + p.offset) * parameters.energy * 0.2;
+        const pulse = 1 + Math.sin(t * pulseSpeed + p.offset) * (0.1 + parameters.stress * 0.5);
         let x = 0;
         let y = 0;
         let radius = p.radius * pulse;
+        let fade = 1;
 
         if (parameters.pattern === 'orbit') {
           p.angle += dt * p.speed * 2 + stressFactor * 0.01;
           const distance = p.distance * (0.8 + 0.2 * Math.sin(t * 1.1 + p.offset));
-          x = Math.cos(p.angle + jitter) * distance;
-          y = Math.sin(p.angle + jitter) * distance;
+          x = Math.cos(p.angle) * distance;
+          y = Math.sin(p.angle) * distance;
           radius *= 0.7;
         } else if (parameters.pattern === 'flow') {
-          p.angle += dt * p.speed * 1.8 + jitter * 0.5;
+          p.angle += dt * p.speed * 1.0;
           x = Math.cos(p.angle) * p.distance * (0.6 + 0.4 * parameters.energy);
           y = Math.sin(p.angle) * p.distance * 0.75;
           radius *= 0.9;
         } else if (parameters.pattern === 'pulse') {
           const pulseRadius = Math.sin(t * 1.4 + p.offset) * 8 * parameters.energy + p.distance * 0.25;
-          x = Math.cos(p.angle + jitter) * (p.distance * 0.45 + pulseRadius);
-          y = Math.sin(p.angle + jitter) * (p.distance * 0.45 + pulseRadius);
+          x = Math.cos(p.angle) * (p.distance * 0.45 + pulseRadius);
+          y = Math.sin(p.angle) * (p.distance * 0.45 + pulseRadius);
           radius *= 1.1;
           p.angle += dt * 0.4;
         } else {
-          p.angle += jitter * 0.15;
+          //p.angle += dt * p.speed * 0.05;
           x = Math.cos(p.angle) * (p.distance + Math.sin(t + p.offset) * 8 * parameters.energy);
           y = Math.sin(p.angle) * (p.distance + Math.cos(t + p.offset) * 8 * parameters.energy);
           radius *= 1.05;
-          p.distance += dt * (0.05 + parameters.energy * 0.1);
-          if (p.distance > width * 0.55) {
-            p.distance = 16 + Math.random() * 60;
+          p.distance += dt * (p.speed * 40);
+          const maxDistance = width * 0.55;
+
+          fade = Math.min(1, p.distance / 30);
+        
+          if (p.distance > maxDistance) {
+            p.distance = Math.random() * 25;
+            p.angle = Math.random() * Math.PI * 2;
           }
         }
 
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fillStyle = parameters.color;
-        ctx.globalAlpha = Math.max(0.2, p.alpha - stressFactor * 0.2);
+
+        ctx.globalAlpha = Math.min(1, Math.max(0, (p.alpha - stressFactor * 0.2) * pulse * fade));
+
         ctx.shadowBlur = 14;
         ctx.shadowColor = parameters.color;
         ctx.fill();
