@@ -17,7 +17,7 @@ const AuraCanvas = ({ parameters }) => {
       x: canvas.width / 2,
       y: canvas.height / 2,
       angle: Math.random() * Math.PI * 2,
-      speed: Math.random() * 2 + (parameters.energy * 5), // La energía afecta la velocidad
+      speed: Math.random() + (parameters.energy * 1.5), // La energía afecta la velocidad
       radius: Math.random() * 3 + 1,
     }));
 
