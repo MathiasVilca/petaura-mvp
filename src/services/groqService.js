@@ -1,5 +1,5 @@
-const GROQ_API_URL =
-  'https://api.groq.ai/v1/llms/llama-3.1-8b-instant/completions';
+const BACKEND_API_URL =
+  import.meta.env.VITE_BACKEND_URL?.trim() || '/api/analyze';
 
 const DEFAULT_AURA = {
   mood: 'calm',
@@ -73,11 +73,6 @@ function normalizeAuraPayload(payload) {
 }
 
 export async function generateAura(profile, transcript) {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-  if (!apiKey) {
-    throw new Error('Falta la variable de entorno VITE_GROQ_API_KEY');
-  }
-
   const profileText = String(profile || '').trim();
   const transcriptText = String(transcript || '').trim();
 
@@ -85,52 +80,24 @@ export async function generateAura(profile, transcript) {
     throw new Error('Perfil de mascota y transcript de voz son requeridos');
   }
 
-  const prompt = `Eres un asistente especializado en analizar el estado emocional y físico de una mascota.\n` +
-    `Recibes un perfil de mascota y un transcript de voz. Responde únicamente con un JSON válido sin texto adicional.\n\n` +
-    `Perfil de la mascota:\n${profileText}\n\n` +
-    `Transcripción de voz:\n${transcriptText}\n\n` +
-    `Devuelve exactamente este formato JSON:\n` +
-    `{\n` +
-    `  "mood": "happy|calm|tired|anxious|playful|affectionate|curious|sick",\n` +
-    `  "energy": 0.0-1.0,\n` +
-    `  "stress": 0.0-1.0,\n` +
-    `  "warmth": 0.0-1.0,\n` +
-    `  "pattern": "burst|orbit|flow|pulse",\n` +
-    `  "summary": "texto en español, máximo 2 oraciones",\n` +
-    `  "actions": ["acción 1", "acción 2", "acción 3"]\n` +
-    `}`;
-
-  const response = await fetch(GROQ_API_URL, {
+  const response = await fetch(BACKEND_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      input: prompt,
-      temperature: 0.3,
-      max_tokens: 400,
+      profile: profileText,
+      transcript: transcriptText,
     }),
   });
 
   if (!response.ok) {
     const bodyText = await response.text();
     throw new Error(
-      `Error en Groq API: ${response.status} ${response.statusText} - ${bodyText}`
+      `Error en backend: ${response.status} ${response.statusText} - ${bodyText}`
     );
   }
 
   const payload = await response.json();
-
-  const outputText =
-    payload?.output?.[0]?.content?.find((item) => item.type === 'output_text')?.text ||
-    payload?.output?.[0]?.content?.[0]?.text ||
-    payload?.output?.[0]?.text ||
-    (typeof payload?.output?.[0] === 'string' ? payload.output[0] : null);
-
-  const parsed = parseOutputText(
-    typeof outputText === 'string' ? outputText : JSON.stringify(outputText)
-  );
-
-  return normalizeAuraPayload(parsed);
+  return normalizeAuraPayload(payload);
 }

@@ -6,32 +6,31 @@ export async function analyzeTranscriptWithAI(transcript, profile = '') {
     throw new Error('No hay texto para analizar');
   }
 
-  const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
-  if (groqApiKey) {
+  try {
     const payload = await generateAura(profile, text);
     return normalizeAIResponse(payload);
+  } catch (error) {
+    const endpoint = import.meta.env.VITE_AI_ENDPOINT;
+    if (!endpoint) {
+      return keywordAnalyzeTranscript(text);
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(body || 'Error en la petición de IA');
+    }
+
+    const payload = await response.json();
+    return normalizeAIResponse(payload);
   }
-
-  const endpoint = import.meta.env.VITE_AI_ENDPOINT;
-  if (!endpoint) {
-    return keywordAnalyzeTranscript(text);
-  }
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ text }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(body || 'Error en la petición de IA');
-  }
-
-  const payload = await response.json();
-  return normalizeAIResponse(payload);
 }
 
 function normalizeAIResponse(payload) {
