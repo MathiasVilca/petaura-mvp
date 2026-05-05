@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import AuraCanvas from './components/AuraCanvas';
+import { analyzeTranscriptWithAI } from './ai/analyzeTranscript';
 
 // 1. Nuestros JSONs simulados (Lo que devolvería Claude)
 const mockStates = {
@@ -53,13 +54,52 @@ const mockStates = {
 function App() {
   const [auraState, setAuraState] = useState(mockStates.calm);
   const [showLegend, setShowLegend] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [detectedMood, setDetectedMood] = useState('calm');
+  const [analysisStatus, setAnalysisStatus] = useState('');
+  const [analysisError, setAnalysisError] = useState('');
 
   // 2. Función para simular la entrada de voz y el cambio de estado
   const simulateVoiceInput = (stateKey) => {
     setAuraState(mockStates[stateKey]);
+    setDetectedMood(stateKey);
+    setAnalysisStatus('Seleccionado desde botones');
+    setAnalysisError('');
 
     if (navigator.vibrate) {
       navigator.vibrate([80]);
+    }
+  };
+
+  const handleTranscriptChange = (event) => {
+    setTranscript(event.target.value);
+    setAnalysisStatus('');
+    setAnalysisError('');
+  };
+
+  const analyzeTranscript = async () => {
+    setAnalysisStatus('Analizando...');
+    setAnalysisError('');
+
+    try {
+      const result = await analyzeTranscriptWithAI(transcript);
+      const mood = result.mood && mockStates[result.mood] ? result.mood : 'calm';
+      const nextState = {
+        ...mockStates[mood],
+        ...(result.energy !== undefined ? { energy: result.energy } : {}),
+        ...(result.stress !== undefined ? { stress: result.stress } : {}),
+        ...(result.warmth !== undefined ? { warmth: result.warmth } : {}),
+        ...(result.pattern ? { pattern: result.pattern } : {}),
+        ...(result.description ? { description: result.description } : {}),
+        ...(Array.isArray(result.actions) ? { actions: result.actions } : {}),
+      };
+
+      setAuraState(nextState);
+      setDetectedMood(mood);
+      setAnalysisStatus('Análisis completado');
+    } catch (error) {
+      setAnalysisStatus('Error en el análisis');
+      setAnalysisError(error.message || 'No se pudo analizar el texto');
     }
   };
 
@@ -93,6 +133,34 @@ function App() {
             >
               Decaído / enfermo
             </button>
+          </div>
+
+          <div style={{ marginTop: '1rem', display: 'grid', gap: '0.85rem' }}>
+            <textarea
+              id="voice-input"
+              value={transcript}
+              onChange={handleTranscriptChange}
+              placeholder="Describe cómo estuvo tu mascota..."
+              style={{
+                width: '100%',
+                minHeight: '90px',
+                borderRadius: '18px',
+                border: '1px solid rgba(148, 163, 184, 0.25)',
+                padding: '0.95rem',
+                background: 'rgba(15, 23, 42, 0.9)',
+                color: 'white',
+                resize: 'vertical',
+              }}
+            />
+            <button
+              className="state-button calm"
+              onClick={analyzeTranscript}
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              Analizar texto con IA
+            </button>
+            {analysisStatus && <p className="voice-hint">{analysisStatus}</p>}
+            {analysisError && <p className="voice-hint" style={{ color: '#fb7185' }}>{analysisError}</p>}
           </div>
 
           <p className="voice-hint">Presiona un estado para cambiar la aura y ver recomendaciones instantáneas.</p>
