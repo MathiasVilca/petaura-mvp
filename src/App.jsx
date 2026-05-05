@@ -1,35 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import AuraCanvas from './components/AuraCanvas';
+
+// 1. Nuestros JSONs simulados (Lo que devolvería Claude)
+const mockStates = {
+  happy: { mood: 'happy', color: '#22c55e', energy: 0.9, pattern: 'burst' },
+  calm: { mood: 'calm', color: '#14b8a6', energy: 0.2, pattern: 'flow' },
+  sick: { mood: 'sick', color: '#581c87', energy: 0.05, pattern: 'pulse' }
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [auraState, setAuraState] = useState(mockStates.calm);
+
+  // 2. Función para simular la entrada de voz y el cambio de estado
+  const simulateVoiceInput = (stateKey) => {
+    setAuraState(mockStates[stateKey]);
+    
+    // Extra: Feedback háptico (vibra si estás en un móvil)
+    if (navigator.vibrate) {
+      navigator.vibrate([80]); 
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: 'sans-serif', backgroundColor: '#0f172a', color: 'white', minHeight: '100vh', padding: '2rem' }}>
+      
+      <h1>PetAura MVP</h1>
+      <p>Simulación de interacción no convencional</p>
+      
+      {/* Nuestro Canvas interactivo */}
+      <div style={{ margin: '2rem 0' }}>
+        <AuraCanvas parameters={auraState} />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+
+      {/* Botones para simular los estados */}
+      <div style={{ display: 'flex', gap: '1rem' }}>
+        <button onClick={() => simulateVoiceInput('happy')} style={{ padding: '10px', backgroundColor: '#22c55e', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+          Simular: "Muy feliz y activo"
         </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+        <button onClick={() => simulateVoiceInput('calm')} style={{ padding: '10px', backgroundColor: '#14b8a6', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+          Simular: "Tranquilo"
+        </button>
+        <button onClick={() => simulateVoiceInput('sick')} style={{ padding: '10px', backgroundColor: '#581c87', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+          Simular: "Decaído / Enfermo"
+        </button>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+
+    </div>
+  );
 }
 
-export default App
+export default App;
