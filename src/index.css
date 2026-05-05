@@ -1,0 +1,272 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #111827 0%, #020617 65%, #000000 100%);
+  color: #e2e8f0;
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.app-tag {
+  margin: 0 0 0.75rem;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 3rem);
+}
+
+.app-subtitle {
+  margin: 0.75rem 0 0;
+  max-width: 44rem;
+  color: #cbd5e1;
+  line-height: 1.7;
+}
+
+.app-main {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.hero-card,
+.legend-card,
+.status-card,
+.detail-card,
+.canvas-card {
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 24px;
+  backdrop-filter: blur(12px);
+  padding: 1.5rem;
+}
+
+.hero-card {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.state-buttons {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.state-button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.95rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.state-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+}
+
+.state-button.happy {
+  background: #22c55e;
+  color: #041b0d;
+}
+
+.state-button.calm {
+  background: #14b8a6;
+  color: #ffffff;
+}
+
+.state-button.sick {
+  background: #581c87;
+  color: #ffffff;
+}
+
+.aura-section {
+  display: grid;
+  grid-template-columns: minmax(280px, 420px) minmax(260px, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.canvas-card {
+  position: relative;
+  cursor: pointer;
+  padding: 1rem;
+  display: grid;
+  place-items: center;
+}
+
+.canvas-caption {
+  margin-top: 1rem;
+  color: #94a3b8;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.aura-canvas {
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1;
+  border-radius: 32px;
+  box-shadow: 0 36px 90px rgba(0, 0, 0, 0.35);
+  display: block;
+}
+
+.status-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.status-card,
+.detail-card,
+.legend-section {
+  width: 100%;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.status-label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.status-value {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.parameter-bar {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 0.85rem;
+}
+
+.parameter-bar span {
+  font-size: 0.92rem;
+}
+
+.meter {
+  width: 100%;
+  height: 0.7rem;
+  background: rgba(148, 163, 184, 0.16);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.meter span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+
+.legend-toggle {
+  width: 100%;
+  border: none;
+  border-radius: 999px;
+  padding: 0.95rem 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb, #8b5cf6);
+  cursor: pointer;
+}
+
+.detail-card h3,
+.legend-card h3 {
+  margin-top: 0;
+}
+
+.detail-card ul {
+  padding-left: 1.2rem;
+  margin: 0.85rem 0 0;
+}
+
+.detail-card li {
+  margin-bottom: 0.55rem;
+}
+
+.legend-section {
+  display: grid;
+}
+
+.legend-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.legend-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.legend-grid p,
+.legend-example p {
+  margin: 0.35rem 0 0;
+  color: #cbd5e1;
+}
+
+.legend-example {
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 18px;
+  padding: 1rem;
+}
+
+.voice-hint {
+  color: #94a3b8;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .aura-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 1rem;
+  }
+
+  .hero-card,
+  .canvas-card,
+  .status-card,
+  .detail-card,
+  .legend-card {
+    padding: 1.2rem;
+  }
+}
