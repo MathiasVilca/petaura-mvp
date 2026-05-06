@@ -2,11 +2,16 @@ import { useState } from 'react';
 import AuraCanvas from './components/AuraCanvas';
 import { analyzeTranscriptWithAI } from './ai/analyzeTranscript';
 
-// 1. Nuestros JSONs simulados (Lo que devolvería Claude)
+const moodColors = {
+  happy: '#4ADE80', calm: '#60A5FA', tired: '#94A3B8',
+  anxious: '#F87171', playful: '#FB923C', affectionate: '#F472B6',
+  curious: '#A78BFA', sick: '#6B7280'
+};
+// Estados de ánimo de mascota con configuraciones de aura (usados por Groq API)
 const mockStates = {
   happy: {
     mood: 'happy',
-    color: '#22c55e',
+    color: moodColors.happy,
     energy: 0.92,
     stress: 0.18,
     warmth: 0.88,
@@ -21,7 +26,7 @@ const mockStates = {
   },
   calm: {
     mood: 'calm',
-    color: '#14b8a6',
+    color: moodColors.calm,
     energy: 0.28,
     stress: 0.12,
     warmth: 0.74,
@@ -36,7 +41,7 @@ const mockStates = {
   },
   tired: {
     mood: 'tired',
-    color: '#facc15',
+    color: moodColors.tired,
     energy: 0.22,
     stress: 0.36,
     warmth: 0.58,
@@ -51,7 +56,7 @@ const mockStates = {
   },
   anxious: {
     mood: 'anxious',
-    color: '#fb7185',
+    color: moodColors.anxious,
     energy: 0.42,
     stress: 0.82,
     warmth: 0.44,
@@ -66,7 +71,7 @@ const mockStates = {
   },
   playful: {
     mood: 'playful',
-    color: '#8b5cf6',
+    color: moodColors.playful,
     energy: 0.85,
     stress: 0.22,
     warmth: 0.88,
@@ -81,7 +86,7 @@ const mockStates = {
   },
   affectionate: {
     mood: 'affectionate',
-    color: '#ec4899',
+    color: moodColors.affectionate,
     energy: 0.62,
     stress: 0.18,
     warmth: 0.95,
@@ -96,7 +101,7 @@ const mockStates = {
   },
   curious: {
     mood: 'curious',
-    color: '#38bdf8',
+    color: moodColors.curious,
     energy: 0.68,
     stress: 0.28,
     warmth: 0.72,
@@ -111,7 +116,7 @@ const mockStates = {
   },
   sick: {
     mood: 'sick',
-    color: '#581c87',
+    color: moodColors.sick,
     energy: 0.06,
     stress: 0.72,
     warmth: 0.32,
@@ -125,6 +130,8 @@ const mockStates = {
     exampleText: 'Hoy estuvo decaído, casi no jugó, respiró lento y comió muy poco. Se mostró más quieto de lo normal.'
   }
 };
+
+
 
 function App() {
   const [auraState, setAuraState] = useState(mockStates.calm);
@@ -153,7 +160,7 @@ function App() {
   };
 
   const analyzeTranscript = async () => {
-    setAnalysisStatus('Analizando...');
+    setAnalysisStatus('Analizando con IA...');
     setAnalysisError('');
 
     try {
@@ -162,6 +169,7 @@ function App() {
       const mood = result.mood && mockStates[result.mood] ? result.mood : 'calm';
       const nextState = {
         ...mockStates[mood],
+        color: moodColors[mood] || moodColors.calm,
         ...(result.energy !== undefined ? { energy: result.energy } : {}),
         ...(result.stress !== undefined ? { stress: result.stress } : {}),
         ...(result.warmth !== undefined ? { warmth: result.warmth } : {}),
@@ -172,10 +180,10 @@ function App() {
 
       setAuraState(nextState);
       setDetectedMood(mood);
-      setAnalysisStatus('Análisis completado');
+      setAnalysisStatus('¡Análisis con IA completado! Revisa la aura y recomendaciones.');
     } catch (error) {
-      setAnalysisStatus('Error en el análisis');
-      setAnalysisError(error.message || 'No se pudo analizar el texto');
+      setAnalysisStatus('Error en el análisis con IA');
+      setAnalysisError(error.message || 'Error al analizar con IA. Verifica tu conexión e intenta nuevamente.');
     }
   };
 
@@ -183,19 +191,19 @@ function App() {
     <div className="app-shell">
       <header className="app-header">
         <div className="hero-card">
-          <p className="app-tag">PetAura MVP</p>
-          <h1>Conecta con el aura de tu mascota</h1>
+          <p className="app-tag">PetAura con IA</p>
+          <h1>Analiza el aura emocional de tu mascota con IA</h1>
           <p className="app-subtitle">
-            Simula la entrada por voz y observa cómo cambia la visualización de aura en tiempo real.
-            Este prototipo cumple el flujo inicial de interacción con feedback inmediato.
+            Describe el comportamiento de tu mascota y usa IA avanzada para analizar su estado emocional.
+            Explora los 8 estados de ánimo con visualizaciones dinámicas y recomendaciones personalizadas.
           </p>
 
-          <div className="state-buttons" role="group" aria-label="Simular estados de mascota">
+          <div className="state-buttons" role="group" aria-label="Ejemplos de estados de ánimo de mascota">
             <button
               className="state-button happy"
               onClick={() => simulateVoiceInput('happy')}
             >
-              Muy feliz y activo
+              Feliz y activo
             </button>
             <button
               className="state-button calm"
@@ -204,10 +212,40 @@ function App() {
               Tranquilo
             </button>
             <button
+              className="state-button tired"
+              onClick={() => simulateVoiceInput('tired')}
+            >
+              Cansado
+            </button>
+            <button
+              className="state-button anxious"
+              onClick={() => simulateVoiceInput('anxious')}
+            >
+              Ansioso
+            </button>
+            <button
+              className="state-button playful"
+              onClick={() => simulateVoiceInput('playful')}
+            >
+              Juguetón
+            </button>
+            <button
+              className="state-button affectionate"
+              onClick={() => simulateVoiceInput('affectionate')}
+            >
+              Cariñoso
+            </button>
+            <button
+              className="state-button curious"
+              onClick={() => simulateVoiceInput('curious')}
+            >
+              Curioso
+            </button>
+            <button
               className="state-button sick"
               onClick={() => simulateVoiceInput('sick')}
             >
-              Decaído / enfermo
+              Enfermo
             </button>
           </div>
 
@@ -216,7 +254,7 @@ function App() {
               id="voice-input"
               value={transcript}
               onChange={handleTranscriptChange}
-              placeholder="Describe cómo estuvo tu mascota..."
+              placeholder="Describe cómo se comportó tu mascota hoy: ¿jugó mucho?, ¿estuvo tranquilo?, ¿mostró signos de cansancio o ansiedad?..."
               style={{
                 width: '100%',
                 minHeight: '90px',
@@ -233,13 +271,13 @@ function App() {
               onClick={analyzeTranscript}
               style={{ width: '100%', justifyContent: 'center' }}
             >
-              Analizar texto con IA
+              Analizar con IA (Groq)
             </button>
             {analysisStatus && <p className="voice-hint">{analysisStatus}</p>}
             {analysisError && <p className="voice-hint" style={{ color: '#fb7185' }}>{analysisError}</p>}
           </div>
 
-          <p className="voice-hint">Presiona un estado para cambiar la aura y ver recomendaciones instantáneas.</p>
+          <p className="voice-hint">Usa los botones para probar estados predefinidos, o describe el comportamiento de tu mascota y presiona "Analizar texto con IA" para obtener un análisis personalizado con Groq.</p>
         </div>
       </header>
 
