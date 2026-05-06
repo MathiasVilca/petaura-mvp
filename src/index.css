@@ -1,6 +1,14 @@
 :root {
   color-scheme: dark;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --happy: #4ADE80;
+  --calm: #60A5FA;
+  --tired: #94A3B8;
+  --anxious: #F87171;
+  --playful: #FB923C;
+  --affectionate: #F472B6;
+  --curious: #A78BFA;
+  --sick: #6B7280;
 }
 
 * {
@@ -96,17 +104,42 @@ h1 {
 }
 
 .state-button.happy {
-  background: #22c55e;
+  background: var(--happy);
   color: #041b0d;
 }
 
 .state-button.calm {
-  background: #14b8a6;
+  background: var(--calm);
+  color: #ffffff;
+}
+
+.state-button.tired {
+  background: var(--tired);
+  color: #ffffff;
+}
+
+.state-button.anxious {
+  background: var(--anxious);
+  color: #ffffff;
+}
+
+.state-button.playful {
+  background: var(--playful);
+  color: #ffffff;
+}
+
+.state-button.affectionate {
+  background: var(--affectionate);
+  color: #ffffff;
+}
+
+.state-button.curious {
+  background: var(--curious);
   color: #ffffff;
 }
 
 .state-button.sick {
-  background: #581c87;
+  background: var(--sick);
   color: #ffffff;
 }
 
