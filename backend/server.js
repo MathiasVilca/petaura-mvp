@@ -102,6 +102,10 @@ app.post('/api/analyze', async (req, res) => {
     `}`;
 
   try {
+    console.log('Enviando petición a Groq API...');
+    console.log('API Key presente:', !!GROQ_API_KEY);
+    console.log('Modelo:', 'mixtral-8x7b-32768');
+
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
@@ -121,6 +125,8 @@ app.post('/api/analyze', async (req, res) => {
       }),
     });
 
+    console.log('Respuesta de Groq:', response.status, response.statusText);
+
     if (!response.ok) {
       const bodyText = await response.text();
       return res.status(response.status).json({
@@ -130,7 +136,9 @@ app.post('/api/analyze', async (req, res) => {
     }
 
     const payload = await response.json();
+    console.log('Payload recibido:', JSON.stringify(payload, null, 2));
     const outputText = payload?.choices?.[0]?.message?.content;
+    console.log('Output text:', outputText);
 
     const parsed = parseOutputText(
       typeof outputText === 'string' ? outputText : JSON.stringify(outputText)
