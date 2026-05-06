@@ -1,252 +1,280 @@
-import { useState } from 'react';
-import AuraCanvas from './components/AuraCanvas';
+import { useState, useEffect } from 'react';
+import AuraCanvas        from './components/AuraCanvas';
+import OnboardingScreen  from './components/OnboardingScreen';
+import VoiceScreen       from './components/VoiceScreen';
+import LoadingScreen     from './components/LoadingScreen';
+import HistoryScreen     from './components/HistoryScreen';
 import { analyzeTranscriptWithAI } from './ai/analyzeTranscript';
 
-// 1. Nuestros JSONs simulados (Lo que devolvería Claude)
+/* ── Mock states — 8 moods ──────────────────────────────────── */
 const mockStates = {
   happy: {
-    mood: 'happy',
-    color: '#22c55e',
-    energy: 0.92,
-    stress: 0.18,
-    warmth: 0.88,
-    pattern: 'burst',
+    mood: 'happy', color: '#22c55e', energy: 0.92, stress: 0.18, warmth: 0.88, pattern: 'burst',
     description: 'Muy activo y alegre. Su aura muestra vitalidad expansiva, brillo y movimiento rápido.',
-    actions: [
-      'Juega 15 minutos con su juguete favorito.',
-      'Refuerza el vínculo con caricias y premios.',
-      'Aprovecha para dar un paseo enérgico.'
-    ],
-    exampleText: 'Toby estuvo súper activo hoy, jugó todo el día con la pelota, comió bien y estuvo muy cariñoso con todos en casa.'
+    actions: ['Juega 15 minutos con su juguete favorito.', 'Refuerza el vínculo con caricias y premios.', 'Aprovecha para dar un paseo enérgico.'],
   },
   calm: {
-    mood: 'calm',
-    color: '#14b8a6',
-    energy: 0.28,
-    stress: 0.12,
-    warmth: 0.74,
-    pattern: 'flow',
-    description: 'Tranquilo y equilibrado. La aura es suave, fluida y reposada, con movimiento constante pero relajado.',
-    actions: [
-      'Mantén el ambiente sereno y con poca estimulación.',
-      'Ofrece un espacio cómodo para descansar.',
-      'Observa si prefiere contacto silencioso o distancia.'
-    ],
-    exampleText: 'Hoy estuvo muy tranquilo, durmió bastante y se mostró relajado mientras paseábamos cerca de casa.'
+    mood: 'calm', color: '#14b8a6', energy: 0.28, stress: 0.12, warmth: 0.74, pattern: 'flow',
+    description: 'Tranquilo y equilibrado. La aura es suave, fluida y reposada.',
+    actions: ['Mantén el ambiente sereno y con poca estimulación.', 'Ofrece un espacio cómodo para descansar.', 'Observa si prefiere contacto silencioso o distancia.'],
   },
   tired: {
-    mood: 'tired',
-    color: '#facc15',
-    energy: 0.22,
-    stress: 0.36,
-    warmth: 0.58,
-    pattern: 'pulse',
-    description: 'Baja energía y ritmo lento. El aura se siente suave, agotada y con movimiento pausado.',
-    actions: [
-      'Permítele descansar en su lugar favorito.',
-      'Reduce la actividad y evita estímulos intensos.',
-      'Asegura agua fresca y un ambiente calmado.'
-    ],
-    exampleText: 'Estuvo más quieto de lo normal, se acomodó a descansar y no mostró ganas de jugar mucho.'
+    mood: 'tired', color: '#facc15', energy: 0.22, stress: 0.36, warmth: 0.58, pattern: 'pulse',
+    description: 'Baja energía y ritmo lento. El aura se siente suave y agotada.',
+    actions: ['Permítele descansar en su lugar favorito.', 'Reduce la actividad y evita estímulos intensos.', 'Asegura agua fresca y un ambiente calmado.'],
   },
   anxious: {
-    mood: 'anxious',
-    color: '#fb7185',
-    energy: 0.42,
-    stress: 0.82,
-    warmth: 0.44,
-    pattern: 'orbit',
-    description: 'Nervioso y alerta. La aura se mueve con tensión, oscilando entre círculos pequeños y energía contenida.',
-    actions: [
-      'Crea un espacio seguro y sin ruido.',
-      'Habla con voz suave y acaricia lentamente.',
-      'Observa sus señales de calma antes de acercarte.'
-    ],
-    exampleText: 'Estuvo inquieto, se movía de un lado a otro y reaccionaba con sensibilidad a sonidos y movimientos.'
+    mood: 'anxious', color: '#fb7185', energy: 0.42, stress: 0.82, warmth: 0.44, pattern: 'orbit',
+    description: 'Nervioso y alerta. La aura se mueve con tensión y oscilaciones inquietas.',
+    actions: ['Crea un espacio seguro y sin ruido.', 'Habla con voz suave y acaricia lentamente.', 'Observa sus señales de calma antes de acercarte.'],
   },
   playful: {
-    mood: 'playful',
-    color: '#8b5cf6',
-    energy: 0.85,
-    stress: 0.22,
-    warmth: 0.88,
-    pattern: 'burst',
-    description: 'Lleno de ganas de jugar. El aura es brillante, expansiva y con destellos rápidos de energía positiva.',
-    actions: [
-      'Ofrece un juguete nuevo o una sesión de juegos corta.',
-      'Premia su entusiasmo con caricias y elogios.',
-      'Aprovecha para fortalecer el vínculo con actividades lúdicas.'
-    ],
-    exampleText: 'Jugó con gran energía, persiguió su juguete favorito y buscó atención para jugar más.'
+    mood: 'playful', color: '#8b5cf6', energy: 0.85, stress: 0.22, warmth: 0.88, pattern: 'burst',
+    description: 'Lleno de ganas de jugar. El aura es brillante y expansiva.',
+    actions: ['Ofrece un juguete nuevo o una sesión de juegos corta.', 'Premia su entusiasmo con caricias y elogios.', 'Aprovecha para fortalecer el vínculo con actividades lúdicas.'],
   },
   affectionate: {
-    mood: 'affectionate',
-    color: '#ec4899',
-    energy: 0.62,
-    stress: 0.18,
-    warmth: 0.95,
-    pattern: 'flow',
-    description: 'Cariñoso y conectado. El aura es cálida, fluida y rodeada de una sensación acogedora.',
-    actions: [
-      'Ofrece un abrazo suave o caricias cerca de su cabeza.',
-      'Permite tiempo de calidad en contacto tranquilo.',
-      'Refuerza la conexión con palabras suaves y cercanía.'
-    ],
-    exampleText: 'Buscó estar cerca, se acomodó junto a ti y respondió con lamidos y caricias calmadas.'
+    mood: 'affectionate', color: '#ec4899', energy: 0.62, stress: 0.18, warmth: 0.95, pattern: 'flow',
+    description: 'Cariñoso y conectado. El aura es cálida, fluida y acogedora.',
+    actions: ['Ofrece un abrazo suave o caricias cerca de su cabeza.', 'Permite tiempo de calidad en contacto tranquilo.', 'Refuerza la conexión con palabras suaves y cercanía.'],
   },
   curious: {
-    mood: 'curious',
-    color: '#38bdf8',
-    energy: 0.68,
-    stress: 0.28,
-    warmth: 0.72,
-    pattern: 'flow',
-    description: 'Interesado y atento. El aura se desplaza con curiosidad, explorando el entorno con movimientos suaves.',
-    actions: [
-      'Deja objetos seguros para que los inspeccione con calma.',
-      'Observa su lenguaje corporal antes de interactuar.',
-      'Ofrece estímulos nuevos de manera gradual.'
-    ],
-    exampleText: 'Estuvo olisqueando y atento a lo que pasaba, explorando objetos nuevos sin perder la calma.'
+    mood: 'curious', color: '#38bdf8', energy: 0.68, stress: 0.28, warmth: 0.72, pattern: 'flow',
+    description: 'Interesado y atento. El aura se desplaza explorando con movimientos suaves.',
+    actions: ['Deja objetos seguros para que los inspeccione con calma.', 'Observa su lenguaje corporal antes de interactuar.', 'Ofrece estímulos nuevos de manera gradual.'],
   },
   sick: {
-    mood: 'sick',
-    color: '#581c87',
-    energy: 0.06,
-    stress: 0.72,
-    warmth: 0.32,
-    pattern: 'pulse',
-    description: 'Muy bajo de energía y algo tenso. El aura es lenta, opaca y concentra la atención hacia el centro.',
-    actions: [
-      'Observa si come y bebe normalmente.',
-      'Permítele descansar en un lugar cálido y cómodo.',
-      'Consulta al veterinario si el estado persiste.'
-    ],
-    exampleText: 'Hoy estuvo decaído, casi no jugó, respiró lento y comió muy poco. Se mostró más quieto de lo normal.'
-  }
+    mood: 'sick', color: '#581c87', energy: 0.06, stress: 0.72, warmth: 0.32, pattern: 'pulse',
+    description: 'Muy bajo de energía y algo tenso. El aura es lenta y opaca.',
+    actions: ['Observa si come y bebe normalmente.', 'Permítele descansar en un lugar cálido y cómodo.', 'Consulta al veterinario si el estado persiste.'],
+  },
 };
 
+/* ── localStorage helpers ───────────────────────────────────── */
+const PROFILE_KEY = 'petaura_profile';
+const HISTORY_KEY = 'petaura_history';
+
+function loadProfile() {
+  try { return JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch { return null; }
+}
+function saveProfile(profile) {
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+}
+function saveAuraToHistory(auraState) {
+  try {
+    const entry = {
+      date:        new Date().toISOString().split('T')[0],
+      timestamp:   new Date().toISOString(),
+      mood:        auraState.mood,
+      color:       auraState.color,
+      energy:      auraState.energy,
+      stress:      auraState.stress,
+      warmth:      auraState.warmth,
+      pattern:     auraState.pattern,
+      description: auraState.description,
+      actions:     auraState.actions,
+    };
+    const current = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    current.unshift(entry);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(current.slice(0, 30)));
+  } catch {}
+}
+
+/* ── App ────────────────────────────────────────────────────── */
 function App() {
-  const [auraState, setAuraState] = useState(mockStates.calm);
-  const [showLegend, setShowLegend] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [detectedMood, setDetectedMood] = useState('calm');
+  const [screen,         setScreen]         = useState(null);        // null = loading
+  const [petProfile,     setPetProfile]     = useState(null);        // { name, species }
+  const [auraState,      setAuraState]      = useState(mockStates.calm);
+  const [showLegend,     setShowLegend]     = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState('');
-  const [analysisError, setAnalysisError] = useState('');
+  const [analysisError,  setAnalysisError]  = useState('');
+  const [transcript,     setTranscript]     = useState('');
 
-  // 2. Función para simular la entrada de voz y el cambio de estado
-  const simulateVoiceInput = (stateKey) => {
-    setAuraState(mockStates[stateKey]);
-    setDetectedMood(stateKey);
-    setAnalysisStatus('Seleccionado desde botones');
-    setAnalysisError('');
-
-    if (navigator.vibrate) {
-      navigator.vibrate([80]);
+  /* ── Init: check localStorage for existing profile ─────── */
+  useEffect(() => {
+    const profile = loadProfile();
+    if (profile?.name) {
+      setPetProfile(profile);
+      setScreen('home');
+    } else {
+      setScreen('onboarding');
     }
+  }, []);
+
+  /* ── Handlers ───────────────────────────────────────────── */
+  const handleOnboardingComplete = (name, species) => {
+    const profile = { name, species };
+    setPetProfile(profile);
+    saveProfile(profile);
+    setScreen('home');
   };
 
-  const handleTranscriptChange = (event) => {
-    setTranscript(event.target.value);
+  const applyAnalysisResult = (result) => {
+    const mood = result.mood && mockStates[result.mood] ? result.mood : 'calm';
+    const next = {
+      ...mockStates[mood],
+      ...(result.energy      !== undefined      ? { energy:      result.energy }      : {}),
+      ...(result.stress      !== undefined      ? { stress:      result.stress }      : {}),
+      ...(result.warmth      !== undefined      ? { warmth:      result.warmth }      : {}),
+      ...(result.pattern                        ? { pattern:     result.pattern }     : {}),
+      ...(result.description                    ? { description: result.description } : {}),
+      ...(Array.isArray(result.actions)         ? { actions:     result.actions }     : {}),
+    };
+    setAuraState(next);
+    saveAuraToHistory(next);
+    if (navigator.vibrate) navigator.vibrate([80]);
+  };
+
+  const handleVoiceConfirm = async (voiceTranscript) => {
+    setScreen('loading');
+    setAnalysisError('');
+    setAnalysisStatus('');
+    try {
+      const profileText = `Nombre: ${petProfile.name}, Especie: ${petProfile.species}`;
+      const result = await analyzeTranscriptWithAI(voiceTranscript, profileText);
+      applyAnalysisResult(result);
+      setAnalysisStatus('Aura generada');
+    } catch (err) {
+      setAnalysisError(err.message || 'No se pudo analizar');
+    }
+    setScreen('home');
+  };
+
+  const handleTextAnalyze = async () => {
+    if (!transcript.trim()) return;
+    setScreen('loading');
+    setAnalysisError('');
+    setAnalysisStatus('');
+    try {
+      const profileText = `Nombre: ${petProfile?.name ?? 'mascota'}, Especie: ${petProfile?.species ?? 'desconocida'}`;
+      const result = await analyzeTranscriptWithAI(transcript, profileText);
+      applyAnalysisResult(result);
+      setAnalysisStatus('Análisis completado');
+    } catch (err) {
+      setAnalysisError(err.message || 'No se pudo analizar');
+    }
+    setScreen('home');
+  };
+
+  const handleReset = () => {
+    if (!window.confirm(`¿Borrar el perfil de ${petProfile?.name} y todo el historial?`)) return;
+    localStorage.removeItem(PROFILE_KEY);
+    localStorage.removeItem(HISTORY_KEY);
+    setPetProfile(null);
+    setAuraState(mockStates.calm);
     setAnalysisStatus('');
     setAnalysisError('');
+    setScreen('onboarding');
   };
 
-  const analyzeTranscript = async () => {
-    setAnalysisStatus('Analizando...');
+  const simulateState = (key) => {
+    setAuraState(mockStates[key]);
+    setAnalysisStatus('Estado simulado');
     setAnalysisError('');
-
-    try {
-      const petProfile = `${auraState.description} ${auraState.exampleText || ''}`.trim();
-      const result = await analyzeTranscriptWithAI(transcript, petProfile);
-      const mood = result.mood && mockStates[result.mood] ? result.mood : 'calm';
-      const nextState = {
-        ...mockStates[mood],
-        ...(result.energy !== undefined ? { energy: result.energy } : {}),
-        ...(result.stress !== undefined ? { stress: result.stress } : {}),
-        ...(result.warmth !== undefined ? { warmth: result.warmth } : {}),
-        ...(result.pattern ? { pattern: result.pattern } : {}),
-        ...(result.description ? { description: result.description } : {}),
-        ...(Array.isArray(result.actions) ? { actions: result.actions } : {}),
-      };
-
-      setAuraState(nextState);
-      setDetectedMood(mood);
-      setAnalysisStatus('Análisis completado');
-    } catch (error) {
-      setAnalysisStatus('Error en el análisis');
-      setAnalysisError(error.message || 'No se pudo analizar el texto');
-    }
+    if (navigator.vibrate) navigator.vibrate([80]);
   };
 
+  /* ── Screen routing ─────────────────────────────────────── */
+  if (screen === null)         return null;
+  if (screen === 'onboarding') return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+  if (screen === 'loading')    return <LoadingScreen petName={petProfile?.name ?? 'tu mascota'} />;
+  if (screen === 'voice')      return (
+    <VoiceScreen
+      petName={petProfile?.name ?? 'tu mascota'}
+      onConfirm={handleVoiceConfirm}
+      onBack={() => setScreen('home')}
+    />
+  );
+  if (screen === 'history')    return (
+    <HistoryScreen
+      petName={petProfile?.name ?? 'tu mascota'}
+      onBack={() => setScreen('home')}
+    />
+  );
+
+  /* ── Home screen ────────────────────────────────────────── */
   return (
     <div className="app-shell">
       <header className="app-header">
         <div className="hero-card">
-          <p className="app-tag">PetAura MVP</p>
-          <h1>Conecta con el aura de tu mascota</h1>
-          <p className="app-subtitle">
-            Simula la entrada por voz y observa cómo cambia la visualización de aura en tiempo real.
-            Este prototipo cumple el flujo inicial de interacción con feedback inmediato.
-          </p>
 
-          <div className="state-buttons" role="group" aria-label="Simular estados de mascota">
-            <button
-              className="state-button happy"
-              onClick={() => simulateVoiceInput('happy')}
-            >
-              Muy feliz y activo
-            </button>
-            <button
-              className="state-button calm"
-              onClick={() => simulateVoiceInput('calm')}
-            >
-              Tranquilo
-            </button>
-            <button
-              className="state-button sick"
-              onClick={() => simulateVoiceInput('sick')}
-            >
-              Decaído / enfermo
-            </button>
+          {/* Identity & primary actions */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <p className="app-tag">PetAura</p>
+              <h1 style={{ margin: 0 }}>{petProfile?.name ?? 'Tu mascota'}</h1>
+              <p style={{ margin: '.35rem 0 0', color: '#64748b', fontSize: '.9rem' }}>
+                {petProfile?.species}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '.5rem' }}>
+              <button onClick={() => setScreen('history')} style={btn.ghost}>
+                Historial
+              </button>
+              <button onClick={handleReset} style={btn.danger} title="Borrar perfil e historial">
+                Resetear
+              </button>
+            </div>
           </div>
 
-          <div style={{ marginTop: '1rem', display: 'grid', gap: '0.85rem' }}>
-            <textarea
-              id="voice-input"
-              value={transcript}
-              onChange={handleTranscriptChange}
-              placeholder="Describe cómo estuvo tu mascota..."
-              style={{
-                width: '100%',
-                minHeight: '90px',
-                borderRadius: '18px',
-                border: '1px solid rgba(148, 163, 184, 0.25)',
-                padding: '0.95rem',
-                background: 'rgba(15, 23, 42, 0.9)',
-                color: 'white',
-                resize: 'vertical',
-              }}
-            />
-            <button
-              className="state-button calm"
-              onClick={analyzeTranscript}
-              style={{ width: '100%', justifyContent: 'center' }}
-            >
-              Analizar texto con IA
-            </button>
-            {analysisStatus && <p className="voice-hint">{analysisStatus}</p>}
-            {analysisError && <p className="voice-hint" style={{ color: '#fb7185' }}>{analysisError}</p>}
-          </div>
+          {/* Voice recording — main CTA */}
+          <button
+            onClick={() => setScreen('voice')}
+            style={btn.primary}
+          >
+            Registrar por voz
+          </button>
 
-          <p className="voice-hint">Presiona un estado para cambiar la aura y ver recomendaciones instantáneas.</p>
+          {/* Demo states */}
+          <details style={{ marginTop: '.25rem' }}>
+            <summary style={{ color: '#475569', fontSize: '.85rem', cursor: 'pointer', userSelect: 'none' }}>
+              Probar estados (demo)
+            </summary>
+            <div className="state-buttons" role="group" style={{ marginTop: '.75rem' }} aria-label="Simular estados">
+              {Object.keys(mockStates).map(key => (
+                <button
+                  key={key}
+                  className={`state-button ${['happy','calm','sick'].includes(key) ? key : 'calm'}`}
+                  style={{ background: mockStates[key].color, color: '#fff' }}
+                  onClick={() => simulateState(key)}
+                >
+                  {key}
+                </button>
+              ))}
+            </div>
+          </details>
+
+          {/* Text analysis fallback */}
+          <details>
+            <summary style={{ color: '#475569', fontSize: '.85rem', cursor: 'pointer', userSelect: 'none' }}>
+              Analizar por texto
+            </summary>
+            <div style={{ marginTop: '.75rem', display: 'grid', gap: '.75rem' }}>
+              <textarea
+                value={transcript}
+                onChange={e => setTranscript(e.target.value)}
+                placeholder="Describe cómo estuvo tu mascota..."
+                style={inp.textarea}
+              />
+              <button className="state-button calm" onClick={handleTextAnalyze} style={{ justifyContent: 'center' }}>
+                Analizar con IA
+              </button>
+              {analysisStatus && <p className="voice-hint">{analysisStatus}</p>}
+              {analysisError  && <p className="voice-hint" style={{ color: '#fb7185' }}>{analysisError}</p>}
+            </div>
+          </details>
         </div>
       </header>
 
       <main className="app-main">
         <section className="aura-section">
-          <article className="canvas-card" aria-labelledby="aura-title">
-            <h2 id="aura-title">Aura actual</h2>
+          <article
+            className="canvas-card"
+            onClick={() => setShowLegend(v => !v)}
+            style={{ cursor: 'pointer' }}
+            aria-labelledby="aura-title"
+          >
+            <h2 id="aura-title">Aura de hoy</h2>
             <AuraCanvas parameters={auraState} />
             <p className="canvas-caption">{auraState.description}</p>
           </article>
@@ -256,7 +284,9 @@ function App() {
               <h3 id="status-title">Resumen</h3>
               <div className="status-row">
                 <span className="status-label">Estado</span>
-                <span className="status-value">{auraState.mood}</span>
+                <span className="status-value" style={{ color: auraState.color }}>
+                  {auraState.mood}
+                </span>
               </div>
               <div className="parameter-bar">
                 <span>Energía</span>
@@ -281,15 +311,13 @@ function App() {
             <section className="detail-card" aria-labelledby="actions-title">
               <h3 id="actions-title">Recomendaciones</h3>
               <ul>
-                {auraState.actions.map((action, index) => (
-                  <li key={index}>{action}</li>
-                ))}
+                {auraState.actions.map((a, i) => <li key={i}>{a}</li>)}
               </ul>
             </section>
 
             <button
               className="legend-toggle"
-              onClick={() => setShowLegend((current) => !current)}
+              onClick={() => setShowLegend(v => !v)}
               aria-expanded={showLegend}
             >
               {showLegend ? 'Ocultar leyenda' : 'Ver leyenda de aura'}
@@ -297,20 +325,17 @@ function App() {
 
             {showLegend && (
               <section className="legend-card" aria-labelledby="legend-title">
-                <h3 id="legend-title">Leyenda de aura</h3>
+                <h3 id="legend-title">Leyenda de colores</h3>
                 <div className="legend-grid">
-                  <div>
-                    <strong>Verde</strong>
-                    <p>Vitalidad, energía positiva, momento activo.</p>
-                  </div>
-                  <div>
-                    <strong>Turquesa</strong>
-                    <p>Calma, equilibrio y bienestar sereno.</p>
-                  </div>
-                  <div>
-                    <strong>Púrpura</strong>
-                    <p>Baja energía, estrés o molestia emocional.</p>
-                  </div>
+                  {Object.values(mockStates).map(st => (
+                    <div key={st.mood} style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                      <span style={{ width: 12, height: 12, borderRadius: '50%', background: st.color, flexShrink: 0, display: 'inline-block' }} />
+                      <div>
+                        <strong style={{ color: st.color, fontSize: '.9rem' }}>{st.mood}</strong>
+                        <p style={{ margin: '0.1rem 0 0', fontSize: '.82rem' }}>{st.description.split('.')[0]}.</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </section>
             )}
@@ -322,3 +347,54 @@ function App() {
 }
 
 export default App;
+
+/* ── Local inline styles (home screen extras) ───────────────── */
+const btn = {
+  primary: {
+    width: '100%',
+    padding: '1rem',
+    minHeight: 52,
+    borderRadius: 999,
+    border: 'none',
+    background: 'linear-gradient(135deg, #7c6bff, #5b4de0)',
+    color: '#fff',
+    fontSize: '1rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+  },
+  ghost: {
+    padding: '.6rem 1.2rem',
+    minHeight: 48,
+    borderRadius: 999,
+    border: '1px solid rgba(148,163,184,.25)',
+    background: 'transparent',
+    color: '#94a3b8',
+    fontSize: '.9rem',
+    cursor: 'pointer',
+  },
+  danger: {
+    padding: '.6rem 1rem',
+    minHeight: 48,
+    borderRadius: 999,
+    border: '1px solid rgba(248,113,113,.3)',
+    background: 'transparent',
+    color: '#f87171',
+    fontSize: '.85rem',
+    cursor: 'pointer',
+  },
+};
+
+const inp = {
+  textarea: {
+    width: '100%',
+    minHeight: 90,
+    borderRadius: 18,
+    border: '1px solid rgba(148,163,184,.25)',
+    padding: '.95rem',
+    background: 'rgba(15,23,42,.9)',
+    color: 'white',
+    resize: 'vertical',
+    boxSizing: 'border-box',
+    fontSize: '.95rem',
+  },
+};
