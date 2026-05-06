@@ -53,6 +53,7 @@ const mockStates = {
 /* ── localStorage helpers ───────────────────────────────────── */
 const PROFILE_KEY = 'petaura_profile';
 const HISTORY_KEY = 'petaura_history';
+const STREAK_KEY  = 'petaura_streak';
 
 function loadProfile() {
   try { return JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch { return null; }
@@ -60,6 +61,30 @@ function loadProfile() {
 function saveProfile(profile) {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
 }
+
+function loadStreak() {
+  try { return JSON.parse(localStorage.getItem(STREAK_KEY)) || { count: 0, lastDate: '' }; }
+  catch { return { count: 0, lastDate: '' }; }
+}
+function calcStreak() {
+  const today = new Date().toISOString().split('T')[0];
+  const prev  = loadStreak();
+  const yd    = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const count = prev.lastDate === today ? prev.count
+              : prev.lastDate === yd    ? prev.count + 1
+              : 1;
+  localStorage.setItem(STREAK_KEY, JSON.stringify({ count, lastDate: today }));
+  return count;
+}
+function getMilestone(total, streak) {
+  if (total === 1) return 'Primera aura guardada';
+  if (total === 3) return '3 auras registradas — vas bien';
+  if (total === 7) return 'Una semana de seguimiento';
+  if (streak === 3) return '3 dias seguidos';
+  if (streak === 7) return 'Racha de 7 dias';
+  return null;
+}
+
 function saveAuraToHistory(auraState) {
   try {
     const entry = {
@@ -82,13 +107,22 @@ function saveAuraToHistory(auraState) {
 
 /* ── App ────────────────────────────────────────────────────── */
 function App() {
-  const [screen,         setScreen]         = useState(null);        // null = loading
-  const [petProfile,     setPetProfile]     = useState(null);        // { name, species }
+  const [screen,         setScreen]         = useState(null);
+  const [petProfile,     setPetProfile]     = useState(null);
   const [auraState,      setAuraState]      = useState(mockStates.calm);
   const [showLegend,     setShowLegend]     = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState('');
   const [analysisError,  setAnalysisError]  = useState('');
   const [transcript,     setTranscript]     = useState('');
+  const [streak,         setStreak]         = useState(0);
+  const [toast,          setToast]          = useState('');
+
+  /* ── Auto-dismiss toast ─────────────────────────────────── */
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(''), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   /* ── Init: check localStorage for existing profile ─────── */
   useEffect(() => {
@@ -99,6 +133,7 @@ function App() {
     } else {
       setScreen('onboarding');
     }
+    setStreak(loadStreak().count);
   }, []);
 
   /* ── Handlers ───────────────────────────────────────────── */
@@ -122,7 +157,17 @@ function App() {
     };
     setAuraState(next);
     saveAuraToHistory(next);
-    if (navigator.vibrate) navigator.vibrate([80]);
+
+    const newStreak = calcStreak();
+    setStreak(newStreak);
+    const total = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]').length;
+    const msg   = getMilestone(total, newStreak);
+    if (msg) {
+      setToast(msg);
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 300]);
+    } else {
+      if (navigator.vibrate) navigator.vibrate([80]);
+    }
   };
 
   const handleVoiceConfirm = async (voiceTranscript) => {
@@ -160,8 +205,11 @@ function App() {
     if (!window.confirm(`¿Borrar el perfil de ${petProfile?.name} y todo el historial?`)) return;
     localStorage.removeItem(PROFILE_KEY);
     localStorage.removeItem(HISTORY_KEY);
+    localStorage.removeItem(STREAK_KEY);
     setPetProfile(null);
     setAuraState(mockStates.calm);
+    setStreak(0);
+    setToast('');
     setAnalysisStatus('');
     setAnalysisError('');
     setScreen('onboarding');
@@ -195,6 +243,18 @@ function App() {
   /* ── Home screen ────────────────────────────────────────── */
   return (
     <div className="app-shell">
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)',
+          background: 'linear-gradient(135deg, #7c6bff, #5b4de0)',
+          color: '#fff', padding: '.75rem 1.5rem', borderRadius: 999,
+          fontWeight: 600, fontSize: '.9rem', zIndex: 999,
+          boxShadow: '0 4px 24px rgba(124,107,255,.45)',
+          whiteSpace: 'nowrap', pointerEvents: 'none',
+        }}>
+          {toast}
+        </div>
+      )}
       <header className="app-header">
         <div className="hero-card">
 
@@ -206,6 +266,11 @@ function App() {
               <p style={{ margin: '.35rem 0 0', color: '#64748b', fontSize: '.9rem' }}>
                 {petProfile?.species}
               </p>
+              {streak > 0 && (
+                <p style={{ margin: '.3rem 0 0', color: '#7c6bff', fontSize: '.82rem', fontWeight: 700 }}>
+                  Racha: {streak} {streak === 1 ? 'dia' : 'dias'}
+                </p>
+              )}
             </div>
             <div style={{ display: 'flex', gap: '.5rem' }}>
               <button onClick={() => setScreen('history')} style={btn.ghost}>
