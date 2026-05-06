@@ -1,109 +1,158 @@
-# PetAura - MVP (PC02)
+# PetAura — MVP (PC02)
 
-PetAura es un prototipo de interacción humano-máquina para mascotas que transforma la entrada de voz o texto en un análisis de estado emocional y físico, desplegando ese resultado como una visualización de "aura" generativa en HTML5 Canvas.
+PetAura es una Progressive Web App que genera una visualización generativa única —un "aura" de partículas animadas— que representa el estado emocional diario de una mascota. El dueño describe cómo estuvo su mascota mediante **voz** o **texto**, y la app traduce ese relato en parámetros visuales que el sistema de partículas convierte en una experiencia viva e irrepetible.
 
-**Curso:** CC451 Interacción Humano Computador
-**Semestre:** 2026-1
+**Curso:** CC451 Interacción Humano Computador  
+**Semestre:** 2026-1  
+**Equipo:** Matias Vilca · Diego Delgado · Dery Gonzales
 
-## Descripción general
-Este MVP demuestra el flujo completo de la aplicación:
+---
 
-1. El usuario describe cómo se comportó su mascota mediante texto o grabación de voz.
-2. El frontend muestra el transcript en pantalla y envía los datos al backend.
-3. El backend hace proxy seguro a Groq API para analizar el perfil y la transcripción.
-4. El sistema normaliza la respuesta de IA y renderiza una aura dinámica basada en el estado de ánimo detectado.
-5. El usuario ve recomendaciones y métricas de energía, estrés y calidez.
+## Diagrama de navegación
 
-## Qué incluye esta versión
+![Flujo de navegación entre pantallas](images/flujo-nav.png)
 
-- Frontend en React + Vite con UI responsiva.
-- Visualización generativa de aura con partículas en `src/components/AuraCanvas.jsx`.
-- Reconocimiento de voz mediante Web Speech API: el transcript aparece en el textarea mientras se graba.
-- Análisis semántico con Groq API, protegido por un backend Express.
-- Soporte para los 8 estados de ánimo definidos: `happy`, `calm`, `tired`, `anxious`, `playful`, `affectionate`, `curious`, `sick`.
-- Mapa de colores de mood usado para derivar la paleta del aura y evitar depender de color directo de la IA.
-- Fallback seguro cuando la respuesta de IA no cumple formato JSON esperado.
+```mermaid
+flowchart TD
+    A([Abrir PetAura]) --> B{¿Perfil guardado?}
 
-## Arquitectura del flujo
+    B -->|No| C[OnboardingScreen\nNombre + Especie]
+    B -->|Sí| D[HomeScreen\nAura del día]
 
-- `src/App.jsx` maneja la experiencia del usuario.
-- `src/services/groqService.js` envía el perfil y transcript al backend.
-- `src/ai/analyzeTranscript.js` normaliza la respuesta de IA y aplica fallback si el endpoint no está disponible.
-- `backend/server.js` expone `/api/analyze`, agrega la clave `GROQ_API_KEY` desde `backend/.env`, y llama al endpoint OpenAI-compatible de Groq.
+    C -->|Comenzar| D
+
+    D -->|Registrar por voz| E[VoiceScreen\nMicrófono + Transcripción]
+    D -->|Historial| F[HistoryScreen\nGalería de auras]
+    D -->|Ver leyenda| G[Panel de leyenda\nEstado + Recomendaciones]
+    D -->|Resetear y confirmar| C
+
+    E -->|Generar aura| H[LoadingScreen\nGroq procesando]
+    E -->|Volver / Cancelar| D
+
+    H -->|Éxito| D
+    H -->|Error - fallback keywords| D
+
+    G -->|Ocultar leyenda| D
+
+    F -->|Volver| D
+```
+
+---
+
+## Pantallas del MVP
+
+| Pantalla | Descripción |
+|---|---|
+| **OnboardingScreen** | Primera vez — aura latente CSS, registro de nombre y especie |
+| **HomeScreen** | Aura del día, panel de leyenda, recomendaciones, acceso a voz e historial |
+| **VoiceScreen** | Grabación con Web Speech API, transcripción en tiempo real, amplitud visual |
+| **LoadingScreen** | Animación expectante mientras Groq procesa el relato |
+| **HistoryScreen** | Galería cronológica de auras pasadas desde localStorage |
+
+---
+
+## Flujo técnico
+
+1. El usuario describe cómo estuvo su mascota por **voz** (Web Speech API) o **texto**.
+2. El frontend envía `{ profile, transcript }` al backend Express vía proxy Vite (`/api/analyze`).
+3. El backend agrega la clave `GROQ_API_KEY` desde `backend/.env` y llama al endpoint OpenAI-compatible de Groq.
+4. Groq devuelve un JSON con `mood`, `energy`, `stress`, `warmth`, `pattern`, `summary` y `actions`.
+5. El Canvas 2D renderiza el aura con las partículas animadas según los parámetros recibidos.
+6. El aura y sus metadatos se guardan en `localStorage` como historial de la mascota.
+
+---
 
 ## Configuración y ejecución local
 
 ### 1. Instalar dependencias
 
-En la raíz del proyecto:
-
 ```bash
+# Raíz del proyecto
 npm install
-```
 
-En el backend:
-
-```bash
-cd backend
-npm install
+# Backend
+cd backend && npm install
 ```
 
 ### 2. Configurar la clave de Groq
 
-Crea `backend/.env` a partir de `backend/.env.example` y agrega tu clave:
+```bash
+cp backend/.env.example backend/.env
+```
+
+Editar `backend/.env`:
 
 ```env
 GROQ_API_KEY=tu_clave_groq_aqui
-PORT=3002
+PORT=3001
 ```
 
-> Si usas otro puerto, asegúrate de ajustar el proxy en `vite.config.js` o define `VITE_BACKEND_URL`.
+La clave gratuita se obtiene en [console.groq.com](https://console.groq.com).
 
-### 3. Iniciar el backend
-
-Desde `backend/`:
+### 3. Iniciar el proyecto (dos terminales)
 
 ```bash
+# Terminal 1 — backend
+cd backend && npm run dev
+
+# Terminal 2 — frontend
 npm run dev
 ```
 
-### 4. Iniciar el frontend
+### 4. Abrir la aplicación
 
-Desde la raíz del proyecto:
+Visitar `http://localhost:5173` en **Chrome** (requerido para Web Speech API).
 
-```bash
-npm run dev
-```
-
-### 5. Abrir la aplicación
-
-Visita `http://localhost:5173` en tu navegador.
-
-## Notas de implementación
-
-- `vite.config.js` configura el proxy para que `/api` apunte al backend local.
-- El backend no guarda la clave en el repositorio; usa `backend/.env` para protegerla.
-- Si el navegador no soporta SpeechRecognition, la aplicación sigue permitiendo entrada manual de texto.
-- El sistema detecta el mood y utiliza `moodColors` en `src/App.jsx` para derivar el color del aura.
+---
 
 ## Estructura del repositorio
 
-- `src/` — frontend React
-- `src/components/AuraCanvas.jsx` — renderizado del aura en Canvas
-- `src/services/groqService.js` — cliente que llama al backend
-- `src/ai/analyzeTranscript.js` — normalización y fallback del análisis de texto
-- `backend/server.js` — proxy Express que llama a Groq API
-- `backend/.env.example` — plantilla para la clave de Groq
-- `vite.config.js` — proxy y configuración de servidor de desarrollo
+```
+petaura-mvp/
+├── src/
+│   ├── App.jsx                        # Navegación entre pantallas y lógica principal
+│   ├── components/
+│   │   ├── AuraCanvas.jsx             # Motor de partículas Canvas 2D (4 patrones)
+│   │   ├── OnboardingScreen.jsx       # Registro inicial con aura latente CSS
+│   │   ├── VoiceScreen.jsx            # Grabación Web Speech API + amplitud visual
+│   │   ├── LoadingScreen.jsx          # Animación expectante mientras procesa Groq
+│   │   └── HistoryScreen.jsx          # Galería de historial desde localStorage
+│   ├── services/
+│   │   └── groqService.js             # Cliente que llama al backend /api/analyze
+│   └── ai/
+│       └── analyzeTranscript.js       # Normalización y fallback por keywords
+├── backend/
+│   ├── server.js                      # Proxy Express → Groq API
+│   ├── .env.example                   # Plantilla de variables de entorno
+│   └── .gitignore                     # Protege backend/.env del repositorio
+├── images/                            # Capturas de pantalla para el reporte PC02
+├── docs/                              # Documentación del proyecto
+└── vite.config.js                     # Proxy /api → localhost:3001
+```
 
-## Relevancia para PC02
+---
 
-Este MVP cumple el objetivo del entregable PC02 al mostrar:
+## Tecnologías
 
-- una experiencia de interacción completo con entrada multimodal (voz y texto),
-- una visualización no convencional de datos emocionales,
-- integración con un servicio de IA externo,
-- y un flujo seguro que protege la clave de API fuera del repositorio.
+| Capa | Tecnología |
+|---|---|
+| Frontend | React 18 + Vite + CSS puro |
+| Aura / partículas | HTML5 Canvas 2D |
+| Entrada de voz | Web Speech API (Chrome) |
+| Amplitud de audio | Web Audio API |
+| LLM | Groq API — `llama3-8b-8192` |
+| Backend proxy | Express + dotenv + cors |
+| Persistencia | localStorage |
+| Háptica | Vibration API |
+
+---
+
+## Notas
+
+- La API key de Groq nunca se expone en el cliente. Todas las llamadas al LLM pasan por el backend.
+- Si el navegador no soporta Web Speech API o el backend no está disponible, el sistema cae a detección por palabras clave y sigue funcionando.
+- El perfil de mascota y el historial de auras persisten en `localStorage` entre sesiones.
 
 ## Licencia
-Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
+
+MIT — ver [LICENSE](LICENSE).
