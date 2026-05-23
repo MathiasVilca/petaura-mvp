@@ -97,7 +97,7 @@ const s = {
   sub: {
     margin: 0,
     fontSize: '.9rem',
-    color: '#64748b',
+    color: '#8899b0',
     textAlign: 'center',
   },
   dots: {

@@ -82,7 +82,7 @@ export default function OnboardingScreen({ onComplete }) {
 
             <div>
               <label htmlFor="pet-breed" style={s.label}>
-                ¿Cuál es su raza? <span style={{ color: '#64748b', fontWeight: 400 }}>(opcional)</span>
+                ¿Cuál es su raza? <span style={{ color: '#8899b0', fontWeight: 400 }}>(opcional)</span>
               </label>
               <input
                 id="pet-breed"
