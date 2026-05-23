@@ -1,11 +1,4 @@
 import AuraCanvas from './AuraCanvas';
-// MATIAS — F1 miniaura:
-// Reemplazar <MiniAuraSlot> por <MiniAuraCanvas parameters={last} size={72} />
-// cuando el componente de canvas estático esté listo. Tamaño fijo: 72×72 px.
-// Wrapper implementado
-function MiniAuraCanvas({ parameters, size = 72 }) {
-  return <AuraCanvas parameters={parameters} size={size} />;
-}
 
 const ALERT_MOODS = new Set(['sick', 'anxious']);
 
