@@ -55,9 +55,9 @@ function EmptyState({ petName }) {
   );
 }
 
-export default function HistoryScreen({ petName, onBack }) {
+export default function HistoryScreen({ petName, onBack, petId }) {
   const [selectedIdx, setSelectedIdx] = useState(null);
-  const history = loadHistory();
+  const history = loadHistory().filter(entry => entry.petId === petId);
 
   const toggleSelect = idx => setSelectedIdx(prev => (prev === idx ? null : idx));
 

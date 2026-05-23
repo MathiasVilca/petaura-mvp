@@ -1,7 +1,8 @@
 import { useRef, useEffect } from 'react';
 
-const AuraCanvas = ({ parameters }) => {
+const AuraCanvas = ({ parameters, size }) => {
   const canvasRef = useRef(null);
+  const actualSize = Number(size) || 340;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -9,8 +10,8 @@ const AuraCanvas = ({ parameters }) => {
     let animationFrameId;
     let lastTime = 0;
 
-    const width = 340;
-    const height = 340;
+    const width = actualSize;
+    const height = actualSize;
     canvas.width = width;
     canvas.height = height;
 
@@ -126,7 +127,7 @@ const AuraCanvas = ({ parameters }) => {
   return (
     <canvas 
       ref={canvasRef} 
-      style={{ borderRadius: '50%', boxShadow: '0 0 20px rgba(0,0,0,0.5)' }}
+      style={{ width: actualSize, height: actualSize, borderRadius: '50%', boxShadow: '0 0 20px rgba(0,0,0,0.5)' }}
     />
   );
 };
