@@ -74,7 +74,7 @@ function loadProfiles() {
     // Migración desde perfil único legacy
     const legacy = JSON.parse(localStorage.getItem(PROFILE_KEY));
     if (legacy?.name) {
-      const migrated = [{ ...legacy, id: 'pet_' + Date.now() }];
+      const migrated = [{ ...legacy, id: 'pet_' + Date.now() }]; // asignar nuevo id unico, puede cambiar
       localStorage.setItem(PROFILES_KEY, JSON.stringify(migrated));
       return migrated;
     }
@@ -119,9 +119,10 @@ function getMilestone(total, streak) {
   return null;
 }
 
-function saveAuraToHistory(auraState) {
+function saveAuraToHistory(auraState,petId) {
   try {
     const entry = {
+      petId:       petId,
       date:        new Date().toISOString().split('T')[0],
       timestamp:   new Date().toISOString(),
       mood:        auraState.mood,
@@ -206,7 +207,7 @@ function App() {
       ...(Array.isArray(result.actions)         ? { actions:        result.actions }        : {}),
     };
     setAuraState(next);
-    saveAuraToHistory(next);
+    saveAuraToHistory(next, petProfile?.id);
 
     const newStreak = calcStreak();
     setStreak(newStreak);
@@ -300,6 +301,7 @@ function App() {
   if (screen === 'history')    return (
     <HistoryScreen
       petName={petProfile?.name ?? 'tu mascota'}
+      petId={petProfile?.id}
       onBack={() => setScreen('home')}
     />
   );
