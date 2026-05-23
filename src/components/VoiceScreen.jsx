@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import NavBackButton from './NavBackButton';
 
 const KEYFRAMES = `
   @keyframes vs-idle {
@@ -157,9 +158,7 @@ export default function VoiceScreen({ petName, onConfirm, onBack }) {
 
           {/* Header */}
           <div style={s.header}>
-            <button onClick={onBack} style={s.backBtn} aria-label="Volver">
-              ← Volver
-            </button>
+            <NavBackButton onClick={onBack} />
             <div>
               <p style={s.eyebrow}>Registro de voz</p>
               <h2 style={s.title}>¿Cómo estuvo {petName} hoy?</h2>
@@ -257,16 +256,6 @@ const s = {
     gap: '1.5rem',
   },
   header: { display: 'flex', flexDirection: 'column', gap: '.75rem' },
-  backBtn: {
-    alignSelf: 'flex-start',
-    background: 'none',
-    border: 'none',
-    color: '#64748b',
-    cursor: 'pointer',
-    fontSize: '.9rem',
-    padding: '0.5rem 0',
-    minHeight: 48,
-  },
   eyebrow: { margin: 0, color: '#94a3b8', fontSize: '.85rem', letterSpacing: '.06em', textTransform: 'uppercase' },
   title: { margin: '.25rem 0 0', fontSize: '1.4rem', color: '#f0f0ff' },
   micZone: {
@@ -289,7 +278,7 @@ const s = {
   },
   micLabel: {
     margin: 0,
-    color: '#64748b',
+    color: '#8899b0',
     fontSize: '.88rem',
     textAlign: 'center',
   },
@@ -335,7 +324,7 @@ const s = {
     borderRadius: 999,
     border: '1px solid rgba(148,163,184,.2)',
     background: 'transparent',
-    color: '#64748b',
+    color: '#8899b0',
     fontSize: '.95rem',
     cursor: 'pointer',
   },

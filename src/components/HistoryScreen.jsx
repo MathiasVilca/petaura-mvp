@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import NavBackButton from './NavBackButton';
 
 const MOOD_ES = {
   happy:       'Feliz',
@@ -66,9 +67,7 @@ export default function HistoryScreen({ petName, onBack }) {
 
         {/* Header */}
         <div style={s.header}>
-          <button onClick={onBack} style={s.backBtn} aria-label="Volver">
-            ← Volver
-          </button>
+          <NavBackButton onClick={onBack} />
           <div>
             <p style={s.eyebrow}>Historial de auras</p>
             <h2 style={s.title}>{petName}</h2>
@@ -104,7 +103,7 @@ export default function HistoryScreen({ petName, onBack }) {
                       <MiniBar label="C" value={entry.warmth}  color="#facc15"     />
                     </div>
 
-                    <span style={{ color: '#475569', fontSize: '.8rem' }}>
+                    <span style={{ color: '#7080a0', fontSize: '.8rem' }}>
                       {isOpen ? '▲' : '▼'}
                     </span>
                   </button>
@@ -120,7 +119,9 @@ export default function HistoryScreen({ petName, onBack }) {
                           <p style={s.detailLabel}>Recomendaciones</p>
                           <ul style={s.actionList}>
                             {entry.actions.map((a, i) => (
-                              <li key={i} style={s.actionItem}>{a}</li>
+                              <li key={i} style={s.actionItem}>
+                                {typeof a === 'string' ? a : a.action}
+                              </li>
                             ))}
                           </ul>
                         </>
@@ -144,6 +145,7 @@ function MiniBar({ label, value, color }) {
       <div style={mb.track}>
         <div style={{ ...mb.fill, width: `${(value ?? 0) * 100}%`, background: color }} />
       </div>
+      <span style={mb.value}>{Math.round((value ?? 0) * 100)}</span>
     </div>
   );
 }
@@ -164,16 +166,6 @@ const s = {
     gap: '1.5rem',
   },
   header: { display: 'flex', flexDirection: 'column', gap: '.5rem' },
-  backBtn: {
-    alignSelf: 'flex-start',
-    background: 'none',
-    border: 'none',
-    color: '#64748b',
-    cursor: 'pointer',
-    fontSize: '.9rem',
-    padding: '.5rem 0',
-    minHeight: 48,
-  },
   eyebrow: { margin: 0, color: '#94a3b8', fontSize: '.85rem', letterSpacing: '.06em', textTransform: 'uppercase' },
   title: { margin: '.2rem 0 0', fontSize: '1.5rem', color: '#f0f0ff' },
   list: { display: 'flex', flexDirection: 'column', gap: '.65rem' },
@@ -197,7 +189,7 @@ const s = {
   },
   entryInfo: { flex: 1, display: 'flex', flexDirection: 'column', gap: '.15rem' },
   entryMood: { color: '#e2e8f0', fontWeight: 700, fontSize: '1rem' },
-  entryDate: { color: '#64748b', fontSize: '.8rem' },
+  entryDate: { color: '#8899b0', fontSize: '.8rem' },
   bars: { display: 'flex', flexDirection: 'column', gap: '.2rem', minWidth: 80 },
   detail: {
     padding: '0 1.25rem 1.25rem',
@@ -215,12 +207,13 @@ const s = {
     textAlign: 'center',
   },
   emptyTitle: { margin: '0 0 .5rem', fontSize: '1.1rem', color: '#e2e8f0', fontWeight: 600 },
-  emptySub: { margin: 0, color: '#64748b', fontSize: '.9rem', lineHeight: 1.6 },
+  emptySub: { margin: 0, color: '#8899b0', fontSize: '.9rem', lineHeight: 1.6 },
 };
 
 const mb = {
   wrap: { display: 'flex', alignItems: 'center', gap: '.3rem' },
-  label: { color: '#475569', fontSize: '.72rem', fontWeight: 700, width: 10 },
+  label: { color: '#7080a0', fontSize: '.72rem', fontWeight: 700, width: 10 },
   track: { flex: 1, height: 4, background: 'rgba(148,163,184,.15)', borderRadius: 999, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 999, transition: 'width .3s ease' },
+  value: { color: '#7080a0', fontSize: '.7rem', minWidth: 20, textAlign: 'right' },
 };
