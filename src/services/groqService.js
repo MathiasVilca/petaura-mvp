@@ -3,6 +3,7 @@ const BACKEND_API_URL =
 
 const DEFAULT_AURA = {
   mood: 'calm',
+  mood_secondary: null,
   energy: 0.5,
   stress: 0.5,
   warmth: 0.5,
@@ -10,9 +11,9 @@ const DEFAULT_AURA = {
   summary:
     'No fue posible generar un análisis completo. Intenta con más contexto o revisa la entrada.',
   actions: [
-    'Observa el comportamiento de tu mascota durante el día.',
-    'Mantén un ambiente tranquilo y cómodo.',
-    'Consulta al veterinario si notas cambios persistentes.',
+    { action: 'Observa el comportamiento de tu mascota durante el día.', reason: 'El seguimiento diario ayuda a detectar cambios de salud a tiempo.' },
+    { action: 'Mantén un ambiente tranquilo y cómodo.', reason: 'Un entorno estable reduce el estrés y favorece el bienestar general.' },
+    { action: 'Consulta al veterinario si notas cambios persistentes.', reason: 'Un profesional puede descartar causas médicas y darte orientación específica.' },
   ],
 };
 
@@ -49,6 +50,11 @@ function normalizeAuraPayload(payload) {
       ? payload.mood.toLowerCase().trim()
       : DEFAULT_AURA.mood;
 
+  const mood_secondary =
+    typeof payload.mood_secondary === 'string' && payload.mood_secondary.trim().length > 0
+      ? payload.mood_secondary.toLowerCase().trim()
+      : null;
+
   const pattern =
     typeof payload.pattern === 'string'
       ? payload.pattern.toLowerCase().trim()
@@ -59,16 +65,32 @@ function normalizeAuraPayload(payload) {
       ? payload.summary.trim()
       : DEFAULT_AURA.summary;
 
+  // Normalizar actions: acepta string[] o {action, reason}[]
+  let actions = DEFAULT_AURA.actions;
+  if (Array.isArray(payload.actions) && payload.actions.length > 0) {
+    actions = payload.actions.slice(0, 5).map((item) => {
+      if (typeof item === 'string') {
+        return { action: item, reason: '' };
+      }
+      if (item && typeof item === 'object') {
+        return {
+          action: typeof item.action === 'string' ? item.action.trim() : String(item),
+          reason: typeof item.reason === 'string' ? item.reason.trim() : '',
+        };
+      }
+      return { action: String(item), reason: '' };
+    });
+  }
+
   return {
     mood,
+    mood_secondary,
     energy: clampValue(payload.energy, 0, 1) ?? DEFAULT_AURA.energy,
     stress: clampValue(payload.stress, 0, 1) ?? DEFAULT_AURA.stress,
     warmth: clampValue(payload.warmth, 0, 1) ?? DEFAULT_AURA.warmth,
     pattern,
     summary,
-    actions: Array.isArray(payload.actions)
-      ? payload.actions.map((item) => String(item)).slice(0, 5)
-      : DEFAULT_AURA.actions,
+    actions,
   };
 }
 

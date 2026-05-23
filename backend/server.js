@@ -38,15 +38,16 @@ function parseOutputText(text) {
 function normalizeAuraPayload(payload) {
   const defaultAura = {
     mood: 'calm',
+    mood_secondary: null,
     energy: 0.5,
     stress: 0.5,
     warmth: 0.5,
     pattern: 'flow',
     summary: 'No fue posible generar un análisis completo. Intenta con más contexto o revisa la entrada.',
     actions: [
-      'Observa el comportamiento de tu mascota durante el día.',
-      'Mantén un ambiente tranquilo y cómodo.',
-      'Consulta al veterinario si notas cambios persistentes.',
+      { action: 'Observa el comportamiento de tu mascota durante el día.', reason: 'El seguimiento diario ayuda a detectar cambios de salud a tiempo.' },
+      { action: 'Mantén un ambiente tranquilo y cómodo.', reason: 'Un entorno estable reduce el estrés y favorece el bienestar general.' },
+      { action: 'Consulta al veterinario si notas cambios persistentes.', reason: 'Un profesional puede descartar causas médicas y darte orientación específica.' },
     ],
   };
 
@@ -54,11 +55,32 @@ function normalizeAuraPayload(payload) {
     return defaultAura;
   }
 
+  // Normalizar actions: acepta string[] o {action, reason}[]
+  let normalizedActions = defaultAura.actions;
+  if (Array.isArray(payload.actions) && payload.actions.length > 0) {
+    normalizedActions = payload.actions.slice(0, 5).map((item) => {
+      if (typeof item === 'string') {
+        return { action: item, reason: '' };
+      }
+      if (item && typeof item === 'object') {
+        return {
+          action: typeof item.action === 'string' ? item.action.trim() : String(item),
+          reason: typeof item.reason === 'string' ? item.reason.trim() : '',
+        };
+      }
+      return { action: String(item), reason: '' };
+    });
+  }
+
   return {
     mood:
       typeof payload.mood === 'string'
         ? payload.mood.toLowerCase().trim()
         : defaultAura.mood,
+    mood_secondary:
+      typeof payload.mood_secondary === 'string' && payload.mood_secondary.trim().length > 0
+        ? payload.mood_secondary.toLowerCase().trim()
+        : null,
     energy: clampValue(payload.energy, 0, 1) ?? defaultAura.energy,
     stress: clampValue(payload.stress, 0, 1) ?? defaultAura.stress,
     warmth: clampValue(payload.warmth, 0, 1) ?? defaultAura.warmth,
@@ -70,9 +92,7 @@ function normalizeAuraPayload(payload) {
       typeof payload.summary === 'string' && payload.summary.trim().length > 0
         ? payload.summary.trim()
         : defaultAura.summary,
-    actions: Array.isArray(payload.actions)
-      ? payload.actions.map((item) => String(item)).slice(0, 5)
-      : defaultAura.actions,
+    actions: normalizedActions,
   };
 }
 
@@ -87,24 +107,33 @@ app.post('/api/analyze', async (req, res) => {
   }
 
   const prompt = `Eres un asistente especializado en analizar el estado emocional y físico de una mascota.\n` +
-    `Recibes un perfil de mascota y un transcript de voz. Responde únicamente con un JSON válido sin texto adicional.\n\n` +
+    `Recibes un perfil de mascota (nombre, especie, raza si se indica) y un relato en texto. Responde ÚNICAMENTE con un JSON válido, sin texto adicional ni markdown.\n\n` +
     `Perfil de la mascota:\n${profile}\n\n` +
-    `Transcripción de voz:\n${transcript}\n\n` +
+    `Relato del dueño:\n${transcript}\n\n` +
+    `Instrucciones importantes:\n` +
+    `- Si la mascota muestra más de una emoción claramente diferenciada, usa mood_secondary para la emoción secundaria. Si solo hay una emoción, omite mood_secondary o ponlo null.\n` +
+    `- Si se indicó la raza, personaliza las recomendaciones considerando las características típicas de esa raza.\n` +
+    `- Cada acción debe incluir un campo reason que explique brevemente por qué es útil para ESTA mascota en particular. El reason no puede ser genérico.\n\n` +
     `Devuelve exactamente este formato JSON:\n` +
     `{\n` +
     `  "mood": "happy|calm|tired|anxious|playful|affectionate|curious|sick",\n` +
+    `  "mood_secondary": "happy|calm|tired|anxious|playful|affectionate|curious|sick|null",\n` +
     `  "energy": 0.0-1.0,\n` +
     `  "stress": 0.0-1.0,\n` +
     `  "warmth": 0.0-1.0,\n` +
     `  "pattern": "burst|orbit|flow|pulse",\n` +
-    `  "summary": "texto en español, máximo 2 oraciones",\n` +
-    `  "actions": ["acción 1", "acción 2", "acción 3"]\n` +
+    `  "summary": "texto en español, máximo 2 oraciones describiendo el estado de la mascota",\n` +
+    `  "actions": [\n` +
+    `    { "action": "acción concreta 1", "reason": "por qué es útil para esta mascota" },\n` +
+    `    { "action": "acción concreta 2", "reason": "por qué es útil para esta mascota" },\n` +
+    `    { "action": "acción concreta 3", "reason": "por qué es útil para esta mascota" }\n` +
+    `  ]\n` +
     `}`;
 
   try {
     console.log('Enviando petición a Groq API...');
     console.log('API Key presente:', !!GROQ_API_KEY);
-    console.log('Modelo:', 'mixtral-8x7b-32768');
+    console.log('Modelo:', 'llama-3.1-8b-instant');
 
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
@@ -121,7 +150,7 @@ app.post('/api/analyze', async (req, res) => {
           },
         ],
         temperature: 0.3,
-        max_tokens: 400,
+        max_tokens: 600,
       }),
     });
 

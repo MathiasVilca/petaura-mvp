@@ -26,10 +26,11 @@ function LatentAura() {
 export default function OnboardingScreen({ onComplete }) {
   const [name, setName] = useState('');
   const [species, setSpecies] = useState('Perro');
+  const [breed, setBreed] = useState('');
   const canSubmit = name.trim().length >= 1;
 
   const handleSubmit = () => {
-    if (canSubmit) onComplete(name.trim(), species);
+    if (canSubmit) onComplete(name.trim(), species, breed.trim());
   };
 
   return (
@@ -77,6 +78,20 @@ export default function OnboardingScreen({ onComplete }) {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="pet-breed" style={s.label}>
+                ¿Cuál es su raza? <span style={{ color: '#64748b', fontWeight: 400 }}>(opcional)</span>
+              </label>
+              <input
+                id="pet-breed"
+                type="text"
+                value={breed}
+                onChange={e => setBreed(e.target.value)}
+                placeholder="Ej: Labrador Retriever, Siamés..."
+                style={s.input}
+              />
             </div>
 
             <button

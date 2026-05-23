@@ -50,16 +50,49 @@ const mockStates = {
   },
 };
 
-/* ── localStorage helpers ───────────────────────────────────── */
-const PROFILE_KEY = 'petaura_profile';
-const HISTORY_KEY = 'petaura_history';
-const STREAK_KEY  = 'petaura_streak';
+/* ── localStorage helpers ─────────────────────────────────────────────── */
+// PROFILE_KEY se mantiene por compatibilidad con datos antiguos de perfil único
+const PROFILE_KEY  = 'petaura_profile';
+const PROFILES_KEY = 'petaura_profiles';   // nuevo: array de perfiles
+const ACTIVE_PET_KEY = 'petaura_active_pet'; // nuevo: id del perfil activo
+const HISTORY_KEY  = 'petaura_history';
+const STREAK_KEY   = 'petaura_streak';
 
 function loadProfile() {
   try { return JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch { return null; }
 }
 function saveProfile(profile) {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+}
+
+/* ── Multi-pet helpers ────────────────────────────────────────────── */
+function loadProfiles() {
+  try {
+    const profiles = JSON.parse(localStorage.getItem(PROFILES_KEY));
+    if (Array.isArray(profiles) && profiles.length > 0) return profiles;
+    // Migración desde perfil único legacy
+    const legacy = JSON.parse(localStorage.getItem(PROFILE_KEY));
+    if (legacy?.name) {
+      const migrated = [{ ...legacy, id: 'pet_' + Date.now() }];
+      localStorage.setItem(PROFILES_KEY, JSON.stringify(migrated));
+      return migrated;
+    }
+    return [];
+  } catch { return []; }
+}
+function saveProfiles(profiles) {
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+}
+function getActiveProfile(profiles) {
+  const activeId = localStorage.getItem(ACTIVE_PET_KEY);
+  if (activeId) {
+    const found = profiles.find(p => p.id === activeId);
+    if (found) return found;
+  }
+  return profiles[0] ?? null;
+}
+function setActiveProfile(id) {
+  localStorage.setItem(ACTIVE_PET_KEY, id);
 }
 
 function loadStreak() {
@@ -91,12 +124,14 @@ function saveAuraToHistory(auraState) {
       date:        new Date().toISOString().split('T')[0],
       timestamp:   new Date().toISOString(),
       mood:        auraState.mood,
+      mood_secondary: auraState.mood_secondary ?? null,
       color:       auraState.color,
       energy:      auraState.energy,
       stress:      auraState.stress,
       warmth:      auraState.warmth,
       pattern:     auraState.pattern,
       description: auraState.description,
+      summary:     auraState.summary ?? null,
       actions:     auraState.actions,
     };
     const current = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
@@ -109,6 +144,7 @@ function saveAuraToHistory(auraState) {
 function App() {
   const [screen,         setScreen]         = useState(null);
   const [petProfile,     setPetProfile]     = useState(null);
+  const [profiles,       setProfiles]       = useState([]);  // F1: multi-perfil
   const [auraState,      setAuraState]      = useState(mockStates.calm);
   const [showLegend,     setShowLegend]     = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState('');
@@ -124,11 +160,13 @@ function App() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  /* ── Init: check localStorage for existing profile ─────── */
+  /* ── Init: check localStorage for existing profile ───────────────── */
   useEffect(() => {
-    const profile = loadProfile();
-    if (profile?.name) {
-      setPetProfile(profile);
+    const allProfiles = loadProfiles();
+    if (allProfiles.length > 0) {
+      setProfiles(allProfiles);
+      const active = getActiveProfile(allProfiles);
+      setPetProfile(active);
       setScreen('home');
     } else {
       setScreen('onboarding');
@@ -136,11 +174,16 @@ function App() {
     setStreak(loadStreak().count);
   }, []);
 
-  /* ── Handlers ───────────────────────────────────────────── */
-  const handleOnboardingComplete = (name, species) => {
-    const profile = { name, species };
-    setPetProfile(profile);
-    saveProfile(profile);
+  /* ── Handlers ────────────────────────────────────────────── */
+  const handleOnboardingComplete = (name, species, breed) => {
+    const newProfile = { id: 'pet_' + Date.now(), name, species, breed: breed || '' };
+    const updatedProfiles = [...profiles, newProfile];
+    setProfiles(updatedProfiles);
+    saveProfiles(updatedProfiles);
+    // Mantener compatibilidad con el key legacy (un solo perfil activo)
+    saveProfile(newProfile);
+    setActiveProfile(newProfile.id);
+    setPetProfile(newProfile);
     setScreen('home');
   };
 
@@ -148,12 +191,14 @@ function App() {
     const mood = result.mood && mockStates[result.mood] ? result.mood : 'calm';
     const next = {
       ...mockStates[mood],
-      ...(result.energy      !== undefined      ? { energy:      result.energy }      : {}),
-      ...(result.stress      !== undefined      ? { stress:      result.stress }      : {}),
-      ...(result.warmth      !== undefined      ? { warmth:      result.warmth }      : {}),
-      ...(result.pattern                        ? { pattern:     result.pattern }     : {}),
-      ...(result.description                    ? { description: result.description } : {}),
-      ...(Array.isArray(result.actions)         ? { actions:     result.actions }     : {}),
+      ...(result.energy      !== undefined      ? { energy:         result.energy }         : {}),
+      ...(result.stress      !== undefined      ? { stress:         result.stress }         : {}),
+      ...(result.warmth      !== undefined      ? { warmth:         result.warmth }         : {}),
+      ...(result.pattern                        ? { pattern:        result.pattern }        : {}),
+      ...(result.description                    ? { description:    result.description }    : {}),
+      ...(result.summary                        ? { summary:        result.summary }        : {}),
+      ...(result.mood_secondary                 ? { mood_secondary: result.mood_secondary } : { mood_secondary: null }),
+      ...(Array.isArray(result.actions)         ? { actions:        result.actions }        : {}),
     };
     setAuraState(next);
     saveAuraToHistory(next);
@@ -175,7 +220,8 @@ function App() {
     setAnalysisError('');
     setAnalysisStatus('');
     try {
-      const profileText = `Nombre: ${petProfile.name}, Especie: ${petProfile.species}`;
+      const breed = petProfile?.breed ? `, Raza: ${petProfile.breed}` : '';
+      const profileText = `Nombre: ${petProfile.name}, Especie: ${petProfile.species}${breed}`;
       const result = await analyzeTranscriptWithAI(voiceTranscript, profileText);
       applyAnalysisResult(result);
       setAnalysisStatus('Aura generada');
@@ -191,7 +237,8 @@ function App() {
     setAnalysisError('');
     setAnalysisStatus('');
     try {
-      const profileText = `Nombre: ${petProfile?.name ?? 'mascota'}, Especie: ${petProfile?.species ?? 'desconocida'}`;
+      const breed = petProfile?.breed ? `, Raza: ${petProfile.breed}` : '';
+      const profileText = `Nombre: ${petProfile?.name ?? 'mascota'}, Especie: ${petProfile?.species ?? 'desconocida'}${breed}`;
       const result = await analyzeTranscriptWithAI(transcript, profileText);
       applyAnalysisResult(result);
       setAnalysisStatus('Análisis completado');
@@ -204,9 +251,12 @@ function App() {
   const handleReset = () => {
     if (!window.confirm(`¿Borrar el perfil de ${petProfile?.name} y todo el historial?`)) return;
     localStorage.removeItem(PROFILE_KEY);
+    localStorage.removeItem(PROFILES_KEY);
+    localStorage.removeItem(ACTIVE_PET_KEY);
     localStorage.removeItem(HISTORY_KEY);
     localStorage.removeItem(STREAK_KEY);
     setPetProfile(null);
+    setProfiles([]);
     setAuraState(mockStates.calm);
     setStreak(0);
     setToast('');
