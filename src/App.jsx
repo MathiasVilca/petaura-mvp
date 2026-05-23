@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AuraCanvas        from './components/AuraCanvas';
 import OnboardingScreen  from './components/OnboardingScreen';
 import VoiceScreen       from './components/VoiceScreen';
@@ -153,6 +153,10 @@ function App() {
   const [transcript,     setTranscript]     = useState('');
   const [streak,         setStreak]         = useState(0);
   const [toast,          setToast]          = useState('');
+  const [showSummary,    setShowSummary]    = useState(false);
+
+  const longPressRef    = useRef(null);
+  const suppressClickRef = useRef(false);
 
   /* ── Auto-dismiss toast ─────────────────────────────────── */
   useEffect(() => {
@@ -408,13 +412,41 @@ function App() {
         <section className="aura-section">
           <article
             className="canvas-card"
-            onClick={() => setShowLegend(v => !v)}
+            onClick={() => {
+              if (suppressClickRef.current) {
+                suppressClickRef.current = false;
+                setShowSummary(false);
+                return;
+              }
+              setShowLegend(v => !v);
+            }}
+            onMouseEnter={() => { if (auraState.summary) setShowSummary(true); }}
+            onMouseLeave={() => setShowSummary(false)}
+            onTouchStart={() => {
+              if (!auraState.summary || showSummary) return;
+              longPressRef.current = setTimeout(() => {
+                setShowSummary(true);
+                suppressClickRef.current = true;
+              }, 400);
+            }}
+            onTouchMove={() => clearTimeout(longPressRef.current)}
+            onTouchEnd={() => clearTimeout(longPressRef.current)}
             style={{ cursor: 'pointer' }}
             aria-labelledby="aura-title"
           >
             <h2 id="aura-title">Aura de hoy</h2>
             <AuraCanvas parameters={auraState} />
             <p className="canvas-caption">{auraState.description}</p>
+
+            {showSummary && auraState.summary && (
+              <div style={summaryOverlay}>
+                <p style={so.label}>Razonamiento del aura</p>
+                <p style={so.text}>{auraState.summary}</p>
+                <p style={so.hint}>
+                  Desktop: mueve el cursor · Móvil: toca para cerrar
+                </p>
+              </div>
+            )}
           </article>
 
           <div className="status-panel">
@@ -545,5 +577,26 @@ const inp = {
     resize: 'vertical',
     boxSizing: 'border-box',
     fontSize: '.95rem',
+  },
+};
+
+/* ── Summary overlay (F2) ───────────────────────────────────── */
+const summaryOverlay = {
+  position: 'absolute', inset: 0, borderRadius: 24,
+  background: 'rgba(2,6,23,.68)', backdropFilter: 'blur(2px)',
+  display: 'flex', flexDirection: 'column', justifyContent: 'center',
+  padding: '1.5rem', gap: '.65rem',
+  pointerEvents: 'none',
+};
+const so = {
+  label: {
+    margin: 0, color: '#7c6bff', fontSize: '.75rem',
+    fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em',
+  },
+  text: {
+    margin: 0, color: '#e2e8f0', fontSize: '.95rem', lineHeight: 1.65,
+  },
+  hint: {
+    margin: 0, color: '#7080a0', fontSize: '.75rem',
   },
 };
