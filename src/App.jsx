@@ -489,11 +489,18 @@ function App() {
 
             <section className="detail-card" aria-labelledby="actions-title">
               <h3 id="actions-title">Recomendaciones</h3>
-              <ul>
-                {auraState.actions.map((a, i) => (
-                  <li key={i}>{typeof a === 'string' ? a : a.action}</li>
-                ))}
-              </ul>
+              <div style={ac.list}>
+                {auraState.actions.map((a, i) => {
+                  const action = typeof a === 'string' ? a : a.action;
+                  const reason = typeof a === 'string' ? '' : (a.reason || '');
+                  return (
+                    <div key={i} style={ac.card}>
+                      <p style={ac.action}>{action}</p>
+                      {reason && <p style={ac.reason}>{reason}</p>}
+                    </div>
+                  );
+                })}
+              </div>
             </section>
 
             <button
@@ -578,6 +585,14 @@ const inp = {
     boxSizing: 'border-box',
     fontSize: '.95rem',
   },
+};
+
+/* ── Action cards (F4) ──────────────────────────────────────── */
+const ac = {
+  list:   { display: 'flex', flexDirection: 'column', gap: '.5rem' },
+  card:   { background: 'rgba(148,163,184,.06)', border: '1px solid rgba(148,163,184,.1)', borderRadius: 12, padding: '.6rem .85rem' },
+  action: { margin: 0, color: '#cbd5e1', fontSize: '.88rem', lineHeight: 1.55, fontWeight: 500 },
+  reason: { margin: '.3rem 0 0', color: '#7080a0', fontSize: '.8rem', lineHeight: 1.5 },
 };
 
 /* ── Summary overlay (F2) ───────────────────────────────────── */
