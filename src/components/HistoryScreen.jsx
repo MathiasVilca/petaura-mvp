@@ -111,8 +111,8 @@ export default function HistoryScreen({ petName, onBack }) {
                   {/* Detail panel */}
                   {isOpen && (
                     <div style={s.detail}>
-                      {entry.description && (
-                        <p style={s.detailText}>{entry.description}</p>
+                      {(entry.summary || entry.description) && (
+                        <p style={s.detailText}>{entry.summary || entry.description}</p>
                       )}
                       {Array.isArray(entry.actions) && entry.actions.length > 0 && (
                         <>
