@@ -1,22 +1,17 @@
+import AuraCanvas from './AuraCanvas';
 // MATIAS — F1 miniaura:
 // Reemplazar <MiniAuraSlot> por <MiniAuraCanvas parameters={last} size={72} />
 // cuando el componente de canvas estático esté listo. Tamaño fijo: 72×72 px.
-function MiniAuraSlot({ color = '#14b8a6' }) {
-  return (
-    <div style={{
-      width: 72, height: 72, borderRadius: '50%', flexShrink: 0,
-      background: `radial-gradient(circle at 38% 38%, ${color}cc 0%, ${color}55 45%, ${color}18 70%, transparent 100%)`,
-      boxShadow: `0 0 18px ${color}44, inset 0 0 14px ${color}22`,
-    }} />
-  );
+// Wrapper implementado
+function MiniAuraCanvas({ parameters, size = 72 }) {
+  return <AuraCanvas parameters={parameters} size={size} />;
 }
 
 const ALERT_MOODS = new Set(['sick', 'anxious']);
 
-function lastEntryForPet(/* petId, */ history) {
-  // TODO (F1 Día 3): filtrar history por petId cuando el schema lo incluya.
-  // Por ahora muestra la entrada más reciente del historial global.
-  return history[0] ?? null;
+function lastEntryForPet( petId, history) {
+  // implementacion de filtrar history por petId
+  return history.find(entry => entry.petId === petId) ?? null;
 }
 
 export default function PetDashboard({ profiles, history, activeId, onSelectPet, onAddPet }) {
@@ -36,7 +31,7 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
 
         <div style={s.grid}>
           {profiles.map(pet => {
-            const last = lastEntryForPet(history);
+            const last = lastEntryForPet(pet.id,history);
             const color = last?.color ?? '#14b8a6';
             const isAlert = last ? ALERT_MOODS.has(last.mood) : false;
             const isStale = !last || Date.now() - new Date(last.timestamp).getTime() > 86_400_000;
@@ -50,7 +45,13 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
                 aria-label={`Ver aura de ${pet.name}`}
               >
                 <div style={s.cardTop}>
-                  <MiniAuraSlot color={color} />
+                  <AuraCanvas parameters={
+                    {color,
+                    energy: last?.energy ?? 0.5,
+                    stress: last?.stress ?? 0.5,
+                    warmth: last?.warmth ?? 0.5,
+                    pattern: last?.pattern ?? 'flow',}
+                  } size={72} />
                   <div style={s.petInfo}>
                     <span style={s.petName}>{pet.name}</span>
                     <span style={s.petSpecies}>
