@@ -4,6 +4,7 @@ import OnboardingScreen  from './components/OnboardingScreen';
 import VoiceScreen       from './components/VoiceScreen';
 import LoadingScreen     from './components/LoadingScreen';
 import HistoryScreen     from './components/HistoryScreen';
+import PetDashboard      from './components/PetDashboard';
 import { analyzeTranscriptWithAI } from './ai/analyzeTranscript';
 
 /* ── Mock states — 8 moods ──────────────────────────────────── */
@@ -163,10 +164,14 @@ function App() {
   /* ── Init: check localStorage for existing profile ───────────────── */
   useEffect(() => {
     const allProfiles = loadProfiles();
-    if (allProfiles.length > 0) {
+    if (allProfiles.length > 1) {
       setProfiles(allProfiles);
       const active = getActiveProfile(allProfiles);
       setPetProfile(active);
+      setScreen('dashboard');
+    } else if (allProfiles.length === 1) {
+      setProfiles(allProfiles);
+      setPetProfile(allProfiles[0]);
       setScreen('home');
     } else {
       setScreen('onboarding');
@@ -184,7 +189,7 @@ function App() {
     saveProfile(newProfile);
     setActiveProfile(newProfile.id);
     setPetProfile(newProfile);
-    setScreen('home');
+    setScreen(updatedProfiles.length > 1 ? 'dashboard' : 'home');
   };
 
   const applyAnalysisResult = (result) => {
@@ -272,6 +277,15 @@ function App() {
     if (navigator.vibrate) navigator.vibrate([80]);
   };
 
+  const handleSelectPet = (petId) => {
+    const found = profiles.find(p => p.id === petId);
+    if (!found) return;
+    setActiveProfile(petId);
+    saveProfile(found);
+    setPetProfile(found);
+    setScreen('home');
+  };
+
   /* ── Screen routing ─────────────────────────────────────── */
   if (screen === null)         return null;
   if (screen === 'onboarding') return <OnboardingScreen onComplete={handleOnboardingComplete} />;
@@ -287,6 +301,15 @@ function App() {
     <HistoryScreen
       petName={petProfile?.name ?? 'tu mascota'}
       onBack={() => setScreen('home')}
+    />
+  );
+  if (screen === 'dashboard')  return (
+    <PetDashboard
+      profiles={profiles}
+      history={JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]')}
+      activeId={petProfile?.id}
+      onSelectPet={handleSelectPet}
+      onAddPet={() => setScreen('onboarding')}
     />
   );
 
@@ -313,7 +336,7 @@ function App() {
             <div>
               <p className="app-tag">PetAura</p>
               <h1 style={{ margin: 0 }}>{petProfile?.name ?? 'Tu mascota'}</h1>
-              <p style={{ margin: '.35rem 0 0', color: '#64748b', fontSize: '.9rem' }}>
+              <p style={{ margin: '.35rem 0 0', color: '#8899b0', fontSize: '.9rem' }}>
                 {petProfile?.species}
               </p>
               {streak > 0 && (
@@ -342,7 +365,7 @@ function App() {
 
           {/* Demo states */}
           <details style={{ marginTop: '.25rem' }}>
-            <summary style={{ color: '#475569', fontSize: '.85rem', cursor: 'pointer', userSelect: 'none' }}>
+            <summary style={{ color: '#7080a0', fontSize: '.85rem', cursor: 'pointer', userSelect: 'none' }}>
               Probar estados (demo)
             </summary>
             <div className="state-buttons" role="group" style={{ marginTop: '.75rem' }} aria-label="Simular estados">
@@ -361,7 +384,7 @@ function App() {
 
           {/* Text analysis fallback */}
           <details>
-            <summary style={{ color: '#475569', fontSize: '.85rem', cursor: 'pointer', userSelect: 'none' }}>
+            <summary style={{ color: '#7080a0', fontSize: '.85rem', cursor: 'pointer', userSelect: 'none' }}>
               Analizar por texto
             </summary>
             <div style={{ marginTop: '.75rem', display: 'grid', gap: '.75rem' }}>
@@ -404,19 +427,28 @@ function App() {
                 </span>
               </div>
               <div className="parameter-bar">
-                <span>Energía</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Energía</span>
+                  <span style={{ color: '#8899b0', fontSize: '.82rem' }}>{Math.round(auraState.energy * 100)}</span>
+                </div>
                 <div className="meter">
                   <span style={{ width: `${auraState.energy * 100}%`, background: auraState.color }} />
                 </div>
               </div>
               <div className="parameter-bar">
-                <span>Estrés</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Estrés</span>
+                  <span style={{ color: '#8899b0', fontSize: '.82rem' }}>{Math.round(auraState.stress * 100)}</span>
+                </div>
                 <div className="meter">
                   <span style={{ width: `${auraState.stress * 100}%`, background: '#f97316' }} />
                 </div>
               </div>
               <div className="parameter-bar">
-                <span>Calidez</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Calidez</span>
+                  <span style={{ color: '#8899b0', fontSize: '.82rem' }}>{Math.round(auraState.warmth * 100)}</span>
+                </div>
                 <div className="meter">
                   <span style={{ width: `${auraState.warmth * 100}%`, background: '#facc15' }} />
                 </div>
@@ -426,7 +458,9 @@ function App() {
             <section className="detail-card" aria-labelledby="actions-title">
               <h3 id="actions-title">Recomendaciones</h3>
               <ul>
-                {auraState.actions.map((a, i) => <li key={i}>{a}</li>)}
+                {auraState.actions.map((a, i) => (
+                  <li key={i}>{typeof a === 'string' ? a : a.action}</li>
+                ))}
               </ul>
             </section>
 
