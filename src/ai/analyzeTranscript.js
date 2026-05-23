@@ -45,7 +45,6 @@ function normalizeAIResponse(payload) {
     stress: parseNumber(payload.stress),
     warmth: parseNumber(payload.warmth),
     pattern: payload.pattern,
-    description: payload.description || payload.summary,
     summary: payload.summary,
     actions: Array.isArray(payload.actions) ? payload.actions : undefined,
   };
