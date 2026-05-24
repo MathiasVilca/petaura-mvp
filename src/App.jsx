@@ -288,6 +288,30 @@ function App() {
     setActiveProfile(petId);
     saveProfile(found);
     setPetProfile(found);
+
+    try {
+      const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      const last = history.find(e => e.petId === petId);
+      if (last) {
+        const mood = last.mood && mockStates[last.mood] ? last.mood : 'calm';
+        setAuraState({
+          ...mockStates[mood],
+          energy:         last.energy         ?? mockStates[mood].energy,
+          stress:         last.stress         ?? mockStates[mood].stress,
+          warmth:         last.warmth         ?? mockStates[mood].warmth,
+          pattern:        last.pattern        ?? mockStates[mood].pattern,
+          description:    last.description    ?? mockStates[mood].description,
+          summary:        last.summary        ?? null,
+          mood_secondary: last.mood_secondary ?? null,
+          actions:        Array.isArray(last.actions) ? last.actions : mockStates[mood].actions,
+        });
+      } else {
+        setAuraState(mockStates.calm);
+      }
+    } catch {
+      setAuraState(mockStates.calm);
+    }
+
     setScreen('home');
   };
 
@@ -351,12 +375,19 @@ function App() {
                 </p>
               )}
             </div>
-            <div style={{ display: 'flex', gap: '.5rem' }}>
+            <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
+              {profiles.length > 1 && (
+                <button onClick={() => setScreen('dashboard')} style={btn.ghost}>
+                  Mis mascotas
+                </button>
+              )}
+              {profiles.length >= 1 && (
+                <button onClick={() => setScreen('onboarding')} style={btn.ghost}>
+                  + Mascota
+                </button>
+              )}
               <button onClick={() => setScreen('history')} style={btn.ghost}>
                 Historial
-              </button>
-              <button onClick={handleReset} style={btn.danger} title="Borrar perfil e historial">
-                Resetear
               </button>
             </div>
           </div>
@@ -407,6 +438,11 @@ function App() {
               {analysisError  && <p className="voice-hint" style={{ color: '#fb7185' }}>{analysisError}</p>}
             </div>
           </details>
+
+          {/* Reset — acción destructiva, no es flujo principal */}
+          <button onClick={handleReset} style={btn.dangerSm} title="Borrar perfil e historial">
+            Resetear cuenta
+          </button>
         </div>
       </header>
 
@@ -570,6 +606,17 @@ const btn = {
     background: 'transparent',
     color: '#f87171',
     fontSize: '.85rem',
+    cursor: 'pointer',
+  },
+  dangerSm: {
+    alignSelf: 'flex-start',
+    padding: '.35rem .85rem',
+    minHeight: 36,
+    borderRadius: 999,
+    border: '1px solid rgba(248,113,113,.2)',
+    background: 'transparent',
+    color: '#7080a0',
+    fontSize: '.78rem',
     cursor: 'pointer',
   },
 };
