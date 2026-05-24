@@ -143,6 +143,24 @@ function saveAuraToHistory(auraState,petId) {
   } catch {}
 }
 
+/* ── SA1: Web Speech Synthesis ─────────────────────────────── */
+const VOICE_MUTED_KEY = 'petaura_voice_muted';
+
+function speakSummary(text, muted) {
+  if (muted) return;
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();           // cancela cualquier lectura previa
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'es-ES';
+  utter.rate = 0.95;
+  utter.pitch = 1;
+  // Preferir voz en español si está disponible
+  const voices = window.speechSynthesis.getVoices();
+  const esVoice = voices.find(v => v.lang.startsWith('es'));
+  if (esVoice) utter.voice = esVoice;
+  window.speechSynthesis.speak(utter);
+}
+
 /* ── App ────────────────────────────────────────────────────── */
 function App() {
   const [screen,         setScreen]         = useState(null);
@@ -156,6 +174,10 @@ function App() {
   const [streak,         setStreak]         = useState(0);
   const [toast,          setToast]          = useState('');
   const [showSummary,    setShowSummary]    = useState(false);
+  // SA1: voz — leer del localStorage para recordar preferencia
+  const [voiceMuted,     setVoiceMuted]     = useState(
+    () => localStorage.getItem(VOICE_MUTED_KEY) === 'true'
+  );
 
   const longPressRef    = useRef(null);
   const suppressClickRef = useRef(false);
@@ -213,6 +235,9 @@ function App() {
     };
     setAuraState(next);
     saveAuraToHistory(next, petProfile?.id);
+
+    // SA1: leer el summary en voz alta al generar aura
+    if (next.summary) speakSummary(next.summary, voiceMuted);
 
     const newStreak = calcStreak();
     setStreak(newStreak);
@@ -376,7 +401,7 @@ function App() {
                 </p>
               )}
             </div>
-            <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
               {profiles.length > 1 && (
                 <button onClick={() => setScreen('dashboard')} style={btn.ghost}>
                   Mis mascotas
@@ -389,6 +414,21 @@ function App() {
               )}
               <button onClick={() => setScreen('history')} style={btn.ghost}>
                 Historial
+              </button>
+              {/* SA1: botón de silenciar síntesis de voz */}
+              <button
+                id="voice-mute-btn"
+                onClick={() => {
+                  const next = !voiceMuted;
+                  setVoiceMuted(next);
+                  localStorage.setItem(VOICE_MUTED_KEY, String(next));
+                  if (next) window.speechSynthesis?.cancel();
+                }}
+                style={{ ...btn.ghost, fontSize: '1.1rem', padding: '.5rem .75rem', minHeight: 40 }}
+                title={voiceMuted ? 'Activar voz del aura' : 'Silenciar voz del aura'}
+                aria-label={voiceMuted ? 'Activar síntesis de voz' : 'Silenciar síntesis de voz'}
+              >
+                {voiceMuted ? '🔇' : '🔊'}
               </button>
             </div>
           </div>
