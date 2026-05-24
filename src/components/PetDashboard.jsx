@@ -6,7 +6,7 @@ function lastEntryForPet( petId, history) {
   // implementacion de filtrar history por petId
   return history.find(entry => entry.petId === petId) ?? null;
 }
-
+const REDUCTION_PARAMETER=0.218 //para aura mini
 export default function PetDashboard({ profiles, history, activeId, onSelectPet, onAddPet }) {
   return (
     <div style={s.page}>
@@ -44,7 +44,7 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
                     stress: last?.stress ?? 0.5,
                     warmth: last?.warmth ?? 0.5,
                     pattern: last?.pattern ?? 'flow',}
-                  } size={72} />
+                  } size={72} reduction_parameter={REDUCTION_PARAMETER} />
                   <div style={s.petInfo}>
                     <span style={s.petName}>{pet.name}</span>
                     <span style={s.petSpecies}>

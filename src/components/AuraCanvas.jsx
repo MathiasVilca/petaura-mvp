@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 
-const AuraCanvas = ({ parameters, size }) => {
+const AuraCanvas = ({ parameters, size, reduction_parameter=1 }) => {
   const canvasRef = useRef(null);
   const actualSize = Number(size) || 340;
 
@@ -15,18 +15,18 @@ const AuraCanvas = ({ parameters, size }) => {
     canvas.width = width;
     canvas.height = height;
 
-    const particleCount = 55 + Math.round(parameters.energy * 65);
+    const particleCount = 55 + Math.round(parameters.energy * 65 * reduction_parameter); // Ajustar cantidad de partículas según energía y reducción
     const particles = Array.from({ length: particleCount }).map(() => {
       
       // 1. Calculamos la distancia inicial según el patrón activo
       const initialDistance = parameters.pattern === 'burst' 
         ? Math.random() * (width * 0.55) // Distribución amplia para evitar el "anillo"
-        : 16 + Math.random() * 110;      // Distribución agrupada original para flow, orbit y pulse
+        : (16 + Math.random() * 110)*(reduction_parameter**0.5);      // Distribución agrupada original para flow, orbit y pulse
 
       return {
         angle: Math.random() * Math.PI * 2,
         speed: 0.4 + Math.random() * 0.8 + parameters.energy * 1.4,
-        radius: 1.2 + Math.random() * 2.8 + parameters.warmth * 2,
+        radius: (1.2 + Math.random() * 2.8 + parameters.warmth * 2)*(reduction_parameter**0.5), // Ajustar tamaño de partículas según calidez y reducción
         
         // 2. Asignamos la distancia condicionada
         distance: initialDistance, 
