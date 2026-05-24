@@ -111,24 +111,19 @@ export default function HistoryScreen({ petName, onBack, petId }) {
                   {/* Detail panel */}
                   {isOpen && (
                     <div style={s.detail}>
-                      {(entry.summary || entry.description) && (
-                        <p style={s.detailText}>{entry.summary || entry.description}</p>
+                      {entry.description && (
+                        <p style={s.detailText}>{entry.description}</p>
                       )}
                       {Array.isArray(entry.actions) && entry.actions.length > 0 && (
                         <>
                           <p style={s.detailLabel}>Recomendaciones</p>
-                          <div style={s.actionCards}>
-                            {entry.actions.map((a, i) => {
-                              const action = typeof a === 'string' ? a : a.action;
-                              const reason = typeof a === 'string' ? '' : (a.reason || '');
-                              return (
-                                <div key={i} style={s.actionCard}>
-                                  <p style={s.actionText}>{action}</p>
-                                  {reason && <p style={s.actionReason}>{reason}</p>}
-                                </div>
-                              );
-                            })}
-                          </div>
+                          <ul style={s.actionList}>
+                            {entry.actions.map((a, i) => (
+                              <li key={i} style={s.actionItem}>
+                                {typeof a === 'string' ? a : a.action}
+                              </li>
+                            ))}
+                          </ul>
                         </>
                       )}
                     </div>
@@ -201,16 +196,9 @@ const s = {
     borderTop: '1px solid rgba(148,163,184,.1)',
   },
   detailText: { color: '#cbd5e1', fontSize: '.9rem', lineHeight: 1.6, margin: '.75rem 0 .5rem' },
-  detailLabel: { color: '#94a3b8', fontSize: '.8rem', fontWeight: 600, margin: '.75rem 0 .5rem', textTransform: 'uppercase', letterSpacing: '.06em' },
-  actionCards: { display: 'flex', flexDirection: 'column', gap: '.5rem' },
-  actionCard: {
-    background: 'rgba(148,163,184,.06)',
-    border: '1px solid rgba(148,163,184,.1)',
-    borderRadius: 12,
-    padding: '.6rem .85rem',
-  },
-  actionText: { margin: 0, color: '#cbd5e1', fontSize: '.88rem', lineHeight: 1.55, fontWeight: 500 },
-  actionReason: { margin: '.3rem 0 0', color: '#7080a0', fontSize: '.8rem', lineHeight: 1.5 },
+  detailLabel: { color: '#94a3b8', fontSize: '.8rem', fontWeight: 600, margin: '.75rem 0 .4rem', textTransform: 'uppercase', letterSpacing: '.06em' },
+  actionList: { margin: 0, paddingLeft: '1.2rem' },
+  actionItem: { color: '#94a3b8', fontSize: '.88rem', lineHeight: 1.7 },
   empty: {
     background: 'rgba(15,23,42,.88)',
     border: '1px solid rgba(148,163,184,.12)',

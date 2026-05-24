@@ -23,16 +23,19 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1 }) => {
         ? Math.random() * (width * 0.55) // Distribución amplia para evitar el "anillo"
         : (16 + Math.random() * 110)*(reduction_parameter**0.5);      // Distribución agrupada original para flow, orbit y pulse
 
+      // 2. Asignar color primario o secundario (70/30) — UNA SOLA VEZ al crear la partícula
+      const isSecondary = parameters.secondaryColor && Math.random() < 0.3;
+
       return {
         angle: Math.random() * Math.PI * 2,
         speed: 0.4 + Math.random() * 0.8 + parameters.energy * 1.4,
         radius: (1.2 + Math.random() * 2.8 + parameters.warmth * 2)*(reduction_parameter**0.5), // Ajustar tamaño de partículas según calidez y reducción
         
-        // 2. Asignamos la distancia condicionada
         distance: initialDistance, 
         
         offset: Math.random() * Math.PI * 2,
         alpha: 0.35 + Math.random() * 0.55,
+        isSecondary, // Propiedad persistente: esta partícula es color secundario sí/no
       };
     });
 
@@ -106,12 +109,16 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1 }) => {
 
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = parameters.color;
+        
+        // Elegir color basado en la propiedad asignada al crear la partícula
+        const particleColor = p.isSecondary ? parameters.secondaryColor : parameters.color;
 
         ctx.globalAlpha = Math.min(1, Math.max(0, (p.alpha - stressFactor * 0.2) * pulse * fade));
 
         ctx.shadowBlur = 14;
-        ctx.shadowColor = parameters.color;
+        ctx.fillStyle = particleColor;
+        ctx.shadowColor = particleColor;
+        
         ctx.fill();
       });
 

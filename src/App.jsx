@@ -128,6 +128,7 @@ function saveAuraToHistory(auraState,petId) {
       mood:        auraState.mood,
       mood_secondary: auraState.mood_secondary ?? null,
       color:       auraState.color,
+      secondaryColor:auraState.secondaryColor,
       energy:      auraState.energy,
       stress:      auraState.stress,
       warmth:      auraState.warmth,

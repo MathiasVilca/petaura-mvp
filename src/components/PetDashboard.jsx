@@ -26,6 +26,7 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
           {profiles.map(pet => {
             const last = lastEntryForPet(pet.id,history);
             const color = last?.color ?? '#14b8a6';
+            const secondaryColor = last?.color ?? null;
             const isAlert = last ? ALERT_MOODS.has(last.mood) : false;
             const isStale = !last || Date.now() - new Date(last.timestamp).getTime() > 86_400_000;
             const isActive = pet.id === activeId;
@@ -39,7 +40,7 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
               >
                 <div style={s.cardTop}>
                   <AuraCanvas parameters={
-                    {color,
+                    {color,secondaryColor,
                     energy: last?.energy ?? 0.5,
                     stress: last?.stress ?? 0.5,
                     warmth: last?.warmth ?? 0.5,
