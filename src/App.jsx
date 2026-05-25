@@ -85,7 +85,7 @@ function saveAuraToHistory(auraState,petId) {
       mood:        auraState.mood,
       mood_secondary: auraState.mood_secondary ?? null,
       color:       auraState.color,
-      secondaryColor:auraState.secondaryColor,
+      secondaryColor:auraState.secondaryColor ?? null,
       energy:      auraState.energy,
       stress:      auraState.stress,
       warmth:      auraState.warmth,
@@ -166,6 +166,7 @@ function App() {
       ...(result.description                    ? { description:    result.description }    : {}),
       ...(result.summary                        ? { summary:        result.summary }        : {}),
       ...(result.mood_secondary                 ? { mood_secondary: result.mood_secondary } : { mood_secondary: null }),
+      ...(result.mood_secondary                 ? { secondaryColor: COLORS_MOOD[result.mood_secondary] } : { secondaryColor: null }),
       ...(Array.isArray(result.actions)         ? { actions:        result.actions }        : {}),
     };
     setAuraState(next);
@@ -261,6 +262,7 @@ function App() {
           description:    last.description    ?? mockStates[mood].description,
           summary:        last.summary        ?? null,
           mood_secondary: last.mood_secondary ?? null,
+          secondaryColor: last.mood_secondary ? COLORS_MOOD[last.mood_secondary] : null,
           actions:        Array.isArray(last.actions) ? last.actions : mockStates[mood].actions,
         });
       } else {

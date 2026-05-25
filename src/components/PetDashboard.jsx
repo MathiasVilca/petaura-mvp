@@ -27,7 +27,7 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
           {profiles.map(pet => {
             const last = lastEntryForPet(pet.id,history);
             const color = last?.color ?? COLORS_MOOD[MOODS.CALM];
-            const secondaryColor = last?.color ?? null;
+            const secondaryColor = last?.secondaryColor ?? null;
             const isAlert = last ? ALERT_MOODS.has(last.mood) : false;
             const isStale = !last || Date.now() - new Date(last.timestamp).getTime() > 86_400_000;
             const isActive = pet.id === activeId;
