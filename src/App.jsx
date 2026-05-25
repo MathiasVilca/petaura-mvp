@@ -409,7 +409,7 @@ function App() {
               {Object.keys(mockStates).map(key => (
                 <button
                   key={key}
-                  className={`state-button ${['happy','calm','sick'].includes(key) ? key : 'calm'}`}
+                  className={`state-button`}
                   style={{ background: mockStates[key].color, color: '#fff' }}
                   onClick={() => simulateState(key)}
                 >
