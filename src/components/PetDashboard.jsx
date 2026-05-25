@@ -1,5 +1,5 @@
 import AuraCanvas from './AuraCanvas';
-import { MOODS,COLORS_MOOD } from '../moods';
+import { MOODS,COLORS_MOOD } from '../moods.js';
 
 const ALERT_MOODS = new Set([MOODS.SICK, MOODS.ANXIOUS]);
 

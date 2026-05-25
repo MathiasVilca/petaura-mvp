@@ -6,7 +6,7 @@ import LoadingScreen     from './components/LoadingScreen';
 import HistoryScreen     from './components/HistoryScreen';
 import PetDashboard      from './components/PetDashboard';
 import { analyzeTranscriptWithAI } from './ai/analyzeTranscript';
-import { MOODS , COLORS_MOOD, MOOD_ES ,mockStates } from './moods';
+import { MOODS , COLORS_MOOD, MOOD_ES ,mockStates } from './moods.js';
 
 /* ── localStorage helpers ─────────────────────────────────────────────── */
 // PROFILE_KEY se mantiene por compatibilidad con datos antiguos de perfil único

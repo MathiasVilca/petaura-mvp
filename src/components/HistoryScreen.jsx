@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import NavBackButton from './NavBackButton';
-import { MOOD_ES } from '../moods';
+import { MOOD_ES } from '../moods.js';
 
 function loadHistory() {
   try {

@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { MOODS,COLORS_MOOD } from '../src/moods';
+import { MOODS,COLORS_MOOD } from '../src/moods.js';
 
 dotenv.config();
 
