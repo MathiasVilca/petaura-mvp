@@ -1,16 +1,6 @@
 import { useState } from 'react';
 import NavBackButton from './NavBackButton';
-
-const MOOD_ES = {
-  happy:       'Feliz',
-  calm:        'Tranquilo',
-  tired:       'Cansado',
-  anxious:     'Ansioso',
-  playful:     'Juguetón',
-  affectionate:'Cariñoso',
-  curious:     'Curioso',
-  sick:        'Decaído',
-};
+import { MOOD_ES } from '../moods';
 
 function loadHistory() {
   try {

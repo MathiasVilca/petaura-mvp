@@ -6,50 +6,7 @@ import LoadingScreen     from './components/LoadingScreen';
 import HistoryScreen     from './components/HistoryScreen';
 import PetDashboard      from './components/PetDashboard';
 import { analyzeTranscriptWithAI } from './ai/analyzeTranscript';
-
-/* ── Mock states — 8 moods ──────────────────────────────────── */
-const mockStates = {
-  happy: {
-    mood: 'happy', color: '#22c55e', energy: 0.92, stress: 0.18, warmth: 0.88, pattern: 'burst',
-    description: 'Muy activo y alegre. Su aura muestra vitalidad expansiva, brillo y movimiento rápido.',
-    actions: ['Juega 15 minutos con su juguete favorito.', 'Refuerza el vínculo con caricias y premios.', 'Aprovecha para dar un paseo enérgico.'],
-  },
-  calm: {
-    mood: 'calm', color: '#14b8a6', energy: 0.28, stress: 0.12, warmth: 0.74, pattern: 'flow',
-    description: 'Tranquilo y equilibrado. La aura es suave, fluida y reposada.',
-    actions: ['Mantén el ambiente sereno y con poca estimulación.', 'Ofrece un espacio cómodo para descansar.', 'Observa si prefiere contacto silencioso o distancia.'],
-  },
-  tired: {
-    mood: 'tired', color: '#facc15', energy: 0.22, stress: 0.36, warmth: 0.58, pattern: 'pulse',
-    description: 'Baja energía y ritmo lento. El aura se siente suave y agotada.',
-    actions: ['Permítele descansar en su lugar favorito.', 'Reduce la actividad y evita estímulos intensos.', 'Asegura agua fresca y un ambiente calmado.'],
-  },
-  anxious: {
-    mood: 'anxious', color: '#fb7185', energy: 0.42, stress: 0.82, warmth: 0.44, pattern: 'orbit',
-    description: 'Nervioso y alerta. La aura se mueve con tensión y oscilaciones inquietas.',
-    actions: ['Crea un espacio seguro y sin ruido.', 'Habla con voz suave y acaricia lentamente.', 'Observa sus señales de calma antes de acercarte.'],
-  },
-  playful: {
-    mood: 'playful', color: '#8b5cf6', energy: 0.85, stress: 0.22, warmth: 0.88, pattern: 'burst',
-    description: 'Lleno de ganas de jugar. El aura es brillante y expansiva.',
-    actions: ['Ofrece un juguete nuevo o una sesión de juegos corta.', 'Premia su entusiasmo con caricias y elogios.', 'Aprovecha para fortalecer el vínculo con actividades lúdicas.'],
-  },
-  affectionate: {
-    mood: 'affectionate', color: '#ec4899', energy: 0.62, stress: 0.18, warmth: 0.95, pattern: 'flow',
-    description: 'Cariñoso y conectado. El aura es cálida, fluida y acogedora.',
-    actions: ['Ofrece un abrazo suave o caricias cerca de su cabeza.', 'Permite tiempo de calidad en contacto tranquilo.', 'Refuerza la conexión con palabras suaves y cercanía.'],
-  },
-  curious: {
-    mood: 'curious', color: '#38bdf8', energy: 0.68, stress: 0.28, warmth: 0.72, pattern: 'flow',
-    description: 'Interesado y atento. El aura se desplaza explorando con movimientos suaves.',
-    actions: ['Deja objetos seguros para que los inspeccione con calma.', 'Observa su lenguaje corporal antes de interactuar.', 'Ofrece estímulos nuevos de manera gradual.'],
-  },
-  sick: {
-    mood: 'sick', color: '#581c87', energy: 0.06, stress: 0.72, warmth: 0.32, pattern: 'pulse',
-    description: 'Muy bajo de energía y algo tenso. El aura es lenta y opaca.',
-    actions: ['Observa si come y bebe normalmente.', 'Permítele descansar en un lugar cálido y cómodo.', 'Consulta al veterinario si el estado persiste.'],
-  },
-};
+import { MOODS , COLORS_MOOD, MOOD_ES ,mockStates } from './moods';
 
 /* ── localStorage helpers ─────────────────────────────────────────────── */
 // PROFILE_KEY se mantiene por compatibilidad con datos antiguos de perfil único
@@ -199,7 +156,7 @@ function App() {
   };
 
   const applyAnalysisResult = (result) => {
-    const mood = result.mood && mockStates[result.mood] ? result.mood : 'calm';
+    const mood = result.mood && mockStates[result.mood] ? result.mood : MOODS.CALM;
     const next = {
       ...mockStates[mood],
       ...(result.energy      !== undefined      ? { energy:         result.energy }         : {}),
@@ -268,7 +225,7 @@ function App() {
     localStorage.removeItem(STREAK_KEY);
     setPetProfile(null);
     setProfiles([]);
-    setAuraState(mockStates.calm);
+    setAuraState(mockStates[MOODS.CALM]);
     setStreak(0);
     setToast('');
     setAnalysisStatus('');
@@ -294,7 +251,7 @@ function App() {
       const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
       const last = history.find(e => e.petId === petId);
       if (last) {
-        const mood = last.mood && mockStates[last.mood] ? last.mood : 'calm';
+        const mood = last.mood && mockStates[last.mood] ? last.mood : MOODS.CALM;
         setAuraState({
           ...mockStates[mood],
           energy:         last.energy         ?? mockStates[mood].energy,
@@ -307,10 +264,10 @@ function App() {
           actions:        Array.isArray(last.actions) ? last.actions : mockStates[mood].actions,
         });
       } else {
-        setAuraState(mockStates.calm);
+        setAuraState(mockStates[MOODS.CALM]);
       }
     } catch {
-      setAuraState(mockStates.calm);
+      setAuraState(mockStates[MOODS.CALM]);
     }
 
     setScreen('home');
@@ -414,7 +371,7 @@ function App() {
                   style={{ background: mockStates[key].color, color: '#fff' }}
                   onClick={() => simulateState(key)}
                 >
-                  {key}
+                  {MOOD_ES[key] || key}
                 </button>
               ))}
             </div>
