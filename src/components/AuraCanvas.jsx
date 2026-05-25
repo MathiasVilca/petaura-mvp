@@ -39,11 +39,11 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
         isSecondary, // Propiedad persistente: esta partícula es color secundario sí/no
       };
     });
-
+    const STARTING_CIRCLE_RADIUS_GRADIENT = width/17.0
     const backgroundGradient = ctx.createRadialGradient(
       width / 2,
       height / 2,
-      20,
+      STARTING_CIRCLE_RADIUS_GRADIENT,
       width / 2,
       height / 2,
       width * 0.8
@@ -116,7 +116,7 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
         const particleColor = p.isSecondary ? parameters.secondaryColor : parameters.color;
 
         ctx.globalAlpha = Math.min(1, Math.max(0, (p.alpha - stressFactor * 0.2) * pulse * fade));
-        const SHADOW_BLUR = 14
+        const SHADOW_BLUR = 1
         ctx.shadowBlur = SHADOW_BLUR;
         ctx.fillStyle = particleColor;
         ctx.shadowColor = particleColor;

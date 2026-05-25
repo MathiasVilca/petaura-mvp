@@ -95,21 +95,6 @@ h1 {
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
 }
 
-.state-button.happy {
-  background: #22c55e;
-  color: #041b0d;
-}
-
-.state-button.calm {
-  background: #14b8a6;
-  color: #ffffff;
-}
-
-.state-button.sick {
-  background: #581c87;
-  color: #ffffff;
-}
-
 .aura-section {
   display: grid;
   grid-template-columns: minmax(280px, 420px) minmax(260px, 1fr);
