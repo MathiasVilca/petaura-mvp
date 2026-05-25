@@ -40,8 +40,14 @@ function normalizeAIResponse(payload) {
   }
 
   const mood = payload.mood?.toString().toLowerCase();
+  const mood_secondary =
+    typeof payload.mood_secondary === 'string' && payload.mood_secondary.trim().length > 0
+      ? payload.mood_secondary.toLowerCase().trim()
+      : undefined;
+
   return {
     mood,
+    mood_secondary,
     energy: parseNumber(payload.energy),
     stress: parseNumber(payload.stress),
     warmth: parseNumber(payload.warmth),
