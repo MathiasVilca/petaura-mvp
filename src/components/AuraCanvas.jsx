@@ -64,7 +64,7 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
       ctx.save();
       ctx.translate(width / 2, height / 2);
       ctx.globalCompositeOperation = 'lighter';
-
+      const MAX_SPAWN_RADIUS = width/17.0
       particles.forEach((p) => {
         const stressFactor = parameters.stress * 0.1;
         const pulseSpeed = 2 + parameters.stress * 3;
@@ -98,12 +98,13 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
           y = Math.sin(p.angle) * (p.distance + Math.cos(t + p.offset) * 8 * parameters.energy);
           radius *= 1.05;
           p.distance += dt * (p.speed * 40);
-          const maxDistance = width * 0.55;
+          const maxDistance = width * 0.55 + p.radius*2;
 
           fade = Math.min(1, p.distance / 30);
-        
+          
           if (p.distance > maxDistance) {
-            p.distance = Math.random() * 25;
+            p.size=(1.2 + Math.random() * 2.8 + parameters.warmth * 2)*(reduction_parameter**0.5),
+            p.distance = Math.random() * MAX_SPAWN_RADIUS;
             p.angle = Math.random() * Math.PI * 2;
           }
         }
@@ -115,8 +116,8 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
         const particleColor = p.isSecondary ? parameters.secondaryColor : parameters.color;
 
         ctx.globalAlpha = Math.min(1, Math.max(0, (p.alpha - stressFactor * 0.2) * pulse * fade));
-
-        ctx.shadowBlur = 14;
+        const SHADOW_BLUR = 14
+        ctx.shadowBlur = SHADOW_BLUR;
         ctx.fillStyle = particleColor;
         ctx.shadowColor = particleColor;
         
