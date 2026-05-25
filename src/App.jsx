@@ -416,7 +416,7 @@ function App() {
                 setShowSummary(false);
                 return;
               }
-              setShowLegend(v => !v);
+              //setShowLegend(v => !v);
             }}
             onMouseEnter={() => { if (auraState.summary) setShowSummary(true); }}
             onMouseLeave={() => setShowSummary(false)}
@@ -508,7 +508,7 @@ function App() {
             </section>
 
             <button
-              className="legend-toggle"
+              className="legend-toggle"          
               onClick={() => setShowLegend(v => !v)}
               aria-expanded={showLegend}
             >
