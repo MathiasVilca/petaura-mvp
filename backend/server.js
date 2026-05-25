@@ -114,7 +114,7 @@ app.post('/api/analyze', async (req, res) => {
     `Instrucciones importantes:\n` +
     `- Si la mascota muestra más de una emoción claramente diferenciada, usa mood_secondary para la emoción secundaria. Si solo hay una emoción, omite mood_secondary o ponlo null.\n` +
     `- Si se indicó la raza, personaliza las recomendaciones considerando las características típicas de esa raza.\n` +
-    `- Cada acción debe incluir un campo reason que explique brevemente por qué es útil para ESTA mascota en particular. El reason no puede ser genérico.\n\n` +
+    `- Cada acción debe incluir un campo reason que explique brevemente por qué es útil para ESTA mascota en particular. El reason DEBE ser específico y personalizado, considerando:\n  * La raza de la mascota (si se indicó).\n  * El estado emocional observado en el relato.\n  * Las comportamientos específicos mencionados.\n  El reason NO puede comenzar con frases genéricas como "para ayudar a reducir", "es importante", o "es fundamental". Debe incluir detalles concretos sobre cómo la acción beneficia a ESTA mascota.\n\n` +
     `Devuelve exactamente este formato JSON:\n` +
     `{\n` +
     `  "mood": "${MOODS.HAPPY}|${MOODS.CALM}|${MOODS.TIRED}|${MOODS.ANXIOUS}|${MOODS.PLAYFUL}|${MOODS.AFFECTIONATE}|${MOODS.CURIOUS}|${MOODS.SICK}",\n` +

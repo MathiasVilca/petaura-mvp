@@ -110,7 +110,12 @@ export default function HistoryScreen({ petName, onBack, petId }) {
                           <ul style={s.actionList}>
                             {entry.actions.map((a, i) => (
                               <li key={i} style={s.actionItem}>
-                                {typeof a === 'string' ? a : a.action}
+                                <div>
+                                  <strong>{typeof a === 'string' ? a : a.action}</strong>
+                                  {typeof a !== 'string' && a.reason && (
+                                    <p style={s.actionReason}>{a.reason}</p>
+                                  )}
+                                </div>
                               </li>
                             ))}
                           </ul>
@@ -189,6 +194,7 @@ const s = {
   detailLabel: { color: '#94a3b8', fontSize: '.8rem', fontWeight: 600, margin: '.75rem 0 .4rem', textTransform: 'uppercase', letterSpacing: '.06em' },
   actionList: { margin: 0, paddingLeft: '1.2rem' },
   actionItem: { color: '#94a3b8', fontSize: '.88rem', lineHeight: 1.7 },
+  actionReason: { color: '#64748b', fontSize: '.8rem', lineHeight: 1.6, margin: '.3rem 0 0', fontStyle: 'italic' },
   empty: {
     background: 'rgba(15,23,42,.88)',
     border: '1px solid rgba(148,163,184,.12)',
