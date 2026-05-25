@@ -1,6 +1,7 @@
 import AuraCanvas from './AuraCanvas';
+import { MOODS,COLORS_MOOD } from '../moods.js';
 
-const ALERT_MOODS = new Set(['sick', 'anxious']);
+const ALERT_MOODS = new Set([MOODS.SICK, MOODS.ANXIOUS]);
 
 function lastEntryForPet( petId, history) {
   // implementacion de filtrar history por petId
@@ -25,8 +26,8 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
         <div style={s.grid}>
           {profiles.map(pet => {
             const last = lastEntryForPet(pet.id,history);
-            const color = last?.color ?? '#14b8a6';
-            const secondaryColor = last?.color ?? null;
+            const color = last?.color ?? COLORS_MOOD[MOODS.CALM];
+            const secondaryColor = last?.secondaryColor ?? null;
             const isAlert = last ? ALERT_MOODS.has(last.mood) : false;
             const isStale = !last || Date.now() - new Date(last.timestamp).getTime() > 86_400_000;
             const isActive = pet.id === activeId;
@@ -45,7 +46,7 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
                     stress: last?.stress ?? 0.5,
                     warmth: last?.warmth ?? 0.5,
                     pattern: last?.pattern ?? 'flow',}
-                  } size={72} reduction_parameter={REDUCTION_PARAMETER} />
+                  } size={72} reduction_parameter={REDUCTION_PARAMETER} reduce_particles={true}/>
                   <div style={s.petInfo}>
                     <span style={s.petName}>{pet.name}</span>
                     <span style={s.petSpecies}>

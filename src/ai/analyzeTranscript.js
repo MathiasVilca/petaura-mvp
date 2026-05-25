@@ -1,4 +1,5 @@
 import { generateAura } from '../services/groqService';
+import { MOODS } from '../moods.js';
 
 export async function analyzeTranscriptWithAI(transcript, profile = '') {
   const text = transcript.trim();
@@ -39,8 +40,14 @@ function normalizeAIResponse(payload) {
   }
 
   const mood = payload.mood?.toString().toLowerCase();
+  const mood_secondary =
+    typeof payload.mood_secondary === 'string' && payload.mood_secondary.trim().length > 0
+      ? payload.mood_secondary.toLowerCase().trim()
+      : undefined;
+
   return {
     mood,
+    mood_secondary,
     energy: parseNumber(payload.energy),
     stress: parseNumber(payload.stress),
     warmth: parseNumber(payload.warmth),
@@ -58,14 +65,14 @@ function parseNumber(value) {
 function keywordAnalyzeTranscript(text) {
   const lower = text.toLowerCase();
   if (/\b(feliz|activo|alegre|energ[ií]a|jueg|salt|contento|contenta)\b/.test(lower)) {
-    return { mood: 'happy' };
+    return { mood: MOODS.HAPPY };
   }
   if (/\b(enfermo|deca[ií]do|triste|let[aá]rgic|apat[ií]a|quieto|silencioso)\b/.test(lower)) {
-    return { mood: 'sick' };
+    return { mood: MOODS.SICK };
   }
   if (/\b(tranquilo|relajado|sereno|calmo|descansado|paz)\b/.test(lower)) {
-    return { mood: 'calm' };
+    return { mood: MOODS.CALM };
   }
 
-  return { mood: 'calm' };
+  return { mood: MOODS.CALM };
 }

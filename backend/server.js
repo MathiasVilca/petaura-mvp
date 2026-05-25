@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { MOODS,COLORS_MOOD } from '../src/moods.js';
 
 dotenv.config();
 
@@ -37,7 +38,7 @@ function parseOutputText(text) {
 
 function normalizeAuraPayload(payload) {
   const defaultAura = {
-    mood: 'calm',
+    mood: MOODS.CALM,
     mood_secondary: null,
     energy: 0.5,
     stress: 0.5,
@@ -116,8 +117,8 @@ app.post('/api/analyze', async (req, res) => {
     `- Cada acción debe incluir un campo reason que explique brevemente por qué es útil para ESTA mascota en particular. El reason no puede ser genérico.\n\n` +
     `Devuelve exactamente este formato JSON:\n` +
     `{\n` +
-    `  "mood": "happy|calm|tired|anxious|playful|affectionate|curious|sick",\n` +
-    `  "mood_secondary": "happy|calm|tired|anxious|playful|affectionate|curious|sick|null",\n` +
+    `  "mood": "${MOODS.HAPPY}|${MOODS.CALM}|${MOODS.TIRED}|${MOODS.ANXIOUS}|${MOODS.PLAYFUL}|${MOODS.AFFECTIONATE}|${MOODS.CURIOUS}|${MOODS.SICK}",\n` +
+    `  "mood_secondary": "${MOODS.HAPPY}|${MOODS.CALM}|${MOODS.TIRED}|${MOODS.ANXIOUS}|${MOODS.PLAYFUL}|${MOODS.AFFECTIONATE}|${MOODS.CURIOUS}|${MOODS.SICK}|null",\n` +
     `  "energy": 0.0-1.0,\n` +
     `  "stress": 0.0-1.0,\n` +
     `  "warmth": 0.0-1.0,\n` +
@@ -128,7 +129,8 @@ app.post('/api/analyze', async (req, res) => {
     `    { "action": "acción concreta 2", "reason": "por qué es útil para esta mascota" },\n` +
     `    { "action": "acción concreta 3", "reason": "por qué es útil para esta mascota" }\n` +
     `  ]\n` +
-    `}`;
+    `}\n` +
+    `Recuerda mantener solo uno de los estados en mood, si estan presentes dos, pon el más dominante en mood y el otro en mood_secondary, si hay más de dos emociones, pon las dos más prevalentes en mood y mood_secondary por separado, poniendo siempre la más dominante en mood.`;
 
   try {
     console.log('Enviando petición a Groq API...');
