@@ -20,15 +20,16 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
       
       // 1. Calculamos la distancia inicial según el patrón activo
       const initialDistance = parameters.pattern === 'burst' 
-        ? Math.random() * (width * 0.55) // Distribución amplia para evitar el "anillo"
-        : (16 + Math.random() * 110)*(reduction_parameter**0.5);      // Distribución agrupada original para flow, orbit y pulse
+        ? (Math.random() * (width * 0.55)) // Distribución amplia para evitar el "anillo"
+        : (16 + Math.random() * 110)*(reduction_parameter);      // Distribución agrupada original para flow, orbit y pulse
 
       // 2. Asignar color primario o secundario (70/30) — UNA SOLA VEZ al crear la partícula
       const isSecondary = parameters.secondaryColor && Math.random() < 0.3;
+      const speed = parameters.pattern === 'burst'? (0.4 + Math.random() * 0.8 + parameters.energy * 1.4)*reduction_parameter :0.4 + Math.random() * 0.8 + parameters.energy * 1.4
 
       return {
         angle: Math.random() * Math.PI * 2,
-        speed: 0.4 + Math.random() * 0.8 + parameters.energy * 1.4,
+        speed: speed,
         radius: (1.2 + Math.random() * 2.8 + parameters.warmth * 2)*(reduction_parameter**0.5), // Ajustar tamaño de partículas según calidez y reducción
         
         distance: initialDistance, 
