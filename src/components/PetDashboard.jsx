@@ -46,7 +46,7 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
                     stress: last?.stress ?? 0.5,
                     warmth: last?.warmth ?? 0.5,
                     pattern: last?.pattern ?? 'flow',}
-                  } size={72} reduction_parameter={REDUCTION_PARAMETER} />
+                  } size={72} reduction_parameter={REDUCTION_PARAMETER} reduce_particles={true}/>
                   <div style={s.petInfo}>
                     <span style={s.petName}>{pet.name}</span>
                     <span style={s.petSpecies}>
