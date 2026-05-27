@@ -170,7 +170,7 @@ const DemoMenu = ({ simulateState }) => {
             key={key}
             className={`state-button`}
             style={{ background: mockStates[key].color, color: '#fff' }}
-            onClick={() => simulateState(key)}
+            onClick={() => {simulateState(key) ; setIsOpen(!isOpen)}}
           >
             {MOOD_ES[key] || key}
           </button>
