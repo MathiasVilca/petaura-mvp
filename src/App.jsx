@@ -163,6 +163,7 @@ const DemoMenu = ({ simulateState }) => {
           borderRadius: '8px',
           boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
           marginTop: '0.5rem',
+          width:300
         }}
       >
         {Object.keys(mockStates).map(key => (
