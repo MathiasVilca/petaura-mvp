@@ -118,6 +118,117 @@ function speakSummary(text, muted) {
   window.speechSynthesis.speak(utter);
 }
 
+//para summaries
+const DemoMenu = ({ simulateState }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div style={{ 
+        marginTop: '.25rem',
+        position: 'relative', 
+        display: 'inline-block',
+        zIndex: 999,
+      }}
+    >
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen} 
+        style={{ 
+          color: '#7080a0', 
+          fontSize: '.85rem', 
+          cursor: 'pointer', 
+          background: 'transparent', 
+          border: 'none',
+          padding: 0,
+          userSelect: 'none',
+          
+        }}
+      >
+        {isOpen ? '▼' : '▶'} Probar estados (demo)
+      </button>
+      <div 
+        className="state-buttons" 
+        role="group"
+        aria-label="Simular estados"
+        style={{ 
+          marginTop: '.75rem', 
+          display: isOpen? 'flex':'none',
+          gap: '0.5rem',
+          flexDirection: 'column',
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          zIndex: 999,
+          background: '#1a1a2e', 
+          padding: '0.75rem',
+          borderRadius: '8px',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+          marginTop: '0.5rem',
+          width:300
+        }}
+      >
+        {Object.keys(mockStates).map(key => (
+          <button
+            key={key}
+            className={`state-button`}
+            style={{ background: mockStates[key].color, color: '#fff' }}
+            onClick={() => {simulateState(key) ; setIsOpen(!isOpen)}}
+          >
+            {MOOD_ES[key] || key}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const TextAnalysisMenu = ({transcript,setTranscript,handleTextAnalyze,analysisStatus,analysisError}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        style={{ 
+          color: '#7080a0', 
+          fontSize: '.85rem', 
+          cursor: 'pointer', 
+          userSelect: 'none',
+          background: 'transparent', 
+          border: 'none',
+          padding: 0
+        }}
+      >
+        {isOpen ? '▼' : '▶'} Analizar por texto
+      </button>
+      <div style={{ marginTop: '.75rem', display: 'grid', gap: '.75rem' }}>
+        { isOpen && (
+          <textarea
+            value={transcript}
+            onChange={e => setTranscript(e.target.value)}
+            placeholder="Describe cómo estuvo tu mascota..."
+            display='none'
+            style={
+              inp.textarea
+            }
+          />
+        )}
+        <button 
+          className="state-button calm" 
+          onClick={handleTextAnalyze} 
+          style={{ 
+            justifyContent: 'center',
+            display: isOpen? 'flex':'none'
+          }}
+        >
+          Analizar con IA
+        </button>
+        {analysisStatus && <p className="voice-hint">{analysisStatus}</p>}
+        {analysisError  && <p className="voice-hint" style={{ color: '#fb7185' }}>{analysisError}</p>}
+      </div>
+    </div>
+  )
+}
+
 /* ── App ────────────────────────────────────────────────────── */
 function App() {
   const [screen,         setScreen]         = useState(null);
@@ -343,7 +454,7 @@ function App() {
           {toast}
         </div>
       )}
-      <header className="app-header">
+      <header className="app-header" style={{ position: 'relative', zIndex: 100 }}>
         <div className="hero-card">
 
           {/* Identity & primary actions */}
@@ -401,43 +512,16 @@ function App() {
           </button>
 
           {/* Demo states */}
-          <details style={{ marginTop: '.25rem' }}>
-            <summary style={{ color: '#7080a0', fontSize: '.85rem', cursor: 'pointer', userSelect: 'none' }}>
-              Probar estados (demo)
-            </summary>
-            <div className="state-buttons" role="group" style={{ marginTop: '.75rem' }} aria-label="Simular estados">
-              {Object.keys(mockStates).map(key => (
-                <button
-                  key={key}
-                  className={`state-button`}
-                  style={{ background: mockStates[key].color, color: '#fff' }}
-                  onClick={() => simulateState(key)}
-                >
-                  {MOOD_ES[key] || key}
-                </button>
-              ))}
-            </div>
-          </details>
-
+          <DemoMenu simulateState={simulateState} />
+          
           {/* Text analysis fallback */}
-          <details>
-            <summary style={{ color: '#7080a0', fontSize: '.85rem', cursor: 'pointer', userSelect: 'none' }}>
-              Analizar por texto
-            </summary>
-            <div style={{ marginTop: '.75rem', display: 'grid', gap: '.75rem' }}>
-              <textarea
-                value={transcript}
-                onChange={e => setTranscript(e.target.value)}
-                placeholder="Describe cómo estuvo tu mascota..."
-                style={inp.textarea}
-              />
-              <button className="state-button calm" onClick={handleTextAnalyze} style={{ justifyContent: 'center' }}>
-                Analizar con IA
-              </button>
-              {analysisStatus && <p className="voice-hint">{analysisStatus}</p>}
-              {analysisError  && <p className="voice-hint" style={{ color: '#fb7185' }}>{analysisError}</p>}
-            </div>
-          </details>
+          <TextAnalysisMenu 
+            transcript={transcript} 
+            setTranscript={setTranscript} 
+            handleTextAnalyze={handleTextAnalyze} 
+            analysisStatus={analysisStatus} 
+            analysisError={analysisError} 
+          />
 
           {/* Reset — acción destructiva, no es flujo principal */}
           <button onClick={handleReset} style={btn.dangerSm} title="Borrar perfil e historial">
