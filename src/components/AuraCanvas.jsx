@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect , memo} from 'react';
 
 const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=false }) => {
   const canvasRef = useRef(null);

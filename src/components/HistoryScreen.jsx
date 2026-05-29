@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState,useMemo } from 'react';
 import NavBackButton from './NavBackButton';
 import { MOOD_ES } from '../moods.js';
+import AuraCanvas from './AuraCanvas';
 
 function loadHistory() {
   try {
@@ -47,7 +48,22 @@ function EmptyState({ petName }) {
 
 export default function HistoryScreen({ petName, onBack, petId }) {
   const [selectedIdx, setSelectedIdx] = useState(null);
-  const history = loadHistory().filter(entry => entry.petId === petId);
+  const history = useMemo(() => {
+    return loadHistory()
+    .filter(entry => entry.petId === petId)
+    .map(entry => ({
+      ...entry,
+      canvasParams: {
+        color: entry.color,
+        secondaryColor: entry.secondaryColor,
+        energy: entry.energy ?? 0.5,
+        stress: entry.stress ?? 0.5,
+        warmth: entry.warmth ?? 0.5,
+        pattern: entry.pattern ?? 'flow',
+      }
+    
+    }));
+  }, [petId]);
 
   const toggleSelect = idx => setSelectedIdx(prev => (prev === idx ? null : idx));
 
@@ -78,7 +94,13 @@ export default function HistoryScreen({ petName, onBack, petId }) {
                     style={s.entryRow}
                     aria-expanded={isOpen}
                   >
-                    <AuraMini color={entry.color} />
+                    
+                    
+                    {/*<AuraMini color={entry.color} />*/}
+                    
+                    <AuraCanvas parameters=
+                      {entry.canvasParams}
+                    size={64}  reduction_parameter={64/340.0} reduceParticles={true}/>
 
                     <div style={s.entryInfo}>
                       <span style={s.entryMood}>
