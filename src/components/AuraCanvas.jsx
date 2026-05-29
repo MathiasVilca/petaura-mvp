@@ -1,6 +1,6 @@
 import { useRef, useEffect , memo} from 'react';
 
-const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=false }) => {
+const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=false, reduce_particle_multiplier=false, reducedBaseParticleCount=25, reducedBaseParticleMult=30 }) => {
   const canvasRef = useRef(null);
   const actualSize = Number(size) || 340;
 
@@ -14,8 +14,9 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
     const height = actualSize;
     canvas.width = width;
     canvas.height = height;
-    const particleBaseCount = reduce_particles? 25 : 55
-    const particleCount = particleBaseCount + Math.round(parameters.energy * 65 * reduction_parameter); // Ajustar cantidad de partículas según energía y reducción
+    const particleBaseCount = reduce_particles? reducedBaseParticleCount : 55
+    const particleBaseMultiplier = reduce_particle_multiplier? reducedBaseParticleMult : 65
+    const particleCount = particleBaseCount + Math.round(parameters.energy * particleBaseMultiplier * reduction_parameter); // Ajustar cantidad de partículas según energía y reducción
     const particles = Array.from({ length: particleCount }).map(() => {
       
       // 1. Calculamos la distancia inicial según el patrón activo
