@@ -9,6 +9,7 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
     const ctx = canvas.getContext('2d');
     let animationFrameId;
     let lastTime = 0;
+    let visible = false;
 
     const width = actualSize;
     const height = actualSize;
@@ -54,6 +55,7 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
     backgroundGradient.addColorStop(1, '#020617');
 
     const render = (time) => {
+      if (!visible) return;
       const t = time * 0.001;
       const dt = lastTime ? Math.min(0.05, (time - lastTime) * 0.001) : 0.016;
       lastTime = time;
@@ -129,9 +131,25 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
       animationFrameId = requestAnimationFrame(render);
     };
 
-    render(0);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible) {
+          lastTime = 0; // evita un dt gigante al reanudar
+          animationFrameId = requestAnimationFrame(render);
+        } else {
+          cancelAnimationFrame(animationFrameId);
+        }
+      },
+      { threshold: 0.1 }
+    );
 
-    return () => cancelAnimationFrame(animationFrameId);
+    observer.observe(canvas);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      observer.disconnect();
+    };
   }, [parameters]);
 
   return (
