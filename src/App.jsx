@@ -580,13 +580,13 @@ function App() {
               <div className="status-row">
                 <span className="status-label">Estado</span>
                 <span className="status-value" style={{ color: auraState.color }}>
-                  {auraState.mood}
+                  {MOOD_ES[auraState.mood] || auraState.mood}
                 </span>
               </div>
               {auraState.mood_secondary && auraState.mood_secondary != "null" && (<div className="status-row">
                 <span id="" className="status-label">Estado Secundario</span>
                 <span className="status-value" style={{ color: auraState.secondaryColor }}>
-                  {auraState.mood_secondary}
+                  {MOOD_ES[auraState.mood_secondary] || auraState.mood_secondary}
                 </span>
               </div>)}
               <div className="parameter-bar">
