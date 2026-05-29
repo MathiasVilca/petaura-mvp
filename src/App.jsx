@@ -5,6 +5,7 @@ import VoiceScreen       from './components/VoiceScreen';
 import LoadingScreen     from './components/LoadingScreen';
 import HistoryScreen     from './components/HistoryScreen';
 import PetDashboard      from './components/PetDashboard';
+import { PayloadInjector } from './components/PayloadInyector.jsx';
 import { analyzeTranscriptWithAI } from './ai/analyzeTranscript';
 import { MOODS , COLORS_MOOD, MOOD_ES ,mockStates } from './moods.js';
 
@@ -522,6 +523,8 @@ function App() {
             analysisStatus={analysisStatus} 
             analysisError={analysisError} 
           />
+
+          <PayloadInjector applyAnalysisResult={applyAnalysisResult} />
 
           {/* Reset — acción destructiva, no es flujo principal */}
           <button onClick={handleReset} style={btn.dangerSm} title="Borrar perfil e historial">
