@@ -34,7 +34,7 @@ export async function analyzeTranscriptWithAI(transcript, profile = '') {
   }
 }
 
-function normalizeAIResponse(payload) {
+export function normalizeAIResponse(payload) {
   if (!payload) {
     throw new Error('Respuesta de IA vacía');
   }

@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { normalizeAIResponse } from '../ai/analyzeTranscript';
 
 export const PayloadInjector = ({ applyAnalysisResult }) => {
   const [isOpen, setIsOpen] = useState(false);
   
   // Un JSON base de ejemplo para que no tengas que escribirlo de cero cada vez
   const [customPayload, setCustomPayload] = useState(`{
-  "mood": "anxious",
+  "mood": "calm",
   "mood_secondary": null,
   "energy": 0.5,
   "stress": 0.5,
@@ -22,8 +23,8 @@ export const PayloadInjector = ({ applyAnalysisResult }) => {
       // 1. Convertimos el texto a un objeto JavaScript real
       const parsedData = JSON.parse(customPayload);
       
-      // 2. Lo enviamos directamente a tu función procesadora
-      applyAnalysisResult(parsedData);
+      // 2. Se envia NORMALIZADO
+      applyAnalysisResult(normalizeAIResponse(parsedData));
       
       alert("Payload inyectado con éxito");
     } catch (error) {
