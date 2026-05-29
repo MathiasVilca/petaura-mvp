@@ -90,15 +90,15 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
           y = Math.sin(p.angle) * p.distance * 0.75;
           radius *= 0.9;
         } else if (parameters.pattern === 'pulse') {
-          const pulseRadius = Math.sin(t * 1.4 + p.offset) * 8 * parameters.energy + p.distance * 0.25;
+          const pulseRadius = Math.sin(t * 1.4 + p.offset) * 8 * reduction_parameter * parameters.energy + p.distance * 0.25;
           x = Math.cos(p.angle) * (p.distance * 0.45 + pulseRadius);
           y = Math.sin(p.angle) * (p.distance * 0.45 + pulseRadius);
           radius *= 1.1;
           p.angle += dt * 0.4;
         } else {
           //p.angle += dt * p.speed * 0.05;
-          x = Math.cos(p.angle) * (p.distance + Math.sin(t + p.offset) * 8 * parameters.energy);
-          y = Math.sin(p.angle) * (p.distance + Math.cos(t + p.offset) * 8 * parameters.energy);
+          x = Math.cos(p.angle) * (p.distance + Math.sin(t + p.offset) * 8 * reduction_parameter * parameters.energy);
+          y = Math.sin(p.angle) * (p.distance + Math.cos(t + p.offset) * 8 * reduction_parameter * parameters.energy);
           radius *= 1.05;
           p.distance += dt * (p.speed * 40);
           const maxDistance = width * 0.55 + p.radius*2;
@@ -155,7 +155,7 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
   return (
     <canvas 
       ref={canvasRef} 
-      style={{ width: actualSize, height: actualSize, borderRadius: '50%', boxShadow: '0 0 20px rgba(0,0,0,0.5)' }}
+      style={{ width: actualSize, height: actualSize, borderRadius: '50%', boxShadow: `0 0 ${Math.round(actualSize / 17)}px rgba(0,0,0,0.5)` }}
     />
   );
 };
