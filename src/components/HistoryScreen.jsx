@@ -110,7 +110,7 @@ export default function HistoryScreen({ petName, onBack, petId }) {
                         {' '}
                         { (entry.mood_secondary &&
                         <span style={s.entrySecondaryMood}>
-                          {" \u2022 "} {MOOD_ES[entry.mood_secondary] || entry.mood_secondary}
+                          {" \u2022 "} {MOOD_ES[entry.mood_secondary] || entry.mood_secondary.charAt(0).toUpperCase() + entry.mood_secondary.slice(1)}
                         </span>)
                         }
                         
