@@ -39,10 +39,10 @@ export function normalizeAIResponse(payload) {
     throw new Error('Respuesta de IA vacía');
   }
 
-  const mood = payload.mood?.toString().trim().charAt(0).toUpperCase() + payload.mood?.toLowerCase().trim().slice(1);
+  const mood = payload.mood?.toString().toLowerCase();
   const mood_secondary =
     typeof payload.mood_secondary === 'string' && payload.mood_secondary.trim().length > 0 && (payload.mood_secondary.toLowerCase().trim() != "null")
-      ? payload.mood_secondary.trim().charAt(0).toUpperCase() + payload.mood_secondary.toLowerCase().trim().slice(1)
+      ?  payload.mood_secondary.toLowerCase().trim()
       : undefined;
 
   return {
