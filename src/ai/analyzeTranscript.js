@@ -34,15 +34,15 @@ export async function analyzeTranscriptWithAI(transcript, profile = '') {
   }
 }
 
-function normalizeAIResponse(payload) {
+export function normalizeAIResponse(payload) {
   if (!payload) {
     throw new Error('Respuesta de IA vacía');
   }
 
   const mood = payload.mood?.toString().toLowerCase();
   const mood_secondary =
-    typeof payload.mood_secondary === 'string' && payload.mood_secondary.trim().length > 0
-      ? payload.mood_secondary.toLowerCase().trim()
+    typeof payload.mood_secondary === 'string' && payload.mood_secondary.trim().length > 0 && (payload.mood_secondary.toLowerCase().trim() != "null")
+      ?  payload.mood_secondary.toLowerCase().trim()
       : undefined;
 
   return {

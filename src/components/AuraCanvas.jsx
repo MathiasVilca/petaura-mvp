@@ -1,6 +1,6 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect , memo} from 'react';
 
-const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=false }) => {
+const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=false, reduce_particle_multiplier=false, reducedBaseParticleCount=25, reducedBaseParticleMult=30 }) => {
   const canvasRef = useRef(null);
   const actualSize = Number(size) || 340;
 
@@ -9,13 +9,15 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
     const ctx = canvas.getContext('2d');
     let animationFrameId;
     let lastTime = 0;
+    let visible = false;
 
     const width = actualSize;
     const height = actualSize;
     canvas.width = width;
     canvas.height = height;
-    const particleBaseCount = reduce_particles? 25 : 55
-    const particleCount = particleBaseCount + Math.round(parameters.energy * 65 * reduction_parameter); // Ajustar cantidad de partículas según energía y reducción
+    const particleBaseCount = reduce_particles? reducedBaseParticleCount : 55
+    const particleBaseMultiplier = reduce_particle_multiplier? reducedBaseParticleMult : 65
+    const particleCount = particleBaseCount + Math.round(parameters.energy * particleBaseMultiplier * reduction_parameter); // Ajustar cantidad de partículas según energía y reducción
     const particles = Array.from({ length: particleCount }).map(() => {
       
       // 1. Calculamos la distancia inicial según el patrón activo
@@ -53,6 +55,7 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
     backgroundGradient.addColorStop(1, '#020617');
 
     const render = (time) => {
+      if (!visible) return;
       const t = time * 0.001;
       const dt = lastTime ? Math.min(0.05, (time - lastTime) * 0.001) : 0.016;
       lastTime = time;
@@ -87,15 +90,15 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
           y = Math.sin(p.angle) * p.distance * 0.75;
           radius *= 0.9;
         } else if (parameters.pattern === 'pulse') {
-          const pulseRadius = Math.sin(t * 1.4 + p.offset) * 8 * parameters.energy + p.distance * 0.25;
+          const pulseRadius = Math.sin(t * 1.4 + p.offset) * 8 * reduction_parameter * parameters.energy + p.distance * 0.25;
           x = Math.cos(p.angle) * (p.distance * 0.45 + pulseRadius);
           y = Math.sin(p.angle) * (p.distance * 0.45 + pulseRadius);
           radius *= 1.1;
           p.angle += dt * 0.4;
         } else {
           //p.angle += dt * p.speed * 0.05;
-          x = Math.cos(p.angle) * (p.distance + Math.sin(t + p.offset) * 8 * parameters.energy);
-          y = Math.sin(p.angle) * (p.distance + Math.cos(t + p.offset) * 8 * parameters.energy);
+          x = Math.cos(p.angle) * (p.distance + Math.sin(t + p.offset) * 8 * reduction_parameter * parameters.energy);
+          y = Math.sin(p.angle) * (p.distance + Math.cos(t + p.offset) * 8 * reduction_parameter * parameters.energy);
           radius *= 1.05;
           p.distance += dt * (p.speed * 40);
           const maxDistance = width * 0.55 + p.radius*2;
@@ -128,15 +131,31 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
       animationFrameId = requestAnimationFrame(render);
     };
 
-    render(0);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible) {
+          lastTime = 0; // evita un dt gigante al reanudar
+          animationFrameId = requestAnimationFrame(render);
+        } else {
+          cancelAnimationFrame(animationFrameId);
+        }
+      },
+      { threshold: 0.1 }
+    );
 
-    return () => cancelAnimationFrame(animationFrameId);
+    observer.observe(canvas);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      observer.disconnect();
+    };
   }, [parameters]);
 
   return (
     <canvas 
       ref={canvasRef} 
-      style={{ width: actualSize, height: actualSize, borderRadius: '50%', boxShadow: '0 0 20px rgba(0,0,0,0.5)' }}
+      style={{ width: actualSize, height: actualSize, borderRadius: '50%', boxShadow: `0 0 ${Math.round(actualSize / 17)}px rgba(0,0,0,0.5)` }}
     />
   );
 };

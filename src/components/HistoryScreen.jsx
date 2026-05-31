@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState,useMemo } from 'react';
 import NavBackButton from './NavBackButton';
 import { MOOD_ES } from '../moods.js';
+import AuraCanvas from './AuraCanvas';
 
 function loadHistory() {
   try {
@@ -47,7 +48,22 @@ function EmptyState({ petName }) {
 
 export default function HistoryScreen({ petName, onBack, petId }) {
   const [selectedIdx, setSelectedIdx] = useState(null);
-  const history = loadHistory().filter(entry => entry.petId === petId);
+  const history = useMemo(() => {
+    return loadHistory()
+    .filter(entry => entry.petId === petId)
+    .map(entry => ({
+      ...entry,
+      canvasParams: {
+        color: entry.color,
+        secondaryColor: entry.secondaryColor,
+        energy: entry.energy ?? 0.5,
+        stress: entry.stress ?? 0.5,
+        warmth: entry.warmth ?? 0.5,
+        pattern: entry.pattern ?? 'flow',
+      }
+    
+    }));
+  }, [petId]);
 
   const toggleSelect = idx => setSelectedIdx(prev => (prev === idx ? null : idx));
 
@@ -78,12 +94,28 @@ export default function HistoryScreen({ petName, onBack, petId }) {
                     style={s.entryRow}
                     aria-expanded={isOpen}
                   >
-                    <AuraMini color={entry.color} />
+                    
+                    
+                    {/*<AuraMini color={entry.color} />*/}
+                    
+                    <AuraCanvas parameters=
+                      {entry.canvasParams}
+                    size={64}  reduction_parameter={64/340.0} reduce_particles={true} reduce_particle_multiplier={true} reducedBaseParticleCount={20}/>
 
                     <div style={s.entryInfo}>
-                      <span style={s.entryMood}>
+                      <span>
+                        <span style={s.entryMood}>
                         {MOOD_ES[entry.mood] || entry.mood}
+                        </span>
+                        {' '}
+                        { (entry.mood_secondary &&
+                        <span style={s.entrySecondaryMood}>
+                          {" \u2022 "} {MOOD_ES[entry.mood_secondary] || entry.mood_secondary.charAt(0).toUpperCase() + entry.mood_secondary.slice(1)}
+                        </span>)
+                        }
+                        
                       </span>
+                      
                       <span style={s.entryDate}>{formatDate(entry.date)}</span>
                     </div>
 
@@ -184,6 +216,7 @@ const s = {
   },
   entryInfo: { flex: 1, display: 'flex', flexDirection: 'column', gap: '.15rem' },
   entryMood: { color: '#e2e8f0', fontWeight: 700, fontSize: '1rem' },
+  entrySecondaryMood: { color: '#6B819E', fontWeight: 'normal', fontSize: '1rem' },
   entryDate: { color: '#8899b0', fontSize: '.8rem' },
   bars: { display: 'flex', flexDirection: 'column', gap: '.2rem', minWidth: 80 },
   detail: {

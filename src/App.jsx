@@ -5,6 +5,7 @@ import VoiceScreen       from './components/VoiceScreen';
 import LoadingScreen     from './components/LoadingScreen';
 import HistoryScreen     from './components/HistoryScreen';
 import PetDashboard      from './components/PetDashboard';
+import { PayloadInjector } from './components/PayloadInyector.jsx';
 import { analyzeTranscriptWithAI } from './ai/analyzeTranscript';
 import { MOODS , COLORS_MOOD, MOOD_ES ,mockStates } from './moods.js';
 
@@ -523,6 +524,8 @@ function App() {
             analysisError={analysisError} 
           />
 
+          <PayloadInjector applyAnalysisResult={applyAnalysisResult} />
+
           {/* Reset — acción destructiva, no es flujo principal */}
           <button onClick={handleReset} style={btn.dangerSm} title="Borrar perfil e historial">
             Resetear cuenta
@@ -577,13 +580,13 @@ function App() {
               <div className="status-row">
                 <span className="status-label">Estado</span>
                 <span className="status-value" style={{ color: auraState.color }}>
-                  {auraState.mood}
+                  {MOOD_ES[auraState.mood] || auraState.mood}
                 </span>
               </div>
               {auraState.mood_secondary && auraState.mood_secondary != "null" && (<div className="status-row">
                 <span id="" className="status-label">Estado Secundario</span>
                 <span className="status-value" style={{ color: auraState.secondaryColor }}>
-                  {auraState.mood_secondary}
+                  {MOOD_ES[auraState.mood_secondary] || auraState.mood_secondary}
                 </span>
               </div>)}
               <div className="parameter-bar">
