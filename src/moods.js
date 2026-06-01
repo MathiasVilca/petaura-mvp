@@ -45,12 +45,12 @@ export const mockStates = {
     actions: ['Mantén el ambiente sereno y con poca estimulación.', 'Ofrece un espacio cómodo para descansar.', 'Observa si prefiere contacto silencioso o distancia.'],
   },
   [MOODS.TIRED]: {
-    mood: MOODS.TIRED, color: COLORS_MOOD[MOODS.TIRED], energy: 0.22, stress: 0.36, warmth: 0.58, pattern: 'pulse',
+    mood: MOODS.TIRED, color: COLORS_MOOD[MOODS.TIRED], energy: 0.22, stress: 0.15, warmth: 0.58, pattern: 'pulse',
     description: 'Baja energía y ritmo lento. El aura se siente suave y agotada.',
     actions: ['Permítele descansar en su lugar favorito.', 'Reduce la actividad y evita estímulos intensos.', 'Asegura agua fresca y un ambiente calmado.'],
   },
   [MOODS.ANXIOUS]: {
-    mood: MOODS.ANXIOUS, color: COLORS_MOOD[MOODS.ANXIOUS], energy: 0.42, stress: 0.82, warmth: 0.44, pattern: 'orbit',
+    mood: MOODS.ANXIOUS, color: COLORS_MOOD[MOODS.ANXIOUS], energy: 0.7, stress: 0.82, warmth: 0.44, pattern: 'orbit',
     description: 'Nervioso y alerta. La aura se mueve con tensión y oscilaciones inquietas.',
     actions: ['Crea un espacio seguro y sin ruido.', 'Habla con voz suave y acaricia lentamente.', 'Observa sus señales de calma antes de acercarte.'],
   },
@@ -60,7 +60,7 @@ export const mockStates = {
     actions: ['Ofrece un juguete nuevo o una sesión de juegos corta.', 'Premia su entusiasmo con caricias y elogios.', 'Aprovecha para fortalecer el vínculo con actividades lúdicas.'],
   },
   [MOODS.AFFECTIONATE]: {
-    mood: MOODS.AFFECTIONATE, color: COLORS_MOOD[MOODS.AFFECTIONATE], energy: 0.62, stress: 0.18, warmth: 0.95, pattern: 'flow',
+    mood: MOODS.AFFECTIONATE, color: COLORS_MOOD[MOODS.AFFECTIONATE], energy: 0.45, stress: 0.18, warmth: 0.95, pattern: 'flow',
     description: 'Cariñoso y conectado. El aura es cálida, fluida y acogedora.',
     actions: ['Ofrece un abrazo suave o caricias cerca de su cabeza.', 'Permite tiempo de calidad en contacto tranquilo.', 'Refuerza la conexión con palabras suaves y cercanía.'],
   },
