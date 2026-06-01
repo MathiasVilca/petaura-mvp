@@ -65,7 +65,7 @@ export const mockStates = {
     actions: ['Ofrece un abrazo suave o caricias cerca de su cabeza.', 'Permite tiempo de calidad en contacto tranquilo.', 'Refuerza la conexión con palabras suaves y cercanía.'],
   },
   [MOODS.CURIOUS]: {
-    mood: MOODS.CURIOUS, color: COLORS_MOOD[MOODS.CURIOUS], energy: 0.68, stress: 0.28, warmth: 0.72, pattern: 'flow',
+    mood: MOODS.CURIOUS, color: COLORS_MOOD[MOODS.CURIOUS], energy: 0.68, stress: 0.28, warmth: 0.72, pattern: 'orbit',
     description: 'Interesado y atento. El aura se desplaza explorando con movimientos suaves.',
     actions: ['Deja objetos seguros para que los inspeccione con calma.', 'Observa su lenguaje corporal antes de interactuar.', 'Ofrece estímulos nuevos de manera gradual.'],
   },
