@@ -44,6 +44,8 @@ function normalizeAuraPayload(payload) {
     stress: 0.5,
     warmth: 0.5,
     pattern: 'flow',
+    // MVP: booleano. Futuro: nivel 0-2 con badge graduado + atenuación del aura.
+    health_concern: false,
     summary: 'No fue posible generar un análisis completo. Intenta con más contexto o revisa la entrada.',
     actions: [
       { action: 'Observa el comportamiento de tu mascota durante el día.', reason: 'El seguimiento diario ayuda a detectar cambios de salud a tiempo.' },
@@ -93,6 +95,7 @@ function normalizeAuraPayload(payload) {
       typeof payload.summary === 'string' && payload.summary.trim().length > 0
         ? payload.summary.trim()
         : defaultAura.summary,
+    health_concern: payload.health_concern === true,
     actions: normalizedActions,
   };
 }

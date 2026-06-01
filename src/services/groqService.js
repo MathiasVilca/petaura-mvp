@@ -8,6 +8,8 @@ const DEFAULT_AURA = {
   stress: 0.5,
   warmth: 0.5,
   pattern: 'flow',
+  // MVP: booleano. Futuro: nivel 0-2 con badge graduado + atenuación del aura.
+  health_concern: false,
   summary:
     'No fue posible generar un análisis completo. Intenta con más contexto o revisa la entrada.',
   actions: [
@@ -90,6 +92,7 @@ function normalizeAuraPayload(payload) {
     warmth: clampValue(payload.warmth, 0, 1) ?? DEFAULT_AURA.warmth,
     pattern,
     summary,
+    health_concern: payload.health_concern === true,
     actions,
   };
 }

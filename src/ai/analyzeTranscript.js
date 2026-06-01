@@ -53,6 +53,7 @@ export function normalizeAIResponse(payload) {
     warmth: parseNumber(payload.warmth),
     pattern: payload.pattern,
     summary: payload.summary,
+    health_concern: payload.health_concern === true,
     actions: Array.isArray(payload.actions) ? payload.actions : undefined,
   };
 }
