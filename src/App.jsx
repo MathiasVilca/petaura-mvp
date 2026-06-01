@@ -300,7 +300,8 @@ function App() {
     const next = {
       ...mockStates[mood],   // pattern siempre derivado del mood, el LLM ya no lo decide
       ...(result.energy      !== undefined      ? { energy:         result.energy }         : {}),
-      ...(result.stress      !== undefined      ? { stress:         result.stress }         : {}),
+      // Piso de stress: el LLM suele emitir 0 en moods positivos, lo que apaga el latido del aura
+      stress: Math.max(0.1, result.stress ?? mockStates[mood].stress),
       ...(result.warmth      !== undefined      ? { warmth:         result.warmth }         : {}),
       ...(result.description                    ? { description:    result.description }    : {}),
       ...(result.summary                        ? { summary:        result.summary }        : {}),
