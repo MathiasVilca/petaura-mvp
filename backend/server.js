@@ -108,29 +108,49 @@ app.post('/api/analyze', async (req, res) => {
   }
 
   const prompt = `Eres un asistente especializado en analizar el estado emocional y físico de una mascota.\n` +
-    `Recibes un perfil de mascota (nombre, especie, raza si se indica) y un relato en texto. Responde ÚNICAMENTE con un JSON válido, sin texto adicional ni markdown.\n\n` +
+    `Recibes un perfil (nombre, especie, raza si se indica) y un relato en texto. Responde ÚNICAMENTE con un JSON válido, sin texto adicional ni markdown.\n\n` +
     `Perfil de la mascota:\n${profile}\n\n` +
     `Relato del dueño:\n${transcript}\n\n` +
-    `Instrucciones importantes:\n` +
-    `- Si la mascota muestra más de una emoción claramente diferenciada, usa mood_secondary para la emoción secundaria. Si solo hay una emoción, omite mood_secondary o ponlo null.\n` +
-    `- Si se indicó la raza, personaliza las recomendaciones considerando las características típicas de esa raza.\n` +
-    `- Cada acción debe incluir un campo reason que explique brevemente por qué es útil para ESTA mascota en particular. El reason DEBE ser específico y personalizado, considerando:\n  * La raza de la mascota (si se indicó).\n  * El estado emocional observado en el relato.\n  * Las comportamientos específicos mencionados.\n  El reason NO puede comenzar con frases genéricas como "para ayudar a reducir", "es importante", o "es fundamental". Debe incluir detalles concretos sobre cómo la acción beneficia a ESTA mascota.\n\n` +
-    `Devuelve exactamente este formato JSON:\n` +
+    `ESTADOS VÁLIDOS (usa EXCLUSIVAMENTE estos valores en inglés; no inventes ni traduzcas variaciones):\n` +
+    `- ${MOODS.HAPPY}: contento y alegre de forma tranquila (activación media-baja).\n` +
+    `- ${MOODS.CALM}: relajado, sereno, en reposo.\n` +
+    `- ${MOODS.PLAYFUL}: con mucha energía y ganas de jugar AHORA.\n` +
+    `- ${MOODS.AFFECTIONATE}: busca contacto, cercanía y vínculo.\n` +
+    `- ${MOODS.CURIOUS}: explorando, atento e interesado en su entorno.\n` +
+    `- ${MOODS.ANXIOUS}: nervioso, inquieto o con miedo; incluye miedo agudo a un gatillo (ruidos, visitas, tormenta) — refléjalo con stress alto.\n` +
+    `- ${MOODS.TIRED}: baja energía, somnoliento, en descanso.\n` +
+    `- ${MOODS.IRRITABLE}: molesto o a la defensiva; gruñe, evita el contacto o muestra agresión.\n\n` +
+    `EMOCIÓN PRINCIPAL Y SECUNDARIA:\n` +
+    `- "mood" es SIEMPRE la emoción dominante del relato.\n` +
+    `- Asigna "mood_secondary" SOLO si el relato describe DOS estados claramente distintos Y compatibles en nivel de activación: no combines un estado muy activo (${MOODS.PLAYFUL}, ${MOODS.ANXIOUS}, ${MOODS.IRRITABLE}) con uno muy apático (${MOODS.TIRED}, ${MOODS.CALM}).\n` +
+    `- Si solo hay una emoción, o si dudas, "mood_secondary" DEBE ser null (el valor null de JSON, NUNCA el texto "null").\n` +
+    `- "mood" y "mood_secondary" no pueden ser iguales.\n\n` +
+    `SALUD (independiente de la emoción):\n` +
+    `- "health_concern": true SOLO si el relato menciona síntomas físicos: no come o no bebe, vómito, diarrea, cojera, temblores por malestar, letargo marcado o quejidos de dolor. En cualquier otro caso, false.\n` +
+    `- Una mascota puede estar p. ej. "${MOODS.TIRED}" con health_concern true.\n\n` +
+    `PARÁMETROS NUMÉRICOS (0.0 a 1.0, coherentes con el mood):\n` +
+    `- "energy": nivel de actividad (0 = aletargado, 1 = muy activo).\n` +
+    `- "stress": tensión o malestar (0 = relajado, 1 = muy alterado). El miedo agudo va aquí, alto.\n` +
+    `- "warmth": intensidad de presencia o confort físico percibido.\n\n` +
+    `RELATO VAGO:\n` +
+    `- Si el relato es insuficiente, responde mood "${MOODS.CALM}", mood_secondary null, health_concern false, e indícalo en summary.\n\n` +
+    `RECOMENDACIONES:\n` +
+    `- Cada acción incluye "reason" específico para ESTA mascota (raza si se indicó, estado emocional, conductas mencionadas). El reason NO puede empezar con frases genéricas ("para ayudar a reducir", "es importante", "es fundamental"); debe dar detalles concretos de por qué beneficia a esta mascota.\n\n` +
+    `Devuelve EXACTAMENTE este formato JSON:\n` +
     `{\n` +
-    `  "mood": "${MOODS.HAPPY}|${MOODS.CALM}|${MOODS.TIRED}|${MOODS.ANXIOUS}|${MOODS.PLAYFUL}|${MOODS.AFFECTIONATE}|${MOODS.CURIOUS}|${MOODS.SICK}",\n` +
-    `  "mood_secondary": "${MOODS.HAPPY}|${MOODS.CALM}|${MOODS.TIRED}|${MOODS.ANXIOUS}|${MOODS.PLAYFUL}|${MOODS.AFFECTIONATE}|${MOODS.CURIOUS}|${MOODS.SICK}|null",\n` +
-    `  "energy": 0.0-1.0,\n` +
-    `  "stress": 0.0-1.0,\n` +
-    `  "warmth": 0.0-1.0,\n` +
-    `  "pattern": "burst|orbit|flow|pulse",\n` +
-    `  "summary": "texto en español, máximo 2 oraciones describiendo el estado de la mascota",\n` +
+    `  "mood": "${MOODS.HAPPY}|${MOODS.CALM}|${MOODS.PLAYFUL}|${MOODS.AFFECTIONATE}|${MOODS.CURIOUS}|${MOODS.ANXIOUS}|${MOODS.TIRED}|${MOODS.IRRITABLE}",\n` +
+    `  "mood_secondary": null,\n` +
+    `  "energy": 0.0,\n` +
+    `  "stress": 0.0,\n` +
+    `  "warmth": 0.0,\n` +
+    `  "health_concern": false,\n` +
+    `  "summary": "texto en español, máximo 2 oraciones",\n` +
     `  "actions": [\n` +
     `    { "action": "acción concreta 1", "reason": "por qué es útil para esta mascota" },\n` +
     `    { "action": "acción concreta 2", "reason": "por qué es útil para esta mascota" },\n` +
     `    { "action": "acción concreta 3", "reason": "por qué es útil para esta mascota" }\n` +
     `  ]\n` +
-    `}\n` +
-    `Recuerda mantener solo uno de los estados en mood, si estan presentes dos, pon el más dominante en mood y el otro en mood_secondary, si hay más de dos emociones, pon las dos más prevalentes en mood y mood_secondary por separado, poniendo siempre la más dominante en mood.`;
+    `}`;
 
   try {
     console.log('Enviando petición a Groq API...');
