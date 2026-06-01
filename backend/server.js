@@ -129,8 +129,11 @@ app.post('/api/analyze', async (req, res) => {
     `- Si solo hay una emoción, o si dudas, "mood_secondary" DEBE ser null (el valor null de JSON, NUNCA el texto "null").\n` +
     `- "mood" y "mood_secondary" no pueden ser iguales.\n\n` +
     `SALUD (independiente de la emoción):\n` +
-    `- "health_concern": true SOLO si el relato menciona síntomas físicos: no come o no bebe, vómito, diarrea, cojera, temblores por malestar, letargo marcado o quejidos de dolor. En cualquier otro caso, false.\n` +
-    `- Una mascota puede estar p. ej. "${MOODS.TIRED}" con health_concern true.\n\n` +
+    `- "health_concern": true SOLO si el relato menciona síntomas físicos: pérdida o reducción del apetito (no come, apenas come o come menos de lo normal), no bebe, vómito, diarrea, cojera, temblores por malestar, letargo marcado o quejidos de dolor. En cualquier otro caso, false.\n` +
+    `- Una mascota puede estar p. ej. "${MOODS.TIRED}" con health_concern true.\n` +
+    `- Evalúa la salud SIEMPRE por separado de la emoción: aunque el mood dominante sea conductual (p. ej. ${MOODS.IRRITABLE} porque gruñó), si el relato TAMBIÉN menciona un síntoma físico real (apenas comió, vomitó, cojea, etc.), marca health_concern: true de todas formas.\n` +
+    `- Aislarse, irse a un rincón, esconderse o evitar el contacto son CONDUCTAS, no síntomas físicos: por sí solas NO activan health_concern.\n` +
+    `- Ejemplos: «apenas comió y estuvo decaído, aunque gruñó al acercarme» → health_concern true (apenas comió = apetito reducido = síntoma físico). «gruñó y se fue a un rincón toda la tarde, sin más» → health_concern false (solo conducta de aislamiento).\n\n` +
     `PARÁMETROS NUMÉRICOS (0.0 a 1.0, coherentes con el mood):\n` +
     `- "energy": nivel de actividad (0 = aletargado, 1 = muy activo).\n` +
     `- "stress": tensión o malestar (0 = relajado, 1 = muy alterado). El miedo agudo va aquí, alto.\n` +
