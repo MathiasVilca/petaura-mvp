@@ -136,7 +136,8 @@ app.post('/api/analyze', async (req, res) => {
     `- "stress": tensión o malestar (0 = relajado, 1 = muy alterado). El miedo agudo va aquí, alto.\n` +
     `- "warmth": intensidad de presencia o confort físico percibido.\n\n` +
     `RELATO VAGO:\n` +
-    `- Si el relato es insuficiente, responde mood "${MOODS.CALM}", mood_secondary null, health_concern false, e indícalo en summary.\n\n` +
+    `- Si el relato es insuficiente, responde mood "${MOODS.CALM}", mood_secondary null, health_concern false, e indícalo en summary.\n` +
+    `- Ante relatos genéricos sin conductas específicas («estuvo bien», «normal», «bien», «igual que siempre»), usa ${MOODS.CALM}, no ${MOODS.HAPPY} ni ningún estado con valencia positiva.\n\n` +
     `RECOMENDACIONES:\n` +
     `- Cada acción incluye "reason" específico para ESTA mascota (raza si se indicó, estado emocional, conductas mencionadas). El reason NO puede empezar con frases genéricas ("para ayudar a reducir", "es importante", "es fundamental"); debe dar detalles concretos de por qué beneficia a esta mascota.\n\n` +
     `Devuelve EXACTAMENTE este formato JSON:\n` +
