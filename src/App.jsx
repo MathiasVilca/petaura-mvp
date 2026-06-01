@@ -620,15 +620,7 @@ function App() {
                   <span style={{ width: `${auraState.stress * 100}%`, background: '#f97316' }} />
                 </div>
               </div>
-              <div className="parameter-bar">
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Calidez</span>
-                  <span style={{ color: '#8899b0', fontSize: '.82rem' }}>{Math.round(auraState.warmth * 100)}</span>
-                </div>
-                <div className="meter">
-                  <span style={{ width: `${auraState.warmth * 100}%`, background: '#facc15' }} />
-                </div>
-              </div>
+              {/* warmth es parámetro interno del motor de partículas — el usuario solo ve Energía y Estrés */}
             </section>
 
             <section className="detail-card" aria-labelledby="actions-title">
