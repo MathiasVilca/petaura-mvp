@@ -115,10 +115,10 @@ app.post('/api/analyze', async (req, res) => {
     `Perfil de la mascota:\n${profile}\n\n` +
     `Relato del dueño:\n${transcript}\n\n` +
     `ESTADOS VÁLIDOS (usa EXCLUSIVAMENTE estos valores en inglés; no inventes ni traduzcas variaciones):\n` +
-    `- ${MOODS.HAPPY}: afecto positivo expresado activamente (mueve la cola, busca interacción suave, muestra bienestar de forma visible) con activación media-baja. Diferente de ${MOODS.CALM}, que es reposo pasivo sin conducta particular.\n` +
+    `- ${MOODS.HAPPY}: afecto positivo y buen ánimo general SIN buscar contacto físico (alegre, mueve la cola, animado) con activación media-baja. Diferente de ${MOODS.CALM} (reposo pasivo sin conducta particular) y de ${MOODS.AFFECTIONATE} (que sí busca proximidad).\n` +
     `- ${MOODS.CALM}: relajado, sereno, en reposo.\n` +
     `- ${MOODS.PLAYFUL}: con mucha energía y ganas de jugar AHORA.\n` +
-    `- ${MOODS.AFFECTIONATE}: busca contacto, cercanía y vínculo.\n` +
+    `- ${MOODS.AFFECTIONATE}: busca activamente proximidad y contacto físico (se pega, viene a buscar al dueño, no se separa, pide caricias).\n` +
     `- ${MOODS.CURIOUS}: explorando, atento e interesado en su entorno.\n` +
     `- ${MOODS.ANXIOUS}: nervioso, inquieto o con miedo; incluye miedo agudo a un gatillo (ruidos, visitas, tormenta) — refléjalo con stress alto.\n` +
     `- ${MOODS.TIRED}: baja energía, somnoliento, en descanso.\n` +
