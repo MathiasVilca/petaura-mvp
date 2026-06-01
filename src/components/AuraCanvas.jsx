@@ -26,7 +26,7 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
         : (16 + Math.random() * 110)*(reduction_parameter);      // Distribución agrupada original para flow, orbit y pulse
 
       // 2. Asignar color primario o secundario (70/30) — UNA SOLA VEZ al crear la partícula
-      const isSecondary = parameters.secondaryColor && Math.random() < 0.3;
+      const isSecondary = parameters.secondaryColor && Math.random() < 0.25;
       const speed = parameters.pattern === 'burst'? (0.4 + Math.random() * 0.8 + parameters.energy * 1.4)*reduction_parameter :0.4 + Math.random() * 0.8 + parameters.energy * 1.4
 
       return {
