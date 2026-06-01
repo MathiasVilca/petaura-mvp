@@ -122,7 +122,6 @@ export default function HistoryScreen({ petName, onBack, petId }) {
                     <div style={s.bars}>
                       <MiniBar label="E" value={entry.energy} color={entry.color} />
                       <MiniBar label="S" value={entry.stress}  color="#f97316"     />
-                      <MiniBar label="C" value={entry.warmth}  color="#facc15"     />
                     </div>
 
                     <span style={{ color: '#7080a0', fontSize: '.8rem' }}>
