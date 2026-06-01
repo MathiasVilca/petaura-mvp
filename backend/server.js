@@ -124,10 +124,17 @@ app.post('/api/analyze', async (req, res) => {
     `- ${MOODS.TIRED}: baja energía, somnoliento, en descanso.\n` +
     `- ${MOODS.IRRITABLE}: molesto o a la defensiva por razones conductuales o de sobreestimulación (gruñe, evita el contacto, muestra agresión ante estímulos externos). NO usar cuando el aislamiento se debe a malestar físico — en ese caso usar ${MOODS.TIRED} o ${MOODS.ANXIOUS} según el nivel de activación, y marcar health_concern: true.\n\n` +
     `EMOCIÓN PRINCIPAL Y SECUNDARIA:\n` +
+    `- Muchos relatos describen DOS estados a la vez. Tu trabajo es detectar el secundario cuando exista, no solo el dominante.\n` +
     `- "mood" es SIEMPRE la emoción dominante del relato.\n` +
-    `- Asigna "mood_secondary" SOLO si el relato describe DOS estados claramente distintos Y compatibles en nivel de activación: no combines un estado muy activo (${MOODS.PLAYFUL}, ${MOODS.ANXIOUS}, ${MOODS.IRRITABLE}) con uno muy apático (${MOODS.TIRED}, ${MOODS.CALM}).\n` +
-    `- Si solo hay una emoción, o si dudas, "mood_secondary" DEBE ser null (el valor null de JSON, NUNCA el texto "null").\n` +
-    `- "mood" y "mood_secondary" no pueden ser iguales.\n\n` +
+    `- Asigna "mood_secondary" siempre que el relato mencione una SEGUNDA conducta o estado distinguible del dominante (dos verbos/momentos/matices distintos). Es lo normal, no la excepción.\n` +
+    `- Solo deja "mood_secondary" en null si el relato describe un único estado homogéneo, o si es vago/insuficiente.\n` +
+    `- Único par PROHIBIDO: dos estados físicamente imposibles en el MISMO instante (p. ej. ${MOODS.PLAYFUL} y ${MOODS.TIRED} a la vez, o ${MOODS.CALM} y ${MOODS.IRRITABLE} a la vez). Si los dos estados ocurren en momentos distintos del relato ("primero… luego…"), SÍ son un par válido.\n` +
+    `- Combinaciones de distinta valencia o activación SÍ son válidas si coexisten de forma realista (p. ej. ${MOODS.AFFECTIONATE} + ${MOODS.ANXIOUS} = busca contacto por miedo; ${MOODS.CURIOUS} + ${MOODS.ANXIOUS} = explora con cautela).\n` +
+    `- Ejemplos:\n` +
+    `  · «jugó un rato y después vino a echarse pegado a mí» → mood ${MOODS.PLAYFUL}, mood_secondary ${MOODS.AFFECTIONATE}.\n` +
+    `  · «olfateaba todo el jardín pero se sobresaltaba con cada ruido» → mood ${MOODS.CURIOUS}, mood_secondary ${MOODS.ANXIOUS}.\n` +
+    `  · «durmió toda la tarde, tranquilo» → mood ${MOODS.TIRED}, mood_secondary null (un solo estado).\n` +
+    `- "mood" y "mood_secondary" no pueden ser iguales. Cuando sea null, usa el valor null de JSON, NUNCA el texto "null".\n\n` +
     `SALUD (independiente de la emoción):\n` +
     `- "health_concern": true SOLO si el relato menciona síntomas físicos: pérdida o reducción del apetito (no come, apenas come o come menos de lo normal), no bebe, vómito, diarrea, cojera, temblores por malestar, letargo marcado o quejidos de dolor. En cualquier otro caso, false.\n` +
     `- Una mascota puede estar p. ej. "${MOODS.TIRED}" con health_concern true.\n` +
@@ -154,7 +161,7 @@ app.post('/api/analyze', async (req, res) => {
     `Devuelve EXACTAMENTE este formato JSON:\n` +
     `{\n` +
     `  "mood": "${MOODS.HAPPY}|${MOODS.CALM}|${MOODS.PLAYFUL}|${MOODS.AFFECTIONATE}|${MOODS.CURIOUS}|${MOODS.ANXIOUS}|${MOODS.TIRED}|${MOODS.IRRITABLE}",\n` +
-    `  "mood_secondary": null,\n` +
+    `  "mood_secondary": "otro de esos valores (distinto del principal) o null si hay un solo estado",\n` +
     `  "energy": 0.0,\n` +
     `  "stress": 0.0,\n` +
     `  "warmth": 0.0,\n` +
