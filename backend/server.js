@@ -122,7 +122,7 @@ app.post('/api/analyze', async (req, res) => {
     `- ${MOODS.CURIOUS}: explorando, atento e interesado en su entorno.\n` +
     `- ${MOODS.ANXIOUS}: nervioso, inquieto o con miedo; incluye miedo agudo a un gatillo (ruidos, visitas, tormenta) — refléjalo con stress alto.\n` +
     `- ${MOODS.TIRED}: baja energía, somnoliento, en descanso.\n` +
-    `- ${MOODS.IRRITABLE}: molesto o a la defensiva; gruñe, evita el contacto o muestra agresión.\n\n` +
+    `- ${MOODS.IRRITABLE}: molesto o a la defensiva por razones conductuales o de sobreestimulación (gruñe, evita el contacto, muestra agresión ante estímulos externos). NO usar cuando el aislamiento se debe a malestar físico — en ese caso usar ${MOODS.TIRED} o ${MOODS.ANXIOUS} según el nivel de activación, y marcar health_concern: true.\n\n` +
     `EMOCIÓN PRINCIPAL Y SECUNDARIA:\n` +
     `- "mood" es SIEMPRE la emoción dominante del relato.\n` +
     `- Asigna "mood_secondary" SOLO si el relato describe DOS estados claramente distintos Y compatibles en nivel de activación: no combines un estado muy activo (${MOODS.PLAYFUL}, ${MOODS.ANXIOUS}, ${MOODS.IRRITABLE}) con uno muy apático (${MOODS.TIRED}, ${MOODS.CALM}).\n` +
