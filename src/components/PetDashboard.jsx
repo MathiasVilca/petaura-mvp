@@ -1,7 +1,7 @@
 import AuraCanvas from './AuraCanvas';
 import { MOODS,COLORS_MOOD } from '../moods.js';
 
-const ALERT_MOODS = new Set([MOODS.SICK, MOODS.ANXIOUS]);
+const ALERT_MOODS = new Set([MOODS.ANXIOUS, MOODS.IRRITABLE]);
 
 function lastEntryForPet( petId, history) {
   // implementacion de filtrar history por petId
