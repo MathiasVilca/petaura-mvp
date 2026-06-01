@@ -142,12 +142,13 @@ app.post('/api/analyze', async (req, res) => {
     `- Si el relato es insuficiente, responde mood "${MOODS.CALM}", mood_secondary null, health_concern false, e indícalo en summary.\n` +
     `- Ante relatos genéricos sin conductas específicas («estuvo bien», «normal», «bien», «igual que siempre»), usa ${MOODS.CALM}, no ${MOODS.HAPPY} ni ningún estado con valencia positiva.\n\n` +
     `RESUMEN (summary):\n` +
-    `- Describe lo que VIVIÓ la mascota ese día, no lo que dijo el dueño. NUNCA menciones "el relato", "la transcripción" ni hagas meta-comentarios sobre la calidad o suficiencia del input.\n` +
+    `- Describe el MOMENTO que cuenta el relato, no el día completo. Es un registro puntual (el dueño puede registrar varias veces al día), así que NO uses "tuvo un día...". Usa el marco temporal del relato si lo hay ("esta mañana", "esta tarde", "hace un rato") o ninguno.\n` +
+    `- Describe lo que VIVIÓ la mascota, no lo que dijo el dueño. NUNCA menciones "el relato", "la transcripción" ni hagas meta-comentarios sobre la calidad o suficiencia del input.\n` +
     `- Usa el nombre de la mascota si aparece en el perfil.\n` +
     `- Tono cálido, empático y personal, como un observador que conoce a la mascota y se preocupa por el vínculo con su dueño.\n` +
     `- Máximo 2 oraciones, en español.\n` +
-    `- Ejemplo de tono correcto: "Tito tuvo un día tranquilo y equilibrado, sin señales de tensión ni de búsqueda activa de atención."\n` +
-    `- Ejemplo de tono INCORRECTO (no hacer): "El relato indica que la mascota estuvo normal."\n\n` +
+    `- Ejemplo correcto: "Tito estuvo muy cariñoso y pegajoso esta tarde, buscando compañía en el sofá."\n` +
+    `- Ejemplo INCORRECTO: "Tito tuvo un día muy cariñoso." (asume el día completo) o "El relato indica que la mascota estuvo normal." (meta-comentario).\n\n` +
     `RECOMENDACIONES:\n` +
     `- Cada acción incluye "reason" específico para ESTA mascota (raza si se indicó, estado emocional, conductas mencionadas). El reason NO puede empezar con frases genéricas ("para ayudar a reducir", "es importante", "es fundamental"); debe dar detalles concretos de por qué beneficia a esta mascota.\n\n` +
     `Devuelve EXACTAMENTE este formato JSON:\n` +
@@ -158,7 +159,7 @@ app.post('/api/analyze', async (req, res) => {
     `  "stress": 0.0,\n` +
     `  "warmth": 0.0,\n` +
     `  "health_concern": false,\n` +
-    `  "summary": "resumen cálido y personal del día de la mascota, máximo 2 oraciones en español",\n` +
+    `  "summary": "resumen cálido y personal del momento que cuenta el relato, máximo 2 oraciones en español",\n` +
     `  "actions": [\n` +
     `    { "action": "acción concreta 1", "reason": "por qué es útil para esta mascota" },\n` +
     `    { "action": "acción concreta 2", "reason": "por qué es útil para esta mascota" },\n` +
