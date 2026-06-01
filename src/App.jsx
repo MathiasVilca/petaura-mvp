@@ -568,7 +568,7 @@ function App() {
             style={{ cursor: 'pointer' }}
             aria-labelledby="aura-title"
           >
-            <h2 id="aura-title">Aura de hoy</h2>
+            <h2 id="aura-title">Aura</h2>
             <AuraCanvas parameters={auraState} />
             <p className="canvas-caption">{auraState.description}</p>
 
