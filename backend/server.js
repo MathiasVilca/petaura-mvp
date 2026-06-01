@@ -115,7 +115,7 @@ app.post('/api/analyze', async (req, res) => {
     `Perfil de la mascota:\n${profile}\n\n` +
     `Relato del dueño:\n${transcript}\n\n` +
     `ESTADOS VÁLIDOS (usa EXCLUSIVAMENTE estos valores en inglés; no inventes ni traduzcas variaciones):\n` +
-    `- ${MOODS.HAPPY}: contento y alegre de forma tranquila (activación media-baja).\n` +
+    `- ${MOODS.HAPPY}: afecto positivo expresado activamente (mueve la cola, busca interacción suave, muestra bienestar de forma visible) con activación media-baja. Diferente de ${MOODS.CALM}, que es reposo pasivo sin conducta particular.\n` +
     `- ${MOODS.CALM}: relajado, sereno, en reposo.\n` +
     `- ${MOODS.PLAYFUL}: con mucha energía y ganas de jugar AHORA.\n` +
     `- ${MOODS.AFFECTIONATE}: busca contacto, cercanía y vínculo.\n` +
