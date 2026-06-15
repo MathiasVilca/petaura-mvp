@@ -44,6 +44,8 @@ function normalizeAuraPayload(payload) {
     stress: 0.5,
     warmth: 0.5,
     pattern: 'flow',
+    // MVP: booleano. Futuro: nivel 0-2 con badge graduado + atenuación del aura.
+    health_concern: false,
     summary: 'No fue posible generar un análisis completo. Intenta con más contexto o revisa la entrada.',
     actions: [
       { action: 'Observa el comportamiento de tu mascota durante el día.', reason: 'El seguimiento diario ayuda a detectar cambios de salud a tiempo.' },
@@ -93,6 +95,7 @@ function normalizeAuraPayload(payload) {
       typeof payload.summary === 'string' && payload.summary.trim().length > 0
         ? payload.summary.trim()
         : defaultAura.summary,
+    health_concern: payload.health_concern === true,
     actions: normalizedActions,
   };
 }
@@ -108,29 +111,68 @@ app.post('/api/analyze', async (req, res) => {
   }
 
   const prompt = `Eres un asistente especializado en analizar el estado emocional y físico de una mascota.\n` +
-    `Recibes un perfil de mascota (nombre, especie, raza si se indica) y un relato en texto. Responde ÚNICAMENTE con un JSON válido, sin texto adicional ni markdown.\n\n` +
+    `Recibes un perfil (nombre, especie, raza si se indica) y un relato en texto. Responde ÚNICAMENTE con un JSON válido, sin texto adicional ni markdown.\n\n` +
     `Perfil de la mascota:\n${profile}\n\n` +
     `Relato del dueño:\n${transcript}\n\n` +
-    `Instrucciones importantes:\n` +
-    `- Si la mascota muestra más de una emoción claramente diferenciada, usa mood_secondary para la emoción secundaria. Si solo hay una emoción, omite mood_secondary o ponlo null.\n` +
-    `- Si se indicó la raza, personaliza las recomendaciones considerando las características típicas de esa raza.\n` +
-    `- Cada acción debe incluir un campo reason que explique brevemente por qué es útil para ESTA mascota en particular. El reason DEBE ser específico y personalizado, considerando:\n  * La raza de la mascota (si se indicó).\n  * El estado emocional observado en el relato.\n  * Las comportamientos específicos mencionados.\n  El reason NO puede comenzar con frases genéricas como "para ayudar a reducir", "es importante", o "es fundamental". Debe incluir detalles concretos sobre cómo la acción beneficia a ESTA mascota.\n\n` +
-    `Devuelve exactamente este formato JSON:\n` +
+    `ESTADOS VÁLIDOS (usa EXCLUSIVAMENTE estos valores en inglés; no inventes ni traduzcas variaciones):\n` +
+    `- ${MOODS.HAPPY}: afecto positivo y buen ánimo general SIN buscar contacto físico (alegre, mueve la cola, animado) con activación media-baja. Diferente de ${MOODS.CALM} (reposo pasivo sin conducta particular) y de ${MOODS.AFFECTIONATE} (que sí busca proximidad).\n` +
+    `- ${MOODS.CALM}: relajado, sereno, en reposo.\n` +
+    `- ${MOODS.PLAYFUL}: con mucha energía y ganas de jugar AHORA.\n` +
+    `- ${MOODS.AFFECTIONATE}: busca activamente proximidad y contacto físico (se pega, viene a buscar al dueño, no se separa, pide caricias).\n` +
+    `- ${MOODS.CURIOUS}: explorando, atento e interesado en su entorno.\n` +
+    `- ${MOODS.ANXIOUS}: nervioso, inquieto o con miedo; incluye miedo agudo a un gatillo (ruidos, visitas, tormenta) — refléjalo con stress alto.\n` +
+    `- ${MOODS.TIRED}: baja energía, somnoliento, en descanso.\n` +
+    `- ${MOODS.IRRITABLE}: molesto o a la defensiva por razones conductuales o de sobreestimulación (gruñe, evita el contacto, muestra agresión ante estímulos externos). NO usar cuando el aislamiento se debe a malestar físico — en ese caso usar ${MOODS.TIRED} o ${MOODS.ANXIOUS} según el nivel de activación, y marcar health_concern: true.\n\n` +
+    `EMOCIÓN PRINCIPAL Y SECUNDARIA:\n` +
+    `- Muchos relatos describen DOS estados a la vez. Tu trabajo es detectar el secundario cuando exista, no solo el dominante.\n` +
+    `- "mood" es SIEMPRE la emoción dominante del relato.\n` +
+    `- Asigna "mood_secondary" siempre que el relato mencione una SEGUNDA conducta o estado distinguible del dominante (dos verbos/momentos/matices distintos). Es lo normal, no la excepción.\n` +
+    `- Solo deja "mood_secondary" en null si el relato describe un único estado homogéneo, o si es vago/insuficiente.\n` +
+    `- Único par PROHIBIDO: dos estados físicamente imposibles en el MISMO instante (p. ej. ${MOODS.PLAYFUL} y ${MOODS.TIRED} a la vez, o ${MOODS.CALM} y ${MOODS.IRRITABLE} a la vez). Si los dos estados ocurren en momentos distintos del relato ("primero… luego…"), SÍ son un par válido.\n` +
+    `- Combinaciones de distinta valencia o activación SÍ son válidas si coexisten de forma realista (p. ej. ${MOODS.AFFECTIONATE} + ${MOODS.ANXIOUS} = busca contacto por miedo; ${MOODS.CURIOUS} + ${MOODS.ANXIOUS} = explora con cautela).\n` +
+    `- Ejemplos:\n` +
+    `  · «jugó un rato y después vino a echarse pegado a mí» → mood ${MOODS.PLAYFUL}, mood_secondary ${MOODS.AFFECTIONATE}.\n` +
+    `  · «olfateaba todo el jardín pero se sobresaltaba con cada ruido» → mood ${MOODS.CURIOUS}, mood_secondary ${MOODS.ANXIOUS}.\n` +
+    `  · «durmió toda la tarde, tranquilo» → mood ${MOODS.TIRED}, mood_secondary null (un solo estado).\n` +
+    `- "mood" y "mood_secondary" no pueden ser iguales. Cuando sea null, usa el valor null de JSON, NUNCA el texto "null".\n\n` +
+    `SALUD (independiente de la emoción):\n` +
+    `- "health_concern": true SOLO si el relato menciona síntomas físicos: pérdida o reducción del apetito (no come, apenas come o come menos de lo normal), no bebe, vómito, diarrea, cojera, temblores por malestar, letargo marcado o quejidos de dolor. En cualquier otro caso, false.\n` +
+    `- Una mascota puede estar p. ej. "${MOODS.TIRED}" con health_concern true.\n` +
+    `- Evalúa la salud SIEMPRE por separado de la emoción: aunque el mood dominante sea conductual (p. ej. ${MOODS.IRRITABLE} porque gruñó), si el relato TAMBIÉN menciona un síntoma físico real (apenas comió, vomitó, cojea, etc.), marca health_concern: true de todas formas.\n` +
+    `- Aislarse, irse a un rincón, esconderse o evitar el contacto son CONDUCTAS, no síntomas físicos: por sí solas NO activan health_concern.\n` +
+    `- Ejemplos: «apenas comió y estuvo decaído, aunque gruñó al acercarme» → health_concern true (apenas comió = apetito reducido = síntoma físico). «gruñó y se fue a un rincón toda la tarde, sin más» → health_concern false (solo conducta de aislamiento).\n\n` +
+    `PARÁMETROS NUMÉRICOS (0.0 a 1.0, coherentes con el mood):\n` +
+    `- "energy": nivel de actividad (0 = aletargado, 1 = muy activo).\n` +
+    `- "stress": tensión o malestar (0 = relajado, 1 = muy alterado). El miedo agudo va aquí, alto.\n` +
+    `- "warmth": intensidad de presencia o confort físico percibido.\n\n` +
+    `RELATO VAGO:\n` +
+    `- Si el relato es insuficiente, responde mood "${MOODS.CALM}", mood_secondary null, health_concern false, e indícalo en summary.\n` +
+    `- Ante relatos genéricos sin conductas específicas («estuvo bien», «normal», «bien», «igual que siempre»), usa ${MOODS.CALM}, no ${MOODS.HAPPY} ni ningún estado con valencia positiva.\n\n` +
+    `RESUMEN (summary):\n` +
+    `- Describe el MOMENTO que cuenta el relato, no el día completo. Es un registro puntual (el dueño puede registrar varias veces al día), así que NO uses "tuvo un día...". Usa el marco temporal del relato si lo hay ("esta mañana", "esta tarde", "hace un rato") o ninguno.\n` +
+    `- Describe lo que VIVIÓ la mascota, no lo que dijo el dueño. NUNCA menciones "el relato", "la transcripción" ni hagas meta-comentarios sobre la calidad o suficiencia del input.\n` +
+    `- Usa el nombre de la mascota si aparece en el perfil.\n` +
+    `- Tono cálido, empático y personal, como un observador que conoce a la mascota y se preocupa por el vínculo con su dueño.\n` +
+    `- Máximo 2 oraciones, en español.\n` +
+    `- Ejemplo correcto: "Tito estuvo muy cariñoso y pegajoso esta tarde, buscando compañía en el sofá."\n` +
+    `- Ejemplo INCORRECTO: "Tito tuvo un día muy cariñoso." (asume el día completo) o "El relato indica que la mascota estuvo normal." (meta-comentario).\n\n` +
+    `RECOMENDACIONES:\n` +
+    `- Cada acción incluye "reason" específico para ESTA mascota (raza si se indicó, estado emocional, conductas mencionadas). El reason NO puede empezar con frases genéricas ("para ayudar a reducir", "es importante", "es fundamental"); debe dar detalles concretos de por qué beneficia a esta mascota.\n\n` +
+    `Devuelve EXACTAMENTE este formato JSON:\n` +
     `{\n` +
-    `  "mood": "${MOODS.HAPPY}|${MOODS.CALM}|${MOODS.TIRED}|${MOODS.ANXIOUS}|${MOODS.PLAYFUL}|${MOODS.AFFECTIONATE}|${MOODS.CURIOUS}|${MOODS.SICK}",\n` +
-    `  "mood_secondary": "${MOODS.HAPPY}|${MOODS.CALM}|${MOODS.TIRED}|${MOODS.ANXIOUS}|${MOODS.PLAYFUL}|${MOODS.AFFECTIONATE}|${MOODS.CURIOUS}|${MOODS.SICK}|null",\n` +
-    `  "energy": 0.0-1.0,\n` +
-    `  "stress": 0.0-1.0,\n` +
-    `  "warmth": 0.0-1.0,\n` +
-    `  "pattern": "burst|orbit|flow|pulse",\n` +
-    `  "summary": "texto en español, máximo 2 oraciones describiendo el estado de la mascota",\n` +
+    `  "mood": "${MOODS.HAPPY}|${MOODS.CALM}|${MOODS.PLAYFUL}|${MOODS.AFFECTIONATE}|${MOODS.CURIOUS}|${MOODS.ANXIOUS}|${MOODS.TIRED}|${MOODS.IRRITABLE}",\n` +
+    `  "mood_secondary": "otro de esos valores (distinto del principal) o null si hay un solo estado",\n` +
+    `  "energy": 0.0,\n` +
+    `  "stress": 0.0,\n` +
+    `  "warmth": 0.0,\n` +
+    `  "health_concern": false,\n` +
+    `  "summary": "resumen cálido y personal del momento que cuenta el relato, máximo 2 oraciones en español",\n` +
     `  "actions": [\n` +
     `    { "action": "acción concreta 1", "reason": "por qué es útil para esta mascota" },\n` +
     `    { "action": "acción concreta 2", "reason": "por qué es útil para esta mascota" },\n` +
     `    { "action": "acción concreta 3", "reason": "por qué es útil para esta mascota" }\n` +
     `  ]\n` +
-    `}\n` +
-    `Recuerda mantener solo uno de los estados en mood, si estan presentes dos, pon el más dominante en mood y el otro en mood_secondary, si hay más de dos emociones, pon las dos más prevalentes en mood y mood_secondary por separado, poniendo siempre la más dominante en mood.`;
+    `}`;
 
   try {
     console.log('Enviando petición a Groq API...');

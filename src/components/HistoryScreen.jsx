@@ -20,6 +20,14 @@ function formatDate(dateStr) {
   }
 }
 
+function formatTime(timestamp) {
+  try {
+    return new Date(timestamp).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return '';
+  }
+}
+
 function AuraMini({ color, size = 64 }) {
   return (
     <div
@@ -49,10 +57,14 @@ function EmptyState({ petName }) {
 export default function HistoryScreen({ petName, onBack, petId }) {
   const [selectedIdx, setSelectedIdx] = useState(null);
   const history = useMemo(() => {
-    return loadHistory()
-    .filter(entry => entry.petId === petId)
-    .map(entry => ({
+    const filtered = loadHistory().filter(entry => entry.petId === petId);
+    // Modelo A: varios registros por día. Marcamos las fechas con más de una entrada
+    // para mostrar la hora y poder distinguir mañana/tarde/noche.
+    const dateCounts = {};
+    filtered.forEach(e => { dateCounts[e.date] = (dateCounts[e.date] || 0) + 1; });
+    return filtered.map(entry => ({
       ...entry,
+      showTime: dateCounts[entry.date] > 1,
       canvasParams: {
         color: entry.color,
         secondaryColor: entry.secondaryColor,
@@ -61,7 +73,7 @@ export default function HistoryScreen({ petName, onBack, petId }) {
         warmth: entry.warmth ?? 0.5,
         pattern: entry.pattern ?? 'flow',
       }
-    
+
     }));
   }, [petId]);
 
@@ -116,13 +128,15 @@ export default function HistoryScreen({ petName, onBack, petId }) {
                         
                       </span>
                       
-                      <span style={s.entryDate}>{formatDate(entry.date)}</span>
+                      <span style={s.entryDate}>
+                        {formatDate(entry.date)}
+                        {entry.showTime && entry.timestamp ? ` · ${formatTime(entry.timestamp)}` : ''}
+                      </span>
                     </div>
 
                     <div style={s.bars}>
                       <MiniBar label="E" value={entry.energy} color={entry.color} />
                       <MiniBar label="S" value={entry.stress}  color="#f97316"     />
-                      <MiniBar label="C" value={entry.warmth}  color="#facc15"     />
                     </div>
 
                     <span style={{ color: '#7080a0', fontSize: '.8rem' }}>

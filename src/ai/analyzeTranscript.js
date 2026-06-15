@@ -51,8 +51,8 @@ export function normalizeAIResponse(payload) {
     energy: parseNumber(payload.energy),
     stress: parseNumber(payload.stress),
     warmth: parseNumber(payload.warmth),
-    pattern: payload.pattern,
     summary: payload.summary,
+    health_concern: payload.health_concern === true,
     actions: Array.isArray(payload.actions) ? payload.actions : undefined,
   };
 }
@@ -64,11 +64,18 @@ function parseNumber(value) {
 
 function keywordAnalyzeTranscript(text) {
   const lower = text.toLowerCase();
+  // Síntomas físicos → tired + health_concern (sick salió del enum de moods)
+  if (/\b(enfermo|vomit|diarrea|cojea|coj[ea]|temblor|deca[ií]do|let[aá]rgic|no come|no bebe)\b/.test(lower)) {
+    return { mood: MOODS.TIRED, health_concern: true };
+  }
+  if (/\b(gru[ñn]|mord|agresiv|defensiv|enojad|molest|ara[ñn])\b/.test(lower)) {
+    return { mood: MOODS.IRRITABLE };
+  }
   if (/\b(feliz|activo|alegre|energ[ií]a|jueg|salt|contento|contenta)\b/.test(lower)) {
     return { mood: MOODS.HAPPY };
   }
-  if (/\b(enfermo|deca[ií]do|triste|let[aá]rgic|apat[ií]a|quieto|silencioso)\b/.test(lower)) {
-    return { mood: MOODS.SICK };
+  if (/\b(triste|apat[ií]a|quieto|silencioso|cansad|dormi)\b/.test(lower)) {
+    return { mood: MOODS.TIRED };
   }
   if (/\b(tranquilo|relajado|sereno|calmo|descansado|paz)\b/.test(lower)) {
     return { mood: MOODS.CALM };

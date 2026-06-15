@@ -93,6 +93,7 @@ function saveAuraToHistory(auraState,petId) {
       pattern:     auraState.pattern,
       description: auraState.description,
       summary:     auraState.summary ?? null,
+      health_concern: auraState.health_concern ?? false,
       actions:     auraState.actions,
     };
     const current = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
@@ -291,16 +292,23 @@ function App() {
 
   const applyAnalysisResult = (result) => {
     const mood = result.mood && mockStates[result.mood] ? result.mood : MOODS.CALM;
+    // Solo acepta secondary si existe en COLORS_MOOD y no duplica el primario
+    const secondary =
+      result.mood_secondary && result.mood_secondary !== mood && COLORS_MOOD[result.mood_secondary]
+        ? result.mood_secondary
+        : null;
     const next = {
-      ...mockStates[mood],
+      ...mockStates[mood],   // pattern siempre derivado del mood, el LLM ya no lo decide
       ...(result.energy      !== undefined      ? { energy:         result.energy }         : {}),
-      ...(result.stress      !== undefined      ? { stress:         result.stress }         : {}),
+      // Piso de stress: el LLM suele emitir 0 en moods positivos, lo que apaga el latido del aura
+      stress: Math.max(0.1, result.stress ?? mockStates[mood].stress),
       ...(result.warmth      !== undefined      ? { warmth:         result.warmth }         : {}),
-      ...(result.pattern                        ? { pattern:        result.pattern }        : {}),
       ...(result.description                    ? { description:    result.description }    : {}),
       ...(result.summary                        ? { summary:        result.summary }        : {}),
-      ...(result.mood_secondary                 ? { mood_secondary: result.mood_secondary } : { mood_secondary: null }),
-      ...(result.mood_secondary                 ? { secondaryColor: COLORS_MOOD[result.mood_secondary] } : { secondaryColor: null }),
+      mood_secondary: secondary,
+      secondaryColor: secondary ? COLORS_MOOD[secondary] : null,
+      // MVP: booleano. Futuro: nivel 0-2 con badge graduado + atenuación del aura.
+      health_concern: result.health_concern === true,
       ...(Array.isArray(result.actions)         ? { actions:        result.actions }        : {}),
     };
     setAuraState(next);
@@ -400,6 +408,7 @@ function App() {
           summary:        last.summary        ?? null,
           mood_secondary: last.mood_secondary ?? null,
           secondaryColor: last.mood_secondary ? COLORS_MOOD[last.mood_secondary] : null,
+          health_concern: last.health_concern ?? false,
           actions:        Array.isArray(last.actions) ? last.actions : mockStates[mood].actions,
         });
       } else {
@@ -559,9 +568,14 @@ function App() {
             style={{ cursor: 'pointer' }}
             aria-labelledby="aura-title"
           >
-            <h2 id="aura-title">Aura de hoy</h2>
+            <h2 id="aura-title">Aura</h2>
             <AuraCanvas parameters={auraState} />
             <p className="canvas-caption">{auraState.description}</p>
+
+            {/* MVP: badge booleano. Futuro: nivel 0-2 con atenuación del aura. */}
+            {auraState.health_concern && (
+              <p style={healthBadge}>⚠ Posible problema de salud — obsérvalo de cerca</p>
+            )}
 
             {showSummary && auraState.summary && (
               <div style={summaryOverlay}>
@@ -607,15 +621,7 @@ function App() {
                   <span style={{ width: `${auraState.stress * 100}%`, background: '#f97316' }} />
                 </div>
               </div>
-              <div className="parameter-bar">
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Calidez</span>
-                  <span style={{ color: '#8899b0', fontSize: '.82rem' }}>{Math.round(auraState.warmth * 100)}</span>
-                </div>
-                <div className="meter">
-                  <span style={{ width: `${auraState.warmth * 100}%`, background: '#facc15' }} />
-                </div>
-              </div>
+              {/* warmth es parámetro interno del motor de partículas — el usuario solo ve Energía y Estrés */}
             </section>
 
             <section className="detail-card" aria-labelledby="actions-title">
@@ -735,6 +741,19 @@ const ac = {
   card:   { background: 'rgba(148,163,184,.06)', border: '1px solid rgba(148,163,184,.1)', borderRadius: 12, padding: '.6rem .85rem' },
   action: { margin: 0, color: '#cbd5e1', fontSize: '.88rem', lineHeight: 1.55, fontWeight: 500 },
   reason: { margin: '.3rem 0 0', color: '#7080a0', fontSize: '.8rem', lineHeight: 1.5 },
+};
+
+/* ── Health concern badge (MVP booleano) ────────────────────── */
+const healthBadge = {
+  margin: '.6rem auto 0',
+  display: 'inline-block',
+  padding: '.4rem .9rem',
+  borderRadius: 999,
+  background: 'rgba(220,38,38,.12)',
+  border: '1px solid rgba(220,38,38,.4)',
+  color: '#fca5a5',
+  fontSize: '.82rem',
+  fontWeight: 600,
 };
 
 /* ── Summary overlay (F2) ───────────────────────────────────── */
