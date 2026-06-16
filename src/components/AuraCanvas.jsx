@@ -112,6 +112,9 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
           }
         }
 
+        x += (Math.random() - 0.5) * 2.0 * parameters.stress;
+        y += (Math.random() - 0.5) * 2.0 * parameters.stress;
+
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         
