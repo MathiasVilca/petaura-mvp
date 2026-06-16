@@ -122,7 +122,8 @@ app.post('/api/analyze', async (req, res) => {
     `- ${MOODS.CURIOUS}: explorando, atento e interesado en su entorno.\n` +
     `- ${MOODS.ANXIOUS}: nervioso, inquieto o con miedo; incluye miedo agudo a un gatillo (ruidos, visitas, tormenta) — refléjalo con stress alto.\n` +
     `- ${MOODS.TIRED}: baja energía, somnoliento, en descanso.\n` +
-    `- ${MOODS.IRRITABLE}: molesto o a la defensiva por razones conductuales o de sobreestimulación (gruñe, evita el contacto, muestra agresión ante estímulos externos). NO usar cuando el aislamiento se debe a malestar físico — en ese caso usar ${MOODS.TIRED} o ${MOODS.ANXIOUS} según el nivel de activación, y marcar health_concern: true.\n\n` +
+    `- ${MOODS.IRRITABLE}: molesto o a la defensiva por razones conductuales o de sobreestimulación (gruñe, evita el contacto, muestra agresión ante estímulos externos). NO usar cuando el aislamiento se debe a malestar físico — en ese caso usar ${MOODS.TIRED} o ${MOODS.ANXIOUS} según el nivel de activación, y marcar health_concern: true.\n` +
+    `- Diferenciación clave ${MOODS.HAPPY} vs ${MOODS.PLAYFUL}: «Está persiguiéndome por la casa ladrando y poniendo las patas en mí» → mood: ${MOODS.PLAYFUL}, mood_secondary: ${MOODS.AFFECTIONATE}, health_concern: false. Conducta activa y dirigida hacia el dueño = ${MOODS.PLAYFUL}, no ${MOODS.HAPPY}. Cuando hay acción motora iniciada por el animal hacia una persona, el estado es ${MOODS.PLAYFUL}.\n\n` +
     `EMOCIÓN PRINCIPAL Y SECUNDARIA:\n` +
     `- Muchos relatos describen DOS estados a la vez. Tu trabajo es detectar el secundario cuando exista, no solo el dominante.\n` +
     `- "mood" es SIEMPRE la emoción dominante del relato.\n` +
@@ -140,7 +141,9 @@ app.post('/api/analyze', async (req, res) => {
     `- Una mascota puede estar p. ej. "${MOODS.TIRED}" con health_concern true.\n` +
     `- Evalúa la salud SIEMPRE por separado de la emoción: aunque el mood dominante sea conductual (p. ej. ${MOODS.IRRITABLE} porque gruñó), si el relato TAMBIÉN menciona un síntoma físico real (apenas comió, vomitó, cojea, etc.), marca health_concern: true de todas formas.\n` +
     `- Aislarse, irse a un rincón, esconderse o evitar el contacto son CONDUCTAS, no síntomas físicos: por sí solas NO activan health_concern.\n` +
-    `- Ejemplos: «apenas comió y estuvo decaído, aunque gruñó al acercarme» → health_concern true (apenas comió = apetito reducido = síntoma físico). «gruñó y se fue a un rincón toda la tarde, sin más» → health_concern false (solo conducta de aislamiento).\n\n` +
+    `- Ejemplos: «apenas comió y estuvo decaído, aunque gruñó al acercarme» → health_concern true (apenas comió = apetito reducido = síntoma físico). «gruñó y se fue a un rincón toda la tarde, sin más» → health_concern false (solo conducta de aislamiento).\n` +
+    `- «Está jadeando y echada en su cama, recién llegamos del parque» → mood: ${MOODS.TIRED}, mood_secondary: null, health_concern: false. El jadeo post-ejercicio es termorregulación normal — no es estrés ni enfermedad.\n` +
+    `- «Come bien, jugó normal, pero cojea de la pata delantera» → mood: ${MOODS.PLAYFUL}, mood_secondary: null, health_concern: true. La salud es independiente del estado emocional: puede estar ${MOODS.PLAYFUL} y tener health_concern: true si hay síntoma físico.\n\n` +
     `PARÁMETROS NUMÉRICOS (0.0 a 1.0, coherentes con el mood):\n` +
     `- "energy": nivel de actividad (0 = aletargado, 1 = muy activo).\n` +
     `- "stress": tensión o malestar (0 = relajado, 1 = muy alterado). El miedo agudo va aquí, alto.\n` +
@@ -153,7 +156,8 @@ app.post('/api/analyze', async (req, res) => {
     `- Describe lo que VIVIÓ la mascota, no lo que dijo el dueño. NUNCA menciones "el relato", "la transcripción" ni hagas meta-comentarios sobre la calidad o suficiencia del input.\n` +
     `- Usa el nombre de la mascota si aparece en el perfil.\n` +
     `- Tono cálido, empático y personal, como un observador que conoce a la mascota y se preocupa por el vínculo con su dueño.\n` +
-    `- Máximo 2 oraciones, en español.\n` +
+    `- 3-4 oraciones. NO describas ni parafrasees el relato — interpreta qué significa el comportamiento, qué dice del vínculo con el dueño o qué contexto veterinario es útil. En español.\n` +
+    `- Si el perfil incluye raza, agrega UNA oración final conectando el comportamiento observado con una característica conocida de esa raza. Si no hay raza o es mestizo/criollo, el summary funciona igual sin ella.\n` +
     `- Ejemplo correcto: "Tito estuvo muy cariñoso y pegajoso esta tarde, buscando compañía en el sofá."\n` +
     `- Ejemplo INCORRECTO: "Tito tuvo un día muy cariñoso." (asume el día completo) o "El relato indica que la mascota estuvo normal." (meta-comentario).\n\n` +
     `RECOMENDACIONES:\n` +
@@ -194,7 +198,7 @@ app.post('/api/analyze', async (req, res) => {
           },
         ],
         temperature: 0.3,
-        max_tokens: 600,
+        max_tokens: 800,
       }),
     });
 
