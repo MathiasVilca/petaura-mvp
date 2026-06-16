@@ -11,7 +11,8 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 function clampValue(value, min = 0, max = 1) {
   const number = Number(value);
@@ -221,6 +222,109 @@ app.post('/api/analyze', async (req, res) => {
   } catch (error) {
     console.error('Error en backend Groq:', error);
     return res.status(500).json({ error: 'Error interno del servidor', details: String(error) });
+  }
+});
+
+app.post('/api/analyze-photo', async (req, res) => {
+  try {
+    const { imageBase64, mimeType, profileText, contextText } = req.body;
+
+    if (!imageBase64 || !mimeType) {
+      return res.status(400).json({ error: 'imageBase64 y mimeType son requeridos' });
+    }
+    if (!GROQ_API_KEY) {
+      return res.status(500).json({ error: 'Falta GROQ_API_KEY en el backend' });
+    }
+
+    const imageUrl = `data:${mimeType};base64,${imageBase64}`;
+    const contextSection = contextText?.trim()
+      ? `\nContexto del dueño: "${contextText.trim()}"`
+      : '';
+
+    const prompt = `Eres un experto en comportamiento canino y bienestar animal.
+Analiza la foto adjunta de un perro y determina su estado emocional actual.
+
+Perfil: ${profileText}${contextSection}
+
+INSTRUCCIÓN IMPORTANTE: La palabra JSON debe aparecer en tu respuesta.
+Responde ÚNICAMENTE con un objeto JSON válido, sin texto antes ni después.
+
+PROCESO DE ANÁLISIS:
+1. Primero observa las señales físicas VISIBLES: postura corporal, posición de cola
+   (si visible), posición de orejas (si visibles), expresión facial, nivel de
+   actividad, contexto del entorno, contacto físico con personas
+2. Luego infiere el estado emocional a partir de esas señales
+3. Si el dueño proporcionó contexto textual, úsalo para resolver ambigüedades
+4. Si las señales son ambiguas o la imagen no es clara, usa "calm" como estado base
+
+REGLA CRÍTICA DEL JADEO: si ves boca abierta con lengua fuera:
+- Con contexto de ejercicio reciente → mood: "tired", health_concern: false
+- Sin contexto → mood: "tired", health_concern: false (NUNCA asignar "anxious" solo por jadeo)
+- Con señales adicionales de estrés claras → mood: "anxious"
+
+REGLA DE health_concern (INDEPENDIENTE del mood):
+- true: cojera visible, herida, postura de dolor, inflamación observable
+- false: jadeo solo, comportamiento emocional, mal humor
+- Un perro puede estar "playful" con health_concern: true si hay síntoma físico visible
+
+MOODS disponibles (usar exactamente estos valores):
+happy | playful | affectionate | calm | tired | anxious | curious | irritable
+
+El campo summary debe tener 3-4 oraciones. NO describas la foto.
+INTERPRETA qué significa lo que ves: qué dice del estado emocional del animal,
+qué dice del vínculo con el dueño, o qué contexto es útil para el dueño.
+Usa el nombre de la mascota. Si hay incertidumbre por imagen poco clara, menciónala.
+Nunca termines el summary con una recomendación.
+
+Responde con este JSON:
+{
+  "mood": "estado principal",
+  "mood_secondary": "segundo estado o null",
+  "energy": 0.0,
+  "stress": 0.0,
+  "warmth": 0.0,
+  "health_concern": false,
+  "summary": "3-4 oraciones interpretando el estado emocional",
+  "actions": [{"action": "qué hacer", "reason": "por qué"}]
+}`;
+
+    const response = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              { type: 'image_url', image_url: { url: imageUrl } },
+            ],
+          },
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.3,
+        max_tokens: 800,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Groq vision API error:', errorData);
+      return res.status(response.status).json({ error: 'Error del modelo de visión', details: errorData });
+    }
+
+    const data = await response.json();
+    const rawText = data.choices?.[0]?.message?.content || '';
+    const parsed = parseOutputText(rawText);
+    return res.json(normalizeAuraPayload(parsed));
+
+  } catch (error) {
+    console.error('Error en /api/analyze-photo:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
