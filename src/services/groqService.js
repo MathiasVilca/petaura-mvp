@@ -1,6 +1,9 @@
 const BACKEND_API_URL =
   import.meta.env.VITE_BACKEND_URL?.trim() || '/api/analyze';
 
+const BACKEND_PHOTO_URL = (import.meta.env.VITE_BACKEND_URL?.trim() || '/api/analyze')
+  .replace(/\/analyze$/, '') + '/analyze-photo';
+
 const DEFAULT_AURA = {
   mood: 'calm',
   mood_secondary: null,
@@ -125,4 +128,20 @@ export async function generateAura(profile, transcript) {
 
   const payload = await response.json();
   return normalizeAuraPayload(payload);
+}
+
+export async function generateAuraFromPhoto({ imageBase64, mimeType, profileText, contextText }) {
+  const response = await fetch(BACKEND_PHOTO_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageBase64, mimeType, profileText, contextText }),
+  });
+
+  if (!response.ok) {
+    const bodyText = await response.text();
+    throw new Error(`Error en backend: ${response.status} ${response.statusText} - ${bodyText}`);
+  }
+
+  const data = await response.json();
+  return normalizeAuraPayload(data);
 }
