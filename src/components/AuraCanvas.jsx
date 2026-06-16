@@ -1,4 +1,4 @@
-import { useRef, useEffect , memo} from 'react';
+import { useRef, useEffect } from 'react';
 
 const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=false, reduce_particle_multiplier=false, reducedBaseParticleCount=25, reducedBaseParticleMult=30 }) => {
   const canvasRef = useRef(null);
@@ -106,7 +106,7 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
           fade = Math.min(1, p.distance / 30);
           
           if (p.distance > maxDistance) {
-            p.size=(1.2 + Math.random() * 2.8 + parameters.warmth * 2)*(reduction_parameter**0.5),
+            p.radius=(1.2 + Math.random() * 2.8 + parameters.warmth * 2)*(reduction_parameter**0.5);
             p.distance = Math.random() * MAX_SPAWN_RADIUS;
             p.angle = Math.random() * Math.PI * 2;
           }
@@ -150,7 +150,7 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
       cancelAnimationFrame(animationFrameId);
       observer.disconnect();
     };
-  }, [parameters]);
+  }, [parameters, size, reduction_parameter, reduce_particles, reducedBaseParticleCount, reduce_particle_multiplier, reducedBaseParticleMult]);
 
   return (
     <canvas 
