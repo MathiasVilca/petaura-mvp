@@ -111,9 +111,10 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
             p.angle = Math.random() * Math.PI * 2;
           }
         }
-
-        x += (Math.random() - 0.5) * 2.0 * parameters.stress;
-        y += (Math.random() - 0.5) * 2.0 * parameters.stress;
+        //jitter, necesita ajustes
+        const jitterMultiplier = 2.0
+        x += (Math.random() - 0.5) * jitterMultiplier * parameters.stress;
+        y += (Math.random() - 0.5) * jitterMultiplier * parameters.stress;
 
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
