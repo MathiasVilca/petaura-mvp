@@ -241,12 +241,27 @@ app.post('/api/analyze-photo', async (req, res) => {
       ? `\nContexto del dueño: "${contextText.trim()}"`
       : '';
 
+    const razaMatch = profileText?.match(/Raza:\s*(.+)/i);
+    const raza = razaMatch ? razaMatch[1].trim() : null;
+
+    const razaSection = raza ? `
+
+INFORMACIÓN DE RAZA: ${raza}
+Usa la raza ÚNICAMENTE para:
+1. Contextualizar señales anatómicas ambiguas (ej: orejas caídas en Basset Hound = anatómico, no tristeza; jadeo en braquicéfalos = basal, no estrés)
+2. Agregar al final del summary UNA oración que conecte lo observado con características típicas de esta raza — solo si es relevante al caso concreto
+3. Incluir en actions al menos una recomendación específica para las necesidades de esta raza
+
+NUNCA uses la raza para:
+- Inferir mood sin señal visual que lo respalde (ej: "es Chihuahua → ansioso" sin evidencia)
+- Reducir o aumentar health_concern si la foto no muestra síntoma claro
+- Hacer afirmaciones genéricas sobre la raza que no apliquen a lo que se ve en la foto` : '';
+
     const prompt = `Eres un experto en comportamiento canino y bienestar animal.
 Analiza la foto adjunta de un perro y determina su estado emocional actual.
 
-Perfil: ${profileText}${contextSection}
+Perfil: ${profileText}${contextSection}${razaSection}
 
-INSTRUCCIÓN IMPORTANTE: La palabra JSON debe aparecer en tu respuesta.
 Responde ÚNICAMENTE con un objeto JSON válido, sin texto antes ni después.
 
 PROCESO DE ANÁLISIS:
