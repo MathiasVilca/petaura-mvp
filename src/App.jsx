@@ -500,7 +500,7 @@ function App() {
               <p className="app-tag">PetAura</p>
               <h1 style={{ margin: 0 }}>{petProfile?.name ?? 'Tu mascota'}</h1>
               <p style={{ margin: '.35rem 0 0', color: '#8899b0', fontSize: '.9rem' }}>
-                {petProfile?.species}
+                {petProfile?.species}{petProfile?.breed ? ` · ${petProfile.breed}` : ''}
               </p>
               {streak > 0 && (
                 <p style={{ margin: '.3rem 0 0', color: '#7c6bff', fontSize: '.82rem', fontWeight: 700 }}>
