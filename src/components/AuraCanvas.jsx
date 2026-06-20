@@ -18,7 +18,8 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
     const particleBaseCount = reduce_particles? reducedBaseParticleCount : 55
     const particleBaseMultiplier = reduce_particle_multiplier? reducedBaseParticleMult : 65
     const particleCount = particleBaseCount + Math.round(parameters.energy * particleBaseMultiplier * reduction_parameter); // Ajustar cantidad de partículas según energía y reducción
-    const jitterMultiplier = 0.5
+    const jitterMultiplier = 0.5 //multiplier for the radius of the jitter
+    const jitterStressExponent = 1.75 //exponent of the stress parameter for the jitterRadius calculation
     const particles = Array.from({ length: particleCount }).map(() => {
       
       // 1. Calculamos la distancia inicial según el patrón activo
@@ -113,7 +114,7 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
           }
         }
         //jitter, necesita ajustes
-        const jitterRadius = p.radius * Math.pow(parameters.stress,1.75) * jitterMultiplier //radio de que posicion puede cambiar (EJEMPLO)
+        const jitterRadius = p.radius * Math.pow(parameters.stress,jitterStressExponent) * jitterMultiplier //radio de que posicion puede cambiar (EJEMPLO)
         //como p.radius ya afectado por reduction_parameter...
         //considerando que stress esta entre 0 y 1
         //angulo al azar 
