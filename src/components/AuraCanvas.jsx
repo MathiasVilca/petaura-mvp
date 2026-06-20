@@ -18,8 +18,8 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
     const particleBaseCount = reduce_particles? reducedBaseParticleCount : 55
     const particleBaseMultiplier = reduce_particle_multiplier? reducedBaseParticleMult : 65
     const particleCount = particleBaseCount + Math.round(parameters.energy * particleBaseMultiplier * reduction_parameter); // Ajustar cantidad de partículas según energía y reducción
-    const jitterMultiplier = 0.5 //multiplier for the radius of the jitter
-    const jitterStressExponent = 1.75 //exponent of the stress parameter for the jitterRadius calculation
+    const jitterMultiplier = 0.5; //multiplier for the radius of the jitter
+    const jitterStressExponent = 1.75; //exponent of the stress parameter for the jitterRadius calculation
     const particles = Array.from({ length: particleCount }).map(() => {
       
       // 1. Calculamos la distancia inicial según el patrón activo
@@ -114,11 +114,11 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
           }
         }
         //jitter, necesita ajustes
-        const jitterRadius = p.radius * Math.pow(parameters.stress,jitterStressExponent) * jitterMultiplier //radio de que posicion puede cambiar (EJEMPLO)
+        const jitterRadius = p.radius * Math.pow(parameters.stress,jitterStressExponent) * jitterMultiplier; //radio de que posicion puede cambiar (EJEMPLO)
         //como p.radius ya afectado por reduction_parameter...
         //considerando que stress esta entre 0 y 1
         //angulo al azar 
-        const jitterAngle = Math.random() * Math.PI * 2
+        const jitterAngle = Math.random() * Math.PI * 2;
         //se mueve en ese angulo
         //se le suma a x e y :P
         x += jitterRadius*Math.cos(jitterAngle);
@@ -131,9 +131,10 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
         
         // Elegir color basado en la propiedad asignada al crear la partícula
         const particleColor = p.isSecondary ? parameters.secondaryColor : parameters.color;
-
-        ctx.globalAlpha = Math.min(1, Math.max(0, (p.alpha - stressFactor * 0.2) * pulse * fade));
-        const SHADOW_BLUR = 1
+        const alphaBaseWarmth=0.65;
+        const alphaWarmth = alphaBaseWarmth+Math.pow(parameters.warmth,2)*(1-alphaBaseWarmth);
+        ctx.globalAlpha = Math.min(1, Math.max(0, (p.alpha - stressFactor * 0.2) * pulse * fade *alphaWarmth));
+        const SHADOW_BLUR = 1;
         ctx.shadowBlur = SHADOW_BLUR;
         ctx.fillStyle = particleColor;
         ctx.shadowColor = particleColor;
