@@ -1,4 +1,5 @@
 import AuraCanvas from './AuraCanvas';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { MOODS,COLORS_MOOD } from '../moods.js';
 
 const ALERT_MOODS = new Set([MOODS.ANXIOUS, MOODS.IRRITABLE]);
@@ -9,6 +10,7 @@ function lastEntryForPet( petId, history) {
 }
 const REDUCTION_PARAMETER=72/340.0 //para aura mini
 export default function PetDashboard({ profiles, history, activeId, onSelectPet, onAddPet }) {
+  const [petSearchQuery,setPetSearchQuery] = useState('')
   return (
     <div style={s.page}>
       <div style={s.container}>
@@ -23,16 +25,23 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
           </button>
         </div>
         <div className="search-container">
-          <input 
+          
+          <input
+            name="pet-name-input"
+            value={petSearchQuery}
+            onChange={e => setPetSearchQuery(e.target.value)}
             type="text"
             placeholder='Buscar mascotas...'
             className="search-bar"
           />
           <i className="fa-solid fa-magnifying-glass search-icon"></i>
         </div>
-
+        {/*petSearchQuery !== '' && <p>Your query is {petSearchQuery}.</p>*/}
         <div style={s.grid}>
-          {profiles.map(pet => {
+          {profiles.filter(pet => {
+            const isQueryFirstInName = pet.name.toLowerCase().trim().indexOf(petSearchQuery.toLowerCase().trim())==0;
+            return isQueryFirstInName;
+        }).map(pet => {
             const last = lastEntryForPet(pet.id,history);
             const color = last?.color ?? COLORS_MOOD[MOODS.CALM];
             const secondaryColor = last?.secondaryColor ?? null;
