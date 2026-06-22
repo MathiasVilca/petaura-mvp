@@ -340,7 +340,6 @@ function App() {
       const profileText = `Nombre: ${petProfile.name}, Especie: ${petProfile.species}${breed}`;
       const result = await analyzeTranscriptWithAI(voiceTranscript, profileText);
       applyAnalysisResult(result);
-      setAnalysisStatus('Aura generada');
     } catch (err) {
       setAnalysisError(err.message || 'No se pudo analizar');
     }
@@ -357,7 +356,7 @@ function App() {
       const profileText = `Nombre: ${petProfile?.name ?? 'mascota'}, Especie: ${petProfile?.species ?? 'desconocida'}${breed}`;
       const result = await analyzeTranscriptWithAI(transcript, profileText);
       applyAnalysisResult(result);
-      setAnalysisStatus('Análisis completado');
+      setTranscript('');
     } catch (err) {
       setAnalysisError(err.message || 'No se pudo analizar');
     }
@@ -374,7 +373,6 @@ function App() {
       const profileText = `Nombre: ${petProfile.name}, Especie: ${petProfile.species}${breed}`;
       const result = await generateAuraFromPhoto({ imageBase64, mimeType, profileText, contextText });
       applyAnalysisResult(result);
-      setAnalysisStatus('Análisis completado');
     } catch (err) {
       const fallbackResult = {
         ...mockStates[MOODS.CALM],
@@ -408,7 +406,6 @@ function App() {
 
   const simulateState = (key) => {
     setAuraState(mockStates[key]);
-    setAnalysisStatus('Estado simulado');
     setAnalysisError('');
     if (navigator.vibrate) navigator.vibrate([80]);
   };
@@ -445,6 +442,9 @@ function App() {
       setAuraState(mockStates[MOODS.CALM]);
     }
 
+    setTranscript('');
+    setAnalysisStatus('');
+    setAnalysisError('');
     setScreen('home');
   };
 
@@ -561,6 +561,7 @@ function App() {
           />
 
           <PhotoAnalysisMenu
+            key={petProfile?.id}
             petProfile={petProfile}
             onAnalyzePhoto={handlePhotoAnalyze}
             isAnalyzing={screen === 'loading'}
