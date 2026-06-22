@@ -10,38 +10,14 @@ function lastEntryForPet( petId, history) {
 }
 const REDUCTION_PARAMETER=72/340.0 //para aura mini
 export default function PetDashboard({ profiles, history, activeId, onSelectPet, onAddPet }) {
-  const [petSearchQuery,setPetSearchQuery] = useState('')
-  return (
-    <div style={s.page}>
-      <div style={s.container}>
-
-        <div style={s.header}>
-          <div>
-            <p style={s.eyebrow}>PetAura</p>
-            <h2 style={s.title}>Mis mascotas</h2>
-          </div>
-          <button onClick={onAddPet} style={s.addBtn} aria-label="Agregar mascota">
-            + Agregar
-          </button>
-        </div>
-        <div className="search-container">
-          
-          <input
-            name="pet-name-input"
-            value={petSearchQuery}
-            onChange={e => setPetSearchQuery(e.target.value)}
-            type="text"
-            placeholder='Buscar mascotas...'
-            className="search-bar"
-          />
-          <i className="fa-solid fa-magnifying-glass search-icon"></i>
-        </div>
-        {/*petSearchQuery !== '' && <p>Your query is {petSearchQuery}.</p>*/}
-        <div style={s.grid}>
-          {profiles.filter(pet => {
-            const isQueryFirstInName = pet.name.toLowerCase().trim().indexOf(petSearchQuery.toLowerCase().trim())==0;
-            return isQueryFirstInName;
-        }).map(pet => {
+  const [petSearchQuery,setPetSearchQuery] = useState('');
+  const cleanQuery = petSearchQuery.toLowerCase().trim();
+  const resultProfiles = (cleanQuery==='')? profiles : profiles.filter(pet => {
+    const isQueryFirstInName = pet.name.toLowerCase().trim().startsWith(cleanQuery);
+    return isQueryFirstInName;
+  });
+  const resultCards = 
+    resultProfiles.map(pet => {
             const last = lastEntryForPet(pet.id,history);
             const color = last?.color ?? COLORS_MOOD[MOODS.CALM];
             const secondaryColor = last?.secondaryColor ?? null;
@@ -80,7 +56,36 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
                 <span style={s.cta}>Ver aura →</span>
               </button>
             );
-          })}
+          });
+  return (
+    <div style={s.page}>
+      <div style={s.container}>
+
+        <div style={s.header}>
+          <div>
+            <p style={s.eyebrow}>PetAura</p>
+            <h2 style={s.title}>Mis mascotas</h2>
+          </div>
+          <button onClick={onAddPet} style={s.addBtn} aria-label="Agregar mascota">
+            + Agregar
+          </button>
+        </div>
+        <div className="search-container">
+          
+          <input
+            name="pet-name-input"
+            value={petSearchQuery}
+            onChange={e => setPetSearchQuery(e.target.value)}
+            type="text"
+            placeholder='Buscar mascotas...'
+            className="search-bar"
+          />
+          <i className="fa-solid fa-magnifying-glass search-icon"></i>
+        </div>
+        {/*petSearchQuery !== '' && <p>Your query is {petSearchQuery}.</p>*/}
+        
+        <div style={s.grid}>
+          {resultCards}
         </div>
 
       </div>
