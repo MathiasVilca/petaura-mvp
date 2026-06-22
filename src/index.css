@@ -95,6 +95,43 @@ h1 {
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
 }
 
+.search-container {
+  position: relative; /*posicion de elementos adentro de el va a ser relativa a el*/
+  display: inline-block;
+  width: 100%; 
+}
+
+.search-bar{
+  width: 100%;
+  padding: .65rem 2.5rem .65rem 1.25rem;
+  min-height: 48px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,.25);
+  background: transparent;
+  color: #e2e8f0;
+  font-size: .9rem;
+  cursor: text;
+}
+
+.search-icon {
+  position: absolute; /* Hace que no empuje a la barra */
+  right: 15px;
+  top: 50%; 
+  transform: translateY(-50%);
+  color: #94a3b8; 
+  pointer-events: none;
+}
+
+.search-bar:focus{
+  border: 1px solid rgba(148,163,184,.75);
+  outline: none
+}
+
+.search-bar::placeholder{
+  color: #94a3b8;
+  opacity: 0.6;
+}
+
 .aura-section {
   display: grid;
   grid-template-columns: minmax(280px, 420px) minmax(260px, 1fr);

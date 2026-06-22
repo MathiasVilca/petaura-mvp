@@ -1,4 +1,5 @@
 import AuraCanvas from './AuraCanvas';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { MOODS,COLORS_MOOD } from '../moods.js';
 
 const ALERT_MOODS = new Set([MOODS.ANXIOUS, MOODS.IRRITABLE]);
@@ -9,22 +10,14 @@ function lastEntryForPet( petId, history) {
 }
 const REDUCTION_PARAMETER=72/340.0 //para aura mini
 export default function PetDashboard({ profiles, history, activeId, onSelectPet, onAddPet }) {
-  return (
-    <div style={s.page}>
-      <div style={s.container}>
-
-        <div style={s.header}>
-          <div>
-            <p style={s.eyebrow}>PetAura</p>
-            <h2 style={s.title}>Mis mascotas</h2>
-          </div>
-          <button onClick={onAddPet} style={s.addBtn} aria-label="Agregar mascota">
-            + Agregar
-          </button>
-        </div>
-
-        <div style={s.grid}>
-          {profiles.map(pet => {
+  const [petSearchQuery,setPetSearchQuery] = useState('');
+  const cleanQuery = petSearchQuery.toLowerCase().trim();
+  const resultProfiles = (cleanQuery==='')? profiles : profiles.filter(pet => {
+    const isQueryFirstInName = pet.name.toLowerCase().trim().startsWith(cleanQuery);
+    return isQueryFirstInName;
+  });
+  const resultCards = 
+    resultProfiles.map(pet => {
             const last = lastEntryForPet(pet.id,history);
             const color = last?.color ?? COLORS_MOOD[MOODS.CALM];
             const secondaryColor = last?.secondaryColor ?? null;
@@ -63,7 +56,36 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
                 <span style={s.cta}>Ver aura →</span>
               </button>
             );
-          })}
+          });
+  return (
+    <div style={s.page}>
+      <div style={s.container}>
+
+        <div style={s.header}>
+          <div>
+            <p style={s.eyebrow}>PetAura</p>
+            <h2 style={s.title}>Mis mascotas</h2>
+          </div>
+          <button onClick={onAddPet} style={s.addBtn} aria-label="Agregar mascota">
+            + Agregar
+          </button>
+        </div>
+        <div className="search-container">
+          
+          <input
+            name="pet-name-input"
+            value={petSearchQuery}
+            onChange={e => setPetSearchQuery(e.target.value)}
+            type="text"
+            placeholder='Buscar mascotas...'
+            className="search-bar"
+          />
+          <i className="fa-solid fa-magnifying-glass search-icon"></i>
+        </div>
+        {/*petSearchQuery !== '' && <p>Your query is {petSearchQuery}.</p>*/}
+        
+        <div style={s.grid}>
+          {resultCards}
         </div>
 
       </div>
@@ -94,6 +116,13 @@ const s = {
     borderRadius: 999,
     border: '1px solid rgba(148,163,184,.25)',
     background: 'transparent', color: '#94a3b8',
+    fontSize: '.9rem', cursor: 'pointer',
+  },
+  searchBar: {
+    padding: '.65rem 1.25rem', minHeight: 48,
+    borderRadius: 999,
+    border: '1px solid rgba(148,163,184,.25)',
+    background: 'transparent', color: '#cee2ff',
     fontSize: '.9rem', cursor: 'pointer',
   },
   grid: {
