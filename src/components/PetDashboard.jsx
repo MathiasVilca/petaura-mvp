@@ -22,6 +22,14 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
             + Agregar
           </button>
         </div>
+        <div className="search-container">
+          <input 
+            type="text"
+            placeholder='Buscar mascotas...'
+            className="search-bar"
+          />
+          <i className="fa-solid fa-magnifying-glass search-icon"></i>
+        </div>
 
         <div style={s.grid}>
           {profiles.map(pet => {
@@ -94,6 +102,13 @@ const s = {
     borderRadius: 999,
     border: '1px solid rgba(148,163,184,.25)',
     background: 'transparent', color: '#94a3b8',
+    fontSize: '.9rem', cursor: 'pointer',
+  },
+  searchBar: {
+    padding: '.65rem 1.25rem', minHeight: 48,
+    borderRadius: 999,
+    border: '1px solid rgba(148,163,184,.25)',
+    background: 'transparent', color: '#cee2ff',
     fontSize: '.9rem', cursor: 'pointer',
   },
   grid: {
