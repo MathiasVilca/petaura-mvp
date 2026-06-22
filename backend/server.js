@@ -161,8 +161,11 @@ app.post('/api/analyze', async (req, res) => {
     `- Ejemplo correcto: "Tito estuvo muy cariñoso y pegajoso esta tarde, buscando compañía en el sofá."\n` +
     `- Ejemplo INCORRECTO: "Tito tuvo un día muy cariñoso." (asume el día completo) o "El relato indica que la mascota estuvo normal." (meta-comentario).\n\n` +
     `RECOMENDACIONES:\n` +
-    `- Cada acción incluye "reason" específico para ESTA mascota (raza si se indicó, estado emocional, conductas mencionadas). El reason NO puede empezar con frases genéricas ("para ayudar a reducir", "es importante", "es fundamental"); debe dar detalles concretos de por qué beneficia a esta mascota.\n\n` +
-    `Devuelve EXACTAMENTE este formato JSON:\n` +
+    `- Devuelve EXACTAMENTE 3 acciones en "actions".\n` +
+    `- Cada action debe ser breve, concreta y relacionada SOLO con el relato.\n` +
+    `- Cada reason debe empezar con "Porque" y no con "para".\n` +
+    `- En actions/reasons tambien aplica NO inventar: juguetes, juego, atencion, compania, carino, dueno observa, salud/veterinario si no aparecen en el relato.\n` +
+    `- Si health_concern es false, NO menciones ni recomiendes salud, veterinario, dieta, enfermedad, revision medica ni problema de salud.\n\n` +
     `{\n` +
     `  "mood": "${MOODS.HAPPY}|${MOODS.CALM}|${MOODS.PLAYFUL}|${MOODS.AFFECTIONATE}|${MOODS.CURIOUS}|${MOODS.ANXIOUS}|${MOODS.TIRED}|${MOODS.IRRITABLE}",\n` +
     `  "mood_secondary": "otro de esos valores (distinto del principal) o null si hay un solo estado",\n` +
@@ -170,7 +173,7 @@ app.post('/api/analyze', async (req, res) => {
     `  "stress": 0.0,\n` +
     `  "warmth": 0.0,\n` +
     `  "health_concern": false,\n` +
-    `  "summary": "Exactamente 3 a 4 oraciones interpretativas (no parafrasear el relato)",\n` +
+    `  "summary": "3 a 4 oraciones interpretativas, sin consejos ni raza inventada",\n` +
     `  "actions": [\n` +
     `    { "action": "acción concreta 1", "reason": "por qué es útil para esta mascota" },\n` +
     `    { "action": "acción concreta 2", "reason": "por qué es útil para esta mascota" },\n` +
