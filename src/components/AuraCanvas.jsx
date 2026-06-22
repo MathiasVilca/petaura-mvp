@@ -1,4 +1,4 @@
-import { useRef, useEffect , memo} from 'react';
+import { useRef, useEffect } from 'react';
 
 const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=false, reduce_particle_multiplier=false, reducedBaseParticleCount=25, reducedBaseParticleMult=30 }) => {
   const canvasRef = useRef(null);
@@ -18,6 +18,8 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
     const particleBaseCount = reduce_particles? reducedBaseParticleCount : 55
     const particleBaseMultiplier = reduce_particle_multiplier? reducedBaseParticleMult : 65
     const particleCount = particleBaseCount + Math.round(parameters.energy * particleBaseMultiplier * reduction_parameter); // Ajustar cantidad de partículas según energía y reducción
+    const jitterMultiplier = 0.5; //multiplier for the radius of the jitter
+    const jitterStressExponent = 1.75; //exponent of the stress parameter for the jitterRadius calculation
     const particles = Array.from({ length: particleCount }).map(() => {
       
       // 1. Calculamos la distancia inicial según el patrón activo
@@ -106,20 +108,33 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
           fade = Math.min(1, p.distance / 30);
           
           if (p.distance > maxDistance) {
-            p.size=(1.2 + Math.random() * 2.8 + parameters.warmth * 2)*(reduction_parameter**0.5),
+            p.radius=(1.2 + Math.random() * 2.8 + parameters.warmth * 2)*(reduction_parameter**0.5);
             p.distance = Math.random() * MAX_SPAWN_RADIUS;
             p.angle = Math.random() * Math.PI * 2;
           }
         }
+        //jitter, necesita ajustes
+        const jitterRadius = p.radius * Math.pow(parameters.stress,jitterStressExponent) * jitterMultiplier; //radio de que posicion puede cambiar (EJEMPLO)
+        //como p.radius ya afectado por reduction_parameter...
+        //considerando que stress esta entre 0 y 1
+        //angulo al azar 
+        const jitterAngle = Math.random() * Math.PI * 2;
+        //se mueve en ese angulo
+        //se le suma a x e y :P
+        x += jitterRadius*Math.cos(jitterAngle);
+        y += jitterRadius*Math.sin(jitterAngle);
+        //x += (Math.random() - 0.5) * jitterMultiplier * parameters.stress;
+        //y += (Math.random() - 0.5) * jitterMultiplier * parameters.stress;
 
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         
         // Elegir color basado en la propiedad asignada al crear la partícula
         const particleColor = p.isSecondary ? parameters.secondaryColor : parameters.color;
-
-        ctx.globalAlpha = Math.min(1, Math.max(0, (p.alpha - stressFactor * 0.2) * pulse * fade));
-        const SHADOW_BLUR = 1
+        const alphaBaseWarmth=0.65;
+        const alphaWarmth = alphaBaseWarmth+Math.pow(parameters.warmth,2)*(1-alphaBaseWarmth);
+        ctx.globalAlpha = Math.min(1, Math.max(0, (p.alpha - stressFactor * 0.2) * pulse * fade *alphaWarmth));
+        const SHADOW_BLUR = 1;
         ctx.shadowBlur = SHADOW_BLUR;
         ctx.fillStyle = particleColor;
         ctx.shadowColor = particleColor;
@@ -150,7 +165,7 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
       cancelAnimationFrame(animationFrameId);
       observer.disconnect();
     };
-  }, [parameters]);
+  }, [parameters, size, reduction_parameter, reduce_particles, reducedBaseParticleCount, reduce_particle_multiplier, reducedBaseParticleMult]);
 
   return (
     <canvas 
