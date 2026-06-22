@@ -697,7 +697,7 @@ function App() {
                     <div key={st.mood} style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
                       <span style={{ width: 12, height: 12, borderRadius: '50%', background: st.color, flexShrink: 0, display: 'inline-block' }} />
                       <div>
-                        <strong style={{ color: st.color, fontSize: '.9rem' }}>{st.mood}</strong>
+                        <strong style={{ color: st.color, fontSize: '.9rem' }}>{MOOD_ES[st.mood] || st.mood}</strong>
                         <p style={{ margin: '0.1rem 0 0', fontSize: '.82rem' }}>{st.description.split('.')[0]}.</p>
                       </div>
                     </div>
