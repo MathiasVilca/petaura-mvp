@@ -7,6 +7,8 @@ import HistoryScreen     from './components/HistoryScreen';
 import PetDashboard      from './components/PetDashboard';
 import { PayloadInjector } from './components/PayloadInyector.jsx';
 import { analyzeTranscriptWithAI } from './ai/analyzeTranscript';
+import { generateAuraFromPhoto } from './services/groqService';
+import PhotoAnalysisMenu from './components/PhotoAnalysisMenu';
 import { MOODS , COLORS_MOOD, MOOD_ES ,mockStates } from './moods.js';
 
 /* ── localStorage helpers ─────────────────────────────────────────────── */
@@ -362,6 +364,31 @@ function App() {
     setScreen('home');
   };
 
+  const handlePhotoAnalyze = async (imageBase64, mimeType, contextText) => {
+    if (!petProfile || screen === 'loading') return;
+    setScreen('loading');
+    setAnalysisError('');
+    setAnalysisStatus('');
+    try {
+      const breed = petProfile.breed ? `, Raza: ${petProfile.breed}` : '';
+      const profileText = `Nombre: ${petProfile.name}, Especie: ${petProfile.species}${breed}`;
+      const result = await generateAuraFromPhoto({ imageBase64, mimeType, profileText, contextText });
+      applyAnalysisResult(result);
+      setAnalysisStatus('Análisis completado');
+    } catch (err) {
+      const fallbackResult = {
+        ...mockStates[MOODS.CALM],
+        summary: `No se pudo analizar la foto de ${petProfile.name}. Intenta de nuevo con mejor iluminación.`,
+        actions: [],
+        health_concern: false,
+        mood_secondary: null,
+      };
+      applyAnalysisResult(fallbackResult);
+      setAnalysisError(err.message || 'No se pudo analizar la foto');
+    }
+    setScreen('home');
+  };
+
   const handleReset = () => {
     if (!window.confirm(`¿Borrar el perfil de ${petProfile?.name} y todo el historial?`)) return;
     localStorage.removeItem(PROFILE_KEY);
@@ -473,7 +500,7 @@ function App() {
               <p className="app-tag">PetAura</p>
               <h1 style={{ margin: 0 }}>{petProfile?.name ?? 'Tu mascota'}</h1>
               <p style={{ margin: '.35rem 0 0', color: '#8899b0', fontSize: '.9rem' }}>
-                {petProfile?.species}
+                {petProfile?.species}{petProfile?.breed ? ` · ${petProfile.breed}` : ''}
               </p>
               {streak > 0 && (
                 <p style={{ margin: '.3rem 0 0', color: '#7c6bff', fontSize: '.82rem', fontWeight: 700 }}>
@@ -531,6 +558,12 @@ function App() {
             handleTextAnalyze={handleTextAnalyze} 
             analysisStatus={analysisStatus} 
             analysisError={analysisError} 
+          />
+
+          <PhotoAnalysisMenu
+            petProfile={petProfile}
+            onAnalyzePhoto={handlePhotoAnalyze}
+            isAnalyzing={screen === 'loading'}
           />
 
           <PayloadInjector applyAnalysisResult={applyAnalysisResult} />
