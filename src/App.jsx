@@ -450,7 +450,14 @@ function App() {
 
   /* ── Screen routing ─────────────────────────────────────── */
   if (screen === null)         return null;
-  if (screen === 'onboarding') return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+  if (screen === 'onboarding') return (
+    <OnboardingScreen
+      onComplete={handleOnboardingComplete}
+      onBack={profiles.length > 1 ? () => setScreen('dashboard')
+            : profiles.length === 1 ? () => setScreen('home')
+            : null}
+    />
+  );
   if (screen === 'loading')    return <LoadingScreen petName={petProfile?.name ?? 'tu mascota'} />;
   if (screen === 'voice')      return (
     <VoiceScreen
