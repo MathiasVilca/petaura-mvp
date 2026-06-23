@@ -17,6 +17,7 @@ function isPetStale(last){
 }
 export default function PetDashboard({ profiles, history, activeId, onSelectPet, onAddPet }) {
   const [petSearchQuery,setPetSearchQuery] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const allSelector = "Todas las mascotas";
   const alertSelector = "Atención";
   const staleSelector = "Sin registro hoy";
@@ -141,29 +142,82 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
             />
             <i className="fa-solid fa-magnifying-glass search-icon"></i>
           </div>
-          <select className='selector-filter' onChange={e => setSelectedFilter(e.target.value)}>
-            <option> {selectorOptions["ALL"]} </option>
-            <optgroup label="Por necesidad">
-              <option> {selectorOptions["NEEDS"].ATTENTION} </option>
-              <option> {selectorOptions["NEEDS"].STALE} </option>
-            </optgroup>
-            <optgroup label="Por especie">
-              <option> {selectorOptions["SPECIES"].DOG} </option>
-              <option> {selectorOptions["SPECIES"].CAT} </option>
-              <option> {selectorOptions["SPECIES"].OTHER} </option>
-            </optgroup>
-            <optgroup label="Por estado">
-              <option> {selectorOptions["MOODS"][MOODS.HAPPY]} </option>
-              <option> {selectorOptions["MOODS"][MOODS.CALM]} </option>
-              <option> {selectorOptions["MOODS"][MOODS.TIRED]} </option>
-              <option> {selectorOptions["MOODS"][MOODS.ANXIOUS]} </option>
-              <option> {selectorOptions["MOODS"][MOODS.PLAYFUL]} </option>
-              <option> {selectorOptions["MOODS"][MOODS.AFFECTIONATE]} </option>
-              <option> {selectorOptions["MOODS"][MOODS.CURIOUS]} </option>
-              <option> {selectorOptions["MOODS"][MOODS.IRRITABLE]} </option>             
-            </optgroup>
-            
-          </select>
+
+          <div style={s.dropdownContainer}>
+            <div 
+              className="filter-select-trigger" 
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              {/*Se imprime directamente Filtro seleccionado*/}
+              <span>{selectedFilter}</span>
+              {/*flechas del dropdown*/}
+              <i className={`fa-solid fa-chevron-${isDropdownOpen ? 'up' : 'down'}`} style={s.chevronIcon}></i>
+            </div>
+
+            {/*solo se muestra menu si esta abietrto*/}
+            {isDropdownOpen && (
+              <div style={s.dropdownMenu}>
+                
+                {/*Por defecto, se muestra en morado si esta activo*/}
+                <div 
+                  className={`dropdown-item ${selectedFilter === selectorOptions["ALL"] ? 'active' : ''}`}
+                  onClick={() => { setSelectedFilter(selectorOptions["ALL"]); setIsDropdownOpen(false); }}
+                >
+                  {selectorOptions["ALL"]}
+                </div>
+
+                {/*El grupo por necesidad*/}
+                <div style={s.dropdownGroupLabel}>Por necesidad</div>
+                <div 
+                  className={`dropdown-item ${selectedFilter === selectorOptions["NEEDS"].ATTENTION ? 'active' : ''}`}
+                  onClick={() => { setSelectedFilter(selectorOptions["NEEDS"].ATTENTION); setIsDropdownOpen(false); }}
+                >
+                  {selectorOptions["NEEDS"].ATTENTION}
+                </div>
+                <div 
+                  className={`dropdown-item ${selectedFilter === selectorOptions["NEEDS"].STALE ? 'active' : ''}`}
+                  onClick={() => { setSelectedFilter(selectorOptions["NEEDS"].STALE); setIsDropdownOpen(false); }}
+                >
+                  {selectorOptions["NEEDS"].STALE}
+                </div>
+
+                {/*Grupo por especie*/}
+                <div style={s.dropdownGroupLabel}>Por especie</div>
+                <div 
+                  className={`dropdown-item ${selectedFilter === selectorOptions["SPECIES"].DOG ? 'active' : ''}`}
+                  onClick={() => { setSelectedFilter(selectorOptions["SPECIES"].DOG); setIsDropdownOpen(false); }}
+                >
+                  {selectorOptions["SPECIES"].DOG}
+                </div>
+                <div 
+                  className={`dropdown-item ${selectedFilter === selectorOptions["SPECIES"].CAT ? 'active' : ''}`}
+                  onClick={() => { setSelectedFilter(selectorOptions["SPECIES"].CAT); setIsDropdownOpen(false); }}
+                >
+                  {selectorOptions["SPECIES"].CAT}
+                </div>
+                <div 
+                  className={`dropdown-item ${selectedFilter === selectorOptions["SPECIES"].OTHER ? 'active' : ''}`}
+                  onClick={() => { setSelectedFilter(selectorOptions["SPECIES"].OTHER); setIsDropdownOpen(false); }}
+                >
+                  {selectorOptions["SPECIES"].OTHER}
+                </div>
+
+                {/* Grupo por estado (Mapeados para evitar repeticion)*/}
+                <div style={s.dropdownGroupLabel}>Por estado</div>
+                {Object.values(MOODS).map(moodKey => (
+                  <div 
+                    key={moodKey}
+                    className={`dropdown-item ${selectedFilter === selectorOptions["MOODS"][moodKey] ? 'active' : ''}`}
+                    onClick={() => { setSelectedFilter(selectorOptions["MOODS"][moodKey]); setIsDropdownOpen(false); }}
+                  >
+                    {selectorOptions["MOODS"][moodKey]}
+                  </div>
+                ))}
+
+              </div>
+            )}
+
+          </div>
         </div>
         
         
@@ -231,6 +285,37 @@ const s = {
     display:'flex',
     alignItems: 'center',
     gap: '1rem',
+  },
+  dropdownContainer: {
+    position: 'relative', 
+  },
+  chevronIcon: {
+    marginLeft: '1.25rem',
+    fontSize: '0.8rem',
+    color: '#8899b0',
+    transition: 'color 0.2s ease',
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 'calc(100% + 8px)', 
+    right: 0,                
+    width: '230px',
+    background: 'rgba(15, 23, 42, 0.94)', 
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    border: '1px solid rgba(148, 163, 184, 0.15)',
+    borderRadius: '16px',
+    padding: '0.5rem',
+    zIndex: 9999, 
+    boxShadow: '0 12px 30px -4px rgba(0, 0, 0, 0.6), 0 4px 12px -2px rgba(0, 0, 0, 0.4)',
+  },
+  dropdownGroupLabel: {
+    color: '#475569', 
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    padding: '0.6rem 0.75rem 0.25rem 0.75rem',
+    letterSpacing: '0.06em',
   },
   cardTop: { display: 'flex', gap: '1rem', alignItems: 'center' },
   petInfo: { display: 'flex', flexDirection: 'column', gap: '.25rem', flex: 1 },

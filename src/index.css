@@ -125,6 +125,52 @@ h1 {
   cursor: pointer;
 }
 
+.filter-select-trigger {
+  height: 42px;
+  padding: 0 1.25rem;
+  border-radius: 99px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background-color: rgba(15, 23, 42, 0.88);
+  color: #cee2ff;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.filter-select-trigger:hover {
+  border-color: rgba(124, 107, 255, 0.45);
+  box-shadow: 0 0 12px rgba(124, 107, 255, 0.05);
+}
+
+/* Opciones individuales de la lista */
+.dropdown-item {
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  color: #8899b0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+/* Hover de las opciones con micro-animación */
+.dropdown-item:hover {
+  background-color: rgba(124, 107, 255, 0.12);
+  color: #fff;
+  padding-left: 1.05rem; 
+}
+
+/* Estilo para la opción que esté seleccionada */
+.dropdown-item.active {
+  color: #7c6bff;
+  font-weight: 600;
+  background-color: rgba(124, 107, 255, 0.08);
+}
+
 .search-icon {
   position: absolute; /* Hace que no empuje a la barra */
   right: 15px;
