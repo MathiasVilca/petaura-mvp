@@ -340,7 +340,6 @@ function App() {
       const profileText = `Nombre: ${petProfile.name}, Especie: ${petProfile.species}${breed}`;
       const result = await analyzeTranscriptWithAI(voiceTranscript, profileText);
       applyAnalysisResult(result);
-      setAnalysisStatus('Aura generada');
     } catch (err) {
       setAnalysisError(err.message || 'No se pudo analizar');
     }
@@ -357,7 +356,7 @@ function App() {
       const profileText = `Nombre: ${petProfile?.name ?? 'mascota'}, Especie: ${petProfile?.species ?? 'desconocida'}${breed}`;
       const result = await analyzeTranscriptWithAI(transcript, profileText);
       applyAnalysisResult(result);
-      setAnalysisStatus('Análisis completado');
+      setTranscript('');
     } catch (err) {
       setAnalysisError(err.message || 'No se pudo analizar');
     }
@@ -374,7 +373,6 @@ function App() {
       const profileText = `Nombre: ${petProfile.name}, Especie: ${petProfile.species}${breed}`;
       const result = await generateAuraFromPhoto({ imageBase64, mimeType, profileText, contextText });
       applyAnalysisResult(result);
-      setAnalysisStatus('Análisis completado');
     } catch (err) {
       const fallbackResult = {
         ...mockStates[MOODS.CALM],
@@ -408,7 +406,6 @@ function App() {
 
   const simulateState = (key) => {
     setAuraState(mockStates[key]);
-    setAnalysisStatus('Estado simulado');
     setAnalysisError('');
     if (navigator.vibrate) navigator.vibrate([80]);
   };
@@ -445,12 +442,22 @@ function App() {
       setAuraState(mockStates[MOODS.CALM]);
     }
 
+    setTranscript('');
+    setAnalysisStatus('');
+    setAnalysisError('');
     setScreen('home');
   };
 
   /* ── Screen routing ─────────────────────────────────────── */
   if (screen === null)         return null;
-  if (screen === 'onboarding') return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+  if (screen === 'onboarding') return (
+    <OnboardingScreen
+      onComplete={handleOnboardingComplete}
+      onBack={profiles.length > 1 ? () => setScreen('dashboard')
+            : profiles.length === 1 ? () => setScreen('home')
+            : null}
+    />
+  );
   if (screen === 'loading')    return <LoadingScreen petName={petProfile?.name ?? 'tu mascota'} />;
   if (screen === 'voice')      return (
     <VoiceScreen
@@ -561,6 +568,7 @@ function App() {
           />
 
           <PhotoAnalysisMenu
+            key={petProfile?.id}
             petProfile={petProfile}
             onAnalyzePhoto={handlePhotoAnalyze}
             isAnalyzing={screen === 'loading'}
@@ -689,7 +697,7 @@ function App() {
                     <div key={st.mood} style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
                       <span style={{ width: 12, height: 12, borderRadius: '50%', background: st.color, flexShrink: 0, display: 'inline-block' }} />
                       <div>
-                        <strong style={{ color: st.color, fontSize: '.9rem' }}>{st.mood}</strong>
+                        <strong style={{ color: st.color, fontSize: '.9rem' }}>{MOOD_ES[st.mood] || st.mood}</strong>
                         <p style={{ margin: '0.1rem 0 0', fontSize: '.82rem' }}>{st.description.split('.')[0]}.</p>
                       </div>
                     </div>

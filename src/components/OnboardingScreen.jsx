@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import NavBackButton from './NavBackButton';
 
 const SPECIES = ['Perro', 'Gato', 'Otro'];
 
@@ -23,7 +24,7 @@ function LatentAura() {
   );
 }
 
-export default function OnboardingScreen({ onComplete }) {
+export default function OnboardingScreen({ onComplete, onBack }) {
   const [name, setName] = useState('');
   const [species, setSpecies] = useState('Perro');
   const [breed, setBreed] = useState('');
@@ -40,6 +41,7 @@ export default function OnboardingScreen({ onComplete }) {
         <LatentAura />
 
         <div style={s.card}>
+          {onBack && <NavBackButton onClick={onBack} />}
           <p style={s.eyebrow}>PetAura</p>
           <h1 style={s.title}>Tu aura comienza hoy</h1>
           <p style={s.body}>
