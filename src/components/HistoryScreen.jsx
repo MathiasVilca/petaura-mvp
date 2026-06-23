@@ -28,21 +28,6 @@ function formatTime(timestamp) {
   }
 }
 
-function AuraMini({ color, size = 64 }) {
-  return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        flexShrink: 0,
-        background: `radial-gradient(circle at 38% 38%, ${color}cc 0%, ${color}55 45%, ${color}18 70%, transparent 100%)`,
-        boxShadow: `0 0 18px ${color}44, inset 0 0 14px ${color}22`,
-      }}
-    />
-  );
-}
-
 function EmptyState({ petName }) {
   return (
     <div style={s.empty}>
@@ -54,131 +39,224 @@ function EmptyState({ petName }) {
   );
 }
 
+function buildHistory(petId) {
+  const filtered = loadHistory().filter(e => e.petId === petId);
+  const dateCounts = {};
+  filtered.forEach(e => { dateCounts[e.date] = (dateCounts[e.date] || 0) + 1; });
+  return filtered.map(entry => ({
+    ...entry,
+    showTime: dateCounts[entry.date] > 1,
+    canvasParams: {
+      color: entry.color,
+      secondaryColor: entry.secondaryColor,
+      energy: entry.energy ?? 0.5,
+      stress: entry.stress ?? 0.5,
+      warmth: entry.warmth ?? 0.5,
+      pattern: entry.pattern ?? 'flow',
+    },
+  }));
+}
+
 export default function HistoryScreen({ petName, onBack, petId }) {
-  const [selectedIdx, setSelectedIdx] = useState(null);
-  const [confirmIdx, setConfirmIdx] = useState(null); // índice pendiente de eliminar
+  const [history, setHistory]         = useState(() => buildHistory(petId));
+  const [expandedIdx, setExpandedIdx] = useState(null);   // detalle abierto (modo normal)
+  const [selectMode, setSelectMode]   = useState(false);  // modo selección múltiple
+  const [selected, setSelected]       = useState(new Set()); // índices seleccionados
+  const [confirmSingle, setConfirmSingle] = useState(null); // idx para borrar uno solo
+  const [confirmBulk, setConfirmBulk]    = useState(false);  // confirmar borrado múltiple
 
-  const [history, setHistory] = useState(() => {
-    const filtered = loadHistory().filter(entry => entry.petId === petId);
-    const dateCounts = {};
-    filtered.forEach(e => { dateCounts[e.date] = (dateCounts[e.date] || 0) + 1; });
-    return filtered.map(entry => ({
-      ...entry,
-      showTime: dateCounts[entry.date] > 1,
-      canvasParams: {
-        color: entry.color,
-        secondaryColor: entry.secondaryColor,
-        energy: entry.energy ?? 0.5,
-        stress: entry.stress ?? 0.5,
-        warmth: entry.warmth ?? 0.5,
-        pattern: entry.pattern ?? 'flow',
-      },
-    }));
-  });
+  /* ── helpers de selección ── */
+  const allSelected = selected.size === history.length && history.length > 0;
 
-  const toggleSelect = idx => setSelectedIdx(prev => (prev === idx ? null : idx));
+  const toggleSelectMode = () => {
+    setSelectMode(v => !v);
+    setSelected(new Set());
+    setExpandedIdx(null);
+  };
 
-  // Pide confirmación antes de borrar
-  const requestDelete = (e, idx) => {
+  const toggleOne = idx => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(idx) ? next.delete(idx) : next.add(idx);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(history.map((_, i) => i)));
+    }
+  };
+
+  /* ── eliminación individual ── */
+  const requestDeleteSingle = (e, idx) => {
     e.stopPropagation();
-    setConfirmIdx(idx);
+    setConfirmSingle(idx);
   };
 
-  // Confirma y elimina del localStorage + estado local
-  const confirmDelete = () => {
+  const confirmDeleteSingle = () => {
+    deleteByIndices(new Set([confirmSingle]));
+    setConfirmSingle(null);
+  };
+
+  /* ── eliminación múltiple ── */
+  const confirmDeleteBulk = () => {
+    deleteByIndices(selected);
+    setSelected(new Set());
+    setSelectMode(false);
+    setConfirmBulk(false);
+  };
+
+  /* ── lógica de borrado real ── */
+  const deleteByIndices = (indices) => {
     const all = loadHistory();
-    const petEntries = all.filter(e => e.petId === petId);
-    const entryToDelete = history[confirmIdx];
-    const globalIdx = all.findIndex(
-      e => e.petId === petId && e.timestamp === entryToDelete.timestamp
+    const toDelete = new Set(
+      [...indices].map(i => history[i]?.timestamp).filter(Boolean)
     );
-    if (globalIdx !== -1) all.splice(globalIdx, 1);
-    localStorage.setItem('petaura_history', JSON.stringify(all));
-
-    const newHistory = history.filter((_, i) => i !== confirmIdx);
-    setHistory(newHistory);
-    if (selectedIdx === confirmIdx) setSelectedIdx(null);
-    else if (selectedIdx > confirmIdx) setSelectedIdx(selectedIdx - 1);
-    setConfirmIdx(null);
+    const remaining = all.filter(e => !(e.petId === petId && toDelete.has(e.timestamp)));
+    localStorage.setItem('petaura_history', JSON.stringify(remaining));
+    setHistory(buildHistory(petId));
+    setExpandedIdx(null);
   };
 
-  const cancelDelete = () => setConfirmIdx(null);
-
+  /* ── render ── */
   return (
     <div style={s.page}>
       <div style={s.container}>
 
         {/* Header */}
         <div style={s.header}>
-          <NavBackButton onClick={onBack} />
+          <div style={s.headerTop}>
+            <NavBackButton onClick={onBack} />
+            {history.length > 0 && (
+              <button
+                id="toggle-select-mode"
+                onClick={toggleSelectMode}
+                style={selectMode ? s.btnSelectActive : s.btnSelect}
+              >
+                {selectMode ? 'Cancelar' : 'Seleccionar'}
+              </button>
+            )}
+          </div>
           <div>
             <p style={s.eyebrow}>Historial de auras</p>
             <h2 style={s.title}>{petName}</h2>
           </div>
         </div>
 
+        {/* Barra de selección múltiple */}
+        {selectMode && history.length > 0 && (
+          <div style={s.selectionBar}>
+            <button id="toggle-select-all" onClick={toggleAll} style={s.btnSelAll}>
+              {allSelected ? 'Deseleccionar todo' : 'Seleccionar todo'}
+            </button>
+            <span style={s.selCount}>
+              {selected.size > 0 ? `${selected.size} seleccionada${selected.size > 1 ? 's' : ''}` : 'Ninguna'}
+            </span>
+            <button
+              id="delete-selected-auras"
+              onClick={() => selected.size > 0 && setConfirmBulk(true)}
+              style={selected.size > 0 ? s.btnDeleteSel : s.btnDeleteSelDisabled}
+              disabled={selected.size === 0}
+            >
+              Eliminar
+            </button>
+          </div>
+        )}
+
         {history.length === 0 ? (
           <EmptyState petName={petName} />
         ) : (
           <div style={s.list}>
             {history.map((entry, idx) => {
-              const isOpen = selectedIdx === idx;
+              const isOpen     = !selectMode && expandedIdx === idx;
+              const isSelected = selected.has(idx);
               return (
-                <div key={idx} style={s.entryWrap}>
-                  {/* Summary row — always visible */}
+                <div
+                  key={idx}
+                  style={{
+                    ...s.entryWrap,
+                    ...(isSelected ? s.entryWrapSelected : {}),
+                  }}
+                >
+                  {/* Fila principal */}
                   <div style={{ position: 'relative' }}>
                     <button
-                      onClick={() => toggleSelect(idx)}
+                      onClick={() => {
+                        if (selectMode) {
+                          toggleOne(idx);
+                        } else {
+                          setExpandedIdx(prev => prev === idx ? null : idx);
+                        }
+                      }}
                       style={s.entryRow}
                       aria-expanded={isOpen}
                     >
-                      <AuraCanvas parameters=
-                        {entry.canvasParams}
-                      size={64}  reduction_parameter={64/340.0} reduce_particles={true} reduce_particle_multiplier={true} reducedBaseParticleCount={20}/>
+                      {/* Checkbox en modo selección */}
+                      {selectMode && (
+                        <div style={isSelected ? s.checkOn : s.checkOff} aria-hidden>
+                          {isSelected && <span style={s.checkMark}>✓</span>}
+                        </div>
+                      )}
+
+                      <AuraCanvas
+                        parameters={entry.canvasParams}
+                        size={64}
+                        reduction_parameter={64 / 340.0}
+                        reduce_particles={true}
+                        reduce_particle_multiplier={true}
+                        reducedBaseParticleCount={20}
+                      />
 
                       <div style={s.entryInfo}>
                         <span>
                           <span style={s.entryMood}>
-                          {MOOD_ES[entry.mood] || entry.mood}
+                            {MOOD_ES[entry.mood] || entry.mood}
                           </span>
                           {' '}
-                          { (entry.mood_secondary &&
-                          <span style={s.entrySecondaryMood}>
-                            {" \u2022 "} {MOOD_ES[entry.mood_secondary] || entry.mood_secondary.charAt(0).toUpperCase() + entry.mood_secondary.slice(1)}
-                          </span>)
-                          }
-                          
+                          {entry.mood_secondary && (
+                            <span style={s.entrySecondaryMood}>
+                              {' \u2022 '}{MOOD_ES[entry.mood_secondary] || entry.mood_secondary.charAt(0).toUpperCase() + entry.mood_secondary.slice(1)}
+                            </span>
+                          )}
                         </span>
-                        
                         <span style={s.entryDate}>
                           {formatDate(entry.date)}
                           {entry.showTime && entry.timestamp ? ` · ${formatTime(entry.timestamp)}` : ''}
                         </span>
                       </div>
 
-                      <div style={s.bars}>
-                        <MiniBar label="E" value={entry.energy} color={entry.color} />
-                        <MiniBar label="S" value={entry.stress}  color="#f97316"     />
-                      </div>
+                      {!selectMode && (
+                        <div style={s.bars}>
+                          <MiniBar label="E" value={entry.energy} color={entry.color} />
+                          <MiniBar label="S" value={entry.stress}  color="#f97316" />
+                        </div>
+                      )}
 
-                      <span style={{ color: '#7080a0', fontSize: '.8rem' }}>
-                        {isOpen ? '▲' : '▼'}
-                      </span>
+                      {!selectMode && (
+                        <span style={{ color: '#7080a0', fontSize: '.8rem' }}>
+                          {isOpen ? '▲' : '▼'}
+                        </span>
+                      )}
                     </button>
 
-                    {/* Botón eliminar X */}
-                    <button
-                      id={`delete-aura-${idx}`}
-                      onClick={(e) => requestDelete(e, idx)}
-                      style={s.deleteBtn}
-                      aria-label="Eliminar aura"
-                      title="Eliminar aura"
-                    >
-                      ✕
-                    </button>
+                    {/* Botón X (solo en modo normal) */}
+                    {!selectMode && (
+                      <button
+                        id={`delete-aura-${idx}`}
+                        onClick={(e) => requestDeleteSingle(e, idx)}
+                        style={s.deleteBtn}
+                        aria-label="Eliminar aura"
+                        title="Eliminar aura"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
 
-                  {/* Detail panel */}
+                  {/* Panel de detalle */}
                   {isOpen && (
                     <div style={s.detail}>
                       {(entry.summary || entry.description) && (
@@ -209,18 +287,37 @@ export default function HistoryScreen({ petName, onBack, petId }) {
           </div>
         )}
 
-        {/* Modal de confirmación de eliminación */}
-        {confirmIdx !== null && (
+        {/* Modal — eliminar una */}
+        {confirmSingle !== null && (
           <div style={s.overlay}>
             <div style={s.modal}>
               <p style={s.modalTitle}>¿Eliminar esta aura?</p>
               <p style={s.modalSub}>
                 Esta acción no se puede deshacer. El registro de{' '}
-                <strong>{formatDate(history[confirmIdx]?.date)}</strong> se eliminará permanentemente.
+                <strong>{formatDate(history[confirmSingle]?.date)}</strong> se eliminará permanentemente.
               </p>
               <div style={s.modalActions}>
-                <button id="cancel-delete-aura" onClick={cancelDelete} style={s.btnCancel}>Cancelar</button>
-                <button id="confirm-delete-aura" onClick={confirmDelete} style={s.btnConfirm}>Eliminar</button>
+                <button id="cancel-delete-aura" onClick={() => setConfirmSingle(null)} style={s.btnCancel}>Cancelar</button>
+                <button id="confirm-delete-aura" onClick={confirmDeleteSingle} style={s.btnConfirm}>Eliminar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal — eliminar seleccionadas */}
+        {confirmBulk && (
+          <div style={s.overlay}>
+            <div style={s.modal}>
+              <p style={s.modalTitle}>¿Eliminar {selected.size} aura{selected.size > 1 ? 's' : ''}?</p>
+              <p style={s.modalSub}>
+                Esta acción no se puede deshacer. Se eliminarán permanentemente{' '}
+                <strong>{selected.size} registro{selected.size > 1 ? 's' : ''}</strong>.
+              </p>
+              <div style={s.modalActions}>
+                <button id="cancel-delete-bulk" onClick={() => setConfirmBulk(false)} style={s.btnCancel}>Cancelar</button>
+                <button id="confirm-delete-bulk" onClick={confirmDeleteBulk} style={s.btnConfirm}>
+                  Eliminar {selected.size}
+                </button>
               </div>
             </div>
           </div>
@@ -259,14 +356,90 @@ const s = {
     gap: '1.5rem',
   },
   header: { display: 'flex', flexDirection: 'column', gap: '.5rem' },
+  headerTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   eyebrow: { margin: 0, color: '#94a3b8', fontSize: '.85rem', letterSpacing: '.06em', textTransform: 'uppercase' },
   title: { margin: '.2rem 0 0', fontSize: '1.5rem', color: '#f0f0ff' },
+
+  btnSelect: {
+    padding: '.4rem 1rem',
+    borderRadius: 20,
+    border: '1px solid rgba(148,163,184,.25)',
+    background: 'transparent',
+    color: '#94a3b8',
+    fontSize: '.85rem',
+    cursor: 'pointer',
+    fontWeight: 500,
+  },
+  btnSelectActive: {
+    padding: '.4rem 1rem',
+    borderRadius: 20,
+    border: '1px solid rgba(239,68,68,.4)',
+    background: 'rgba(239,68,68,.1)',
+    color: '#f87171',
+    fontSize: '.85rem',
+    cursor: 'pointer',
+    fontWeight: 600,
+  },
+
+  selectionBar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '.75rem',
+    background: 'rgba(15,23,42,.9)',
+    border: '1px solid rgba(148,163,184,.15)',
+    borderRadius: 16,
+    padding: '.65rem 1rem',
+  },
+  btnSelAll: {
+    background: 'none',
+    border: 'none',
+    color: '#60a5fa',
+    fontSize: '.85rem',
+    cursor: 'pointer',
+    fontWeight: 600,
+    padding: 0,
+    whiteSpace: 'nowrap',
+  },
+  selCount: {
+    flex: 1,
+    color: '#8899b0',
+    fontSize: '.85rem',
+    textAlign: 'center',
+  },
+  btnDeleteSel: {
+    padding: '.4rem 1rem',
+    borderRadius: 12,
+    border: 'none',
+    background: 'rgba(239,68,68,.85)',
+    color: '#fff',
+    fontSize: '.85rem',
+    cursor: 'pointer',
+    fontWeight: 600,
+    whiteSpace: 'nowrap',
+  },
+  btnDeleteSelDisabled: {
+    padding: '.4rem 1rem',
+    borderRadius: 12,
+    border: 'none',
+    background: 'rgba(148,163,184,.12)',
+    color: '#4a5568',
+    fontSize: '.85rem',
+    cursor: 'not-allowed',
+    fontWeight: 600,
+    whiteSpace: 'nowrap',
+  },
+
   list: { display: 'flex', flexDirection: 'column', gap: '.65rem' },
   entryWrap: {
     background: 'rgba(15,23,42,.88)',
     border: '1px solid rgba(148,163,184,.12)',
     borderRadius: 20,
     overflow: 'hidden',
+    transition: 'border-color .2s',
+  },
+  entryWrapSelected: {
+    border: '1px solid rgba(96,165,250,.45)',
+    background: 'rgba(30,58,138,.18)',
   },
   entryRow: {
     width: '100%',
@@ -280,6 +453,37 @@ const s = {
     textAlign: 'left',
     minHeight: 56,
   },
+
+  /* Checkbox */
+  checkOff: {
+    width: 22,
+    height: 22,
+    borderRadius: '50%',
+    border: '2px solid rgba(148,163,184,.35)',
+    background: 'transparent',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkOn: {
+    width: 22,
+    height: 22,
+    borderRadius: '50%',
+    border: '2px solid #60a5fa',
+    background: '#2563eb',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkMark: {
+    color: '#fff',
+    fontSize: '.7rem',
+    fontWeight: 800,
+    lineHeight: 1,
+  },
+
   entryInfo: { flex: 1, display: 'flex', flexDirection: 'column', gap: '.15rem' },
   entryMood: { color: '#e2e8f0', fontWeight: 700, fontSize: '1rem' },
   entrySecondaryMood: { color: '#6B819E', fontWeight: 'normal', fontSize: '1rem' },
@@ -309,6 +513,7 @@ const s = {
   },
   emptyTitle: { margin: '0 0 .5rem', fontSize: '1.1rem', color: '#e2e8f0', fontWeight: 600 },
   emptySub: { margin: 0, color: '#8899b0', fontSize: '.9rem', lineHeight: 1.6 },
+
   deleteBtn: {
     position: 'absolute',
     top: 10,
@@ -326,10 +531,12 @@ const s = {
     alignItems: 'center',
     justifyContent: 'center',
     lineHeight: 1,
-    transition: 'background .18s, transform .12s',
+    transition: 'background .18s',
     zIndex: 2,
     padding: 0,
   },
+
+  /* Modales */
   overlay: {
     position: 'fixed',
     inset: 0,
@@ -350,23 +557,9 @@ const s = {
     width: '100%',
     boxShadow: '0 20px 60px rgba(0,0,0,.6)',
   },
-  modalTitle: {
-    margin: '0 0 .5rem',
-    fontSize: '1.1rem',
-    fontWeight: 700,
-    color: '#f0f0ff',
-  },
-  modalSub: {
-    margin: '0 0 1.5rem',
-    fontSize: '.9rem',
-    color: '#8899b0',
-    lineHeight: 1.55,
-  },
-  modalActions: {
-    display: 'flex',
-    gap: '.75rem',
-    justifyContent: 'flex-end',
-  },
+  modalTitle: { margin: '0 0 .5rem', fontSize: '1.1rem', fontWeight: 700, color: '#f0f0ff' },
+  modalSub: { margin: '0 0 1.5rem', fontSize: '.9rem', color: '#8899b0', lineHeight: 1.55 },
+  modalActions: { display: 'flex', gap: '.75rem', justifyContent: 'flex-end' },
   btnCancel: {
     padding: '.55rem 1.25rem',
     borderRadius: 12,
