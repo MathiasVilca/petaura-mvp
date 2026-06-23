@@ -82,7 +82,9 @@ function normalizeAuraPayload(payload) {
         ? payload.mood.toLowerCase().trim()
         : defaultAura.mood,
     mood_secondary:
-      typeof payload.mood_secondary === 'string' && payload.mood_secondary.trim().length > 0
+      typeof payload.mood_secondary === 'string' &&
+      payload.mood_secondary.trim().length > 0 &&
+      payload.mood_secondary.trim().toLowerCase() !== 'null'
         ? payload.mood_secondary.toLowerCase().trim()
         : null,
     energy: clampValue(payload.energy, 0, 1) ?? defaultAura.energy,
@@ -119,10 +121,10 @@ app.post('/api/analyze', async (req, res) => {
     `- ${MOODS.HAPPY}: alegría con señales positivas CONCRETAS (recibir contento, saltar de alegría, mover la cola) SIN pelota, SIN juguete, SIN juego activo y SIN contacto dominante. Si aparece jugar/jugó con pelota o juguete, correr de un lado a otro o persecución lúdica, NUNCA uses ${MOODS.HAPPY}: usa ${MOODS.PLAYFUL}. Relatos genéricos como "Hoy estuvo bien"/"normal" son ${MOODS.CALM}.\n` +
     `- ${MOODS.CALM}: relajado, sereno, en reposo.\n` +
     `- ${MOODS.PLAYFUL}: juego activo AHORA; si menciona jugar con pelota/juguete, correr o persecución lúdica, mood SIEMPRE es ${MOODS.PLAYFUL} y NUNCA ${MOODS.HAPPY}. Si solo juega sin parar con pelota/juguete/todo lo que encuentra, es un ÚNICO estado: mood_secondary null. Solo usa ${MOODS.AFFECTIONATE} si hay contacto físico explícito.\n` +
-    `- ${MOODS.AFFECTIONATE}: busca proximidad/contacto (se pega, viene al dueño, no se separa, pide caricias). Si hay fuegos artificiales/ruidos/tormenta + temblor/miedo + busca contacto o no se separa, mood SIEMPRE es ${MOODS.AFFECTIONATE} y mood_secondary ${MOODS.ANXIOUS}; NUNCA null ni ${MOODS.ANXIOUS}/${MOODS.AFFECTIONATE}.\n` +
+    `- ${MOODS.AFFECTIONATE}: busca proximidad/contacto (se pega, viene al dueño, no se separa, pide caricias, pone la cabeza encima, se queda pegada). Si hay fuegos artificiales/ruidos/tormenta + temblor/miedo + busca contacto o no se separa, mood SIEMPRE es ${MOODS.AFFECTIONATE} y mood_secondary ${MOODS.ANXIOUS}; NUNCA null ni ${MOODS.ANXIOUS}/${MOODS.AFFECTIONATE}. Si SOLO busca companía y contacto SIN gatillo de miedo ni segunda conducta diferente, mood_secondary null.\n` +
     `- ${MOODS.CURIOUS}: exploración activa (olfatear, buscar, inspeccionar, recorrer). BOLSA/SUPER/OBJETO + oler/inspeccionar/poner patas para oler = mood ${MOODS.CURIOUS}, mood_secondary null. JARDÍN/LUGAR + olfatear/buscar como actividad dominante + ruidos/sobresaltos/asustada = mood SIEMPRE ${MOODS.CURIOUS}, mood_secondary ${MOODS.ANXIOUS}; NUNCA ${MOODS.ANXIOUS}/${MOODS.CURIOUS}. JUGUETE NUEVO + primero olfateó/desconfiada/empujó + al final jugó = ${MOODS.CURIOUS}/${MOODS.PLAYFUL}.\n` +
     `- ${MOODS.ANXIOUS}: nervioso, inquieto o con miedo; incluye miedo agudo a un gatillo. Si dice inquieta/daba vueltas/se echaba y se volvía a levantar, mood ${MOODS.ANXIOUS}, mood_secondary null, health_concern false. Si estuvo sola y rompió/destrozó un cojín u objeto, es ansiedad por separación: mood ${MOODS.ANXIOUS}, mood_secondary null, health_concern false; NO es ${MOODS.CALM}.\n` +
-    `- ${MOODS.TIRED}: baja energía, somnoliento o en descanso. Dormir casi todo el día, levantarse a tomar agua y volver a echarse = mood ${MOODS.TIRED}, mood_secondary null, health_concern false si NO hay vómito, diarrea, cojera, dolor, falta de apetito, no beber ni quejidos; NO inventes enfermedad.\n` +
+    `- ${MOODS.TIRED}: baja energía, somnoliento o en descanso. Dormir casi todo el día, levantarse a tomar agua y volver a echarse = mood ${MOODS.TIRED}, mood_secondary null, health_concern false si NO hay vómito, diarrea, cojera, dolor, falta de apetito, no beber ni quejidos; NO inventes enfermedad. OJO: "apenas se levantó una vez a tomar agua y volvió a echarse" significa que SÍ bebe agua y SÍ se mueve; es descanso normal, health_concern false.\n` +
     `- ${MOODS.IRRITABLE}: defensivo/conductual: gruñe, evita contacto o reacciona a estímulos externos. Si ladra a ventana/afuera y luego gruñe, mood ${MOODS.IRRITABLE}, mood_secondary ${MOODS.ANXIOUS}, health_concern false. Si gruñe al acariciarla y se esconde SIN síntoma físico, mood ${MOODS.IRRITABLE}, mood_secondary null, health_concern false. Si casi no comió/está muy quieta Y gruñe, mood ${MOODS.IRRITABLE}, mood_secondary null, health_concern true; NO inventes ${MOODS.ANXIOUS}.\n` +
     `- Diferenciación clave ${MOODS.HAPPY} vs ${MOODS.PLAYFUL}: «Está persiguiéndome por la casa ladrando y poniendo las patas en mí» → mood: ${MOODS.PLAYFUL}, mood_secondary: ${MOODS.AFFECTIONATE}, health_concern: false. Conducta activa y dirigida hacia el dueño = ${MOODS.PLAYFUL}, no ${MOODS.HAPPY}. Cuando hay acción motora iniciada por el animal hacia una persona, el estado es ${MOODS.PLAYFUL}.\n\n` +
     `EMOCIÓN PRINCIPAL Y SECUNDARIA:\n` +
@@ -136,7 +138,7 @@ app.post('/api/analyze', async (req, res) => {
     `  · «jugó un rato y después vino a echarse pegado a mí» → mood ${MOODS.PLAYFUL}, mood_secondary ${MOODS.AFFECTIONATE}.\n` +
     `  · «olfateaba todo el jardín pero se sobresaltaba con cada ruido» → mood ${MOODS.CURIOUS}, mood_secondary ${MOODS.ANXIOUS}.\n` +
     `  · «durmió toda la tarde, tranquilo» → mood ${MOODS.TIRED}, mood_secondary null (un solo estado).\n` +
-    `- "mood" y "mood_secondary" no pueden ser iguales. Cuando sea null, usa el valor null de JSON, NUNCA el texto "null".\n\n` +
+    `- "mood" y "mood_secondary" no pueden ser iguales. mood_secondary DEBE ser null (valor JSON real, SIN comillas) cuando el relato describe un único estado. PROHIBIDO escribir la cadena de texto "null" — eso es un error. Correcto: "mood_secondary": null. INCORRECTO: "mood_secondary": "null".\n\n` +
     `SALUD (independiente de la emoción):\n` +
     `- "health_concern": true SOLO si el relato menciona síntomas físicos: pérdida o reducción del apetito (no come, apenas come o come menos de lo normal), no bebe, vómito, diarrea, cojera, temblores por malestar, letargo marcado o quejidos de dolor. En cualquier otro caso, false.\n` +
     `- Si SOLO hay síntomas físicos (vómito, no quiso comer, inapetencia, no bebe, decaimiento) y NO hay gruñido/agresión/inquietud/miedo explícito, mood SIEMPRE ${MOODS.TIRED}, mood_secondary null, health_concern true. Si el único síntoma es cojera/no apoya bien la pata, mood ${MOODS.TIRED}, mood_secondary ${MOODS.ANXIOUS}, health_concern true; NUNCA ${MOODS.IRRITABLE}.\n` +
@@ -153,14 +155,14 @@ app.post('/api/analyze', async (req, res) => {
     `- Si el relato es insuficiente, responde mood "${MOODS.CALM}", mood_secondary null, health_concern false, e indícalo en summary.\n` +
     `- Ante relatos genéricos sin conductas específicas («Hoy estuvo bien», «estuvo bien», «normal», «bien», «igual que siempre»), mood SIEMPRE ${MOODS.CALM}, mood_secondary null, health_concern false; PROHIBIDO inferir alegría, actividad, ejercicio, juego, contacto, raza o necesidad de recomendaciones si no están escritos.\n\n` +
     `RESUMEN (summary):\n` +
-    `- Describe el MOMENTO que cuenta el relato, no el día completo. Es un registro puntual (el dueño puede registrar varias veces al día), así que NO uses "tuvo un día...". Usa el marco temporal del relato si lo hay ("esta mañana", "esta tarde", "hace un rato") o ninguno.\n` +
+    `- El summary SIEMPRE debe tener entre 3 y 4 oraciones completas, aunque el relato sea corto o simple. NUNCA escribas un summary de 1 sola oración.\n` +
     `- Describe lo que VIVIÓ la mascota, no lo que dijo el dueño. NUNCA menciones "el relato", "la transcripción" ni hagas meta-comentarios sobre la calidad o suficiencia del input.\n` +
     `- Usa el nombre de la mascota si aparece en el perfil.\n` +
     `- Tono cálido, empático y personal, como un observador que conoce a la mascota y se preocupa por el vínculo con su dueño.\n` +
-    `- 3-4 oraciones. NO describas ni parafrasees el relato — interpreta qué significa el comportamiento, qué dice del vínculo con el dueño o qué contexto veterinario es útil. En español.\n` +
-    `- Si el perfil incluye raza, agrega UNA oración final conectando el comportamiento observado con una característica conocida de esa raza. Si no hay raza o es mestizo/criollo, el summary funciona igual sin ella.\n` +
-    `- Ejemplo correcto: "Tito estuvo muy cariñoso y pegajoso esta tarde, buscando compañía en el sofá."\n` +
-    `- Ejemplo INCORRECTO: "Tito tuvo un día muy cariñoso." (asume el día completo) o "El relato indica que la mascota estuvo normal." (meta-comentario).\n\n` +
+    `- NO describas ni parafrasees el relato — interpreta qué significa el comportamiento, qué dice del vínculo con el dueño o qué contexto útil aporta.\n` +
+    `- Si el perfil incluye raza (nombre de raza real), agrega UNA oración final conectando el comportamiento observado con una característica conocida de esa raza. Ejemplo: si el perfil dice Pastor Alemán y el relato es de exploración, la oración final puede ser algo como "Los Pastores Alemanes necesitan estimulación mental constante, y esa exploración activa es exactamente lo que los mantiene equilibrados." Si no hay raza o es mestizo/criollo, el summary funciona igual sin esa oración.\n` +
+    `- Ejemplo correcto de formato (3 oraciones): "Luna mostró exactamente la respuesta que esperarías de un perro con buen vínculo afectivo: buscar refugio donde se siente más segura. El temblor ante los fuegos artificiales es una reacción fisiológica al estrés agudo, no un signo de debilidad. Los Huskies Siberianos son conocidos por su independencia, así que verla buscar ese contacto dice mucho de la confianza que tiene en su dueño."\n` +
+    `- Ejemplo INCORRECTO (1 oración, paráfrasis del relato): "Luna se mostró interesada en la bolsa del super, oliendo y explorando su contenido con curiosidad."\n\n` +
     `RECOMENDACIONES:\n` +
     `- Devuelve EXACTAMENTE 3 acciones en "actions".\n` +
     `- Cada action debe ser breve, concreta y relacionada SOLO con el relato.\n` +

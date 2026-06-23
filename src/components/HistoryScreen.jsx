@@ -1,4 +1,4 @@
-import { useState,useMemo } from 'react';
+import { useState } from 'react';
 import NavBackButton from './NavBackButton';
 import { MOOD_ES } from '../moods.js';
 import AuraCanvas from './AuraCanvas';
@@ -56,10 +56,10 @@ function EmptyState({ petName }) {
 
 export default function HistoryScreen({ petName, onBack, petId }) {
   const [selectedIdx, setSelectedIdx] = useState(null);
-  const history = useMemo(() => {
+  const [confirmIdx, setConfirmIdx] = useState(null); // índice pendiente de eliminar
+
+  const [history, setHistory] = useState(() => {
     const filtered = loadHistory().filter(entry => entry.petId === petId);
-    // Modelo A: varios registros por día. Marcamos las fechas con más de una entrada
-    // para mostrar la hora y poder distinguir mañana/tarde/noche.
     const dateCounts = {};
     filtered.forEach(e => { dateCounts[e.date] = (dateCounts[e.date] || 0) + 1; });
     return filtered.map(entry => ({
@@ -72,12 +72,37 @@ export default function HistoryScreen({ petName, onBack, petId }) {
         stress: entry.stress ?? 0.5,
         warmth: entry.warmth ?? 0.5,
         pattern: entry.pattern ?? 'flow',
-      }
-
+      },
     }));
-  }, [petId]);
+  });
 
   const toggleSelect = idx => setSelectedIdx(prev => (prev === idx ? null : idx));
+
+  // Pide confirmación antes de borrar
+  const requestDelete = (e, idx) => {
+    e.stopPropagation();
+    setConfirmIdx(idx);
+  };
+
+  // Confirma y elimina del localStorage + estado local
+  const confirmDelete = () => {
+    const all = loadHistory();
+    const petEntries = all.filter(e => e.petId === petId);
+    const entryToDelete = history[confirmIdx];
+    const globalIdx = all.findIndex(
+      e => e.petId === petId && e.timestamp === entryToDelete.timestamp
+    );
+    if (globalIdx !== -1) all.splice(globalIdx, 1);
+    localStorage.setItem('petaura_history', JSON.stringify(all));
+
+    const newHistory = history.filter((_, i) => i !== confirmIdx);
+    setHistory(newHistory);
+    if (selectedIdx === confirmIdx) setSelectedIdx(null);
+    else if (selectedIdx > confirmIdx) setSelectedIdx(selectedIdx - 1);
+    setConfirmIdx(null);
+  };
+
+  const cancelDelete = () => setConfirmIdx(null);
 
   return (
     <div style={s.page}>
@@ -101,48 +126,57 @@ export default function HistoryScreen({ petName, onBack, petId }) {
               return (
                 <div key={idx} style={s.entryWrap}>
                   {/* Summary row — always visible */}
-                  <button
-                    onClick={() => toggleSelect(idx)}
-                    style={s.entryRow}
-                    aria-expanded={isOpen}
-                  >
-                    
-                    
-                    {/*<AuraMini color={entry.color} />*/}
-                    
-                    <AuraCanvas parameters=
-                      {entry.canvasParams}
-                    size={64}  reduction_parameter={64/340.0} reduce_particles={true} reduce_particle_multiplier={true} reducedBaseParticleCount={20}/>
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      onClick={() => toggleSelect(idx)}
+                      style={s.entryRow}
+                      aria-expanded={isOpen}
+                    >
+                      <AuraCanvas parameters=
+                        {entry.canvasParams}
+                      size={64}  reduction_parameter={64/340.0} reduce_particles={true} reduce_particle_multiplier={true} reducedBaseParticleCount={20}/>
 
-                    <div style={s.entryInfo}>
-                      <span>
-                        <span style={s.entryMood}>
-                        {MOOD_ES[entry.mood] || entry.mood}
+                      <div style={s.entryInfo}>
+                        <span>
+                          <span style={s.entryMood}>
+                          {MOOD_ES[entry.mood] || entry.mood}
+                          </span>
+                          {' '}
+                          { (entry.mood_secondary &&
+                          <span style={s.entrySecondaryMood}>
+                            {" \u2022 "} {MOOD_ES[entry.mood_secondary] || entry.mood_secondary.charAt(0).toUpperCase() + entry.mood_secondary.slice(1)}
+                          </span>)
+                          }
+                          
                         </span>
-                        {' '}
-                        { (entry.mood_secondary &&
-                        <span style={s.entrySecondaryMood}>
-                          {" \u2022 "} {MOOD_ES[entry.mood_secondary] || entry.mood_secondary.charAt(0).toUpperCase() + entry.mood_secondary.slice(1)}
-                        </span>)
-                        }
                         
-                      </span>
-                      
-                      <span style={s.entryDate}>
-                        {formatDate(entry.date)}
-                        {entry.showTime && entry.timestamp ? ` · ${formatTime(entry.timestamp)}` : ''}
-                      </span>
-                    </div>
+                        <span style={s.entryDate}>
+                          {formatDate(entry.date)}
+                          {entry.showTime && entry.timestamp ? ` · ${formatTime(entry.timestamp)}` : ''}
+                        </span>
+                      </div>
 
-                    <div style={s.bars}>
-                      <MiniBar label="E" value={entry.energy} color={entry.color} />
-                      <MiniBar label="S" value={entry.stress}  color="#f97316"     />
-                    </div>
+                      <div style={s.bars}>
+                        <MiniBar label="E" value={entry.energy} color={entry.color} />
+                        <MiniBar label="S" value={entry.stress}  color="#f97316"     />
+                      </div>
 
-                    <span style={{ color: '#7080a0', fontSize: '.8rem' }}>
-                      {isOpen ? '▲' : '▼'}
-                    </span>
-                  </button>
+                      <span style={{ color: '#7080a0', fontSize: '.8rem' }}>
+                        {isOpen ? '▲' : '▼'}
+                      </span>
+                    </button>
+
+                    {/* Botón eliminar X */}
+                    <button
+                      id={`delete-aura-${idx}`}
+                      onClick={(e) => requestDelete(e, idx)}
+                      style={s.deleteBtn}
+                      aria-label="Eliminar aura"
+                      title="Eliminar aura"
+                    >
+                      ✕
+                    </button>
+                  </div>
 
                   {/* Detail panel */}
                   {isOpen && (
@@ -174,6 +208,24 @@ export default function HistoryScreen({ petName, onBack, petId }) {
             })}
           </div>
         )}
+
+        {/* Modal de confirmación de eliminación */}
+        {confirmIdx !== null && (
+          <div style={s.overlay}>
+            <div style={s.modal}>
+              <p style={s.modalTitle}>¿Eliminar esta aura?</p>
+              <p style={s.modalSub}>
+                Esta acción no se puede deshacer. El registro de{' '}
+                <strong>{formatDate(history[confirmIdx]?.date)}</strong> se eliminará permanentemente.
+              </p>
+              <div style={s.modalActions}>
+                <button id="cancel-delete-aura" onClick={cancelDelete} style={s.btnCancel}>Cancelar</button>
+                <button id="confirm-delete-aura" onClick={confirmDelete} style={s.btnConfirm}>Eliminar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
@@ -257,6 +309,84 @@ const s = {
   },
   emptyTitle: { margin: '0 0 .5rem', fontSize: '1.1rem', color: '#e2e8f0', fontWeight: 600 },
   emptySub: { margin: 0, color: '#8899b0', fontSize: '.9rem', lineHeight: 1.6 },
+  deleteBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 26,
+    height: 26,
+    borderRadius: '50%',
+    border: '1px solid rgba(248,113,113,.35)',
+    background: 'rgba(239,68,68,.12)',
+    color: '#f87171',
+    fontSize: '.75rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    lineHeight: 1,
+    transition: 'background .18s, transform .12s',
+    zIndex: 2,
+    padding: 0,
+  },
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,.65)',
+    backdropFilter: 'blur(4px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+    padding: '1rem',
+  },
+  modal: {
+    background: '#0f1729',
+    border: '1px solid rgba(148,163,184,.18)',
+    borderRadius: 24,
+    padding: '2rem 1.75rem 1.5rem',
+    maxWidth: 340,
+    width: '100%',
+    boxShadow: '0 20px 60px rgba(0,0,0,.6)',
+  },
+  modalTitle: {
+    margin: '0 0 .5rem',
+    fontSize: '1.1rem',
+    fontWeight: 700,
+    color: '#f0f0ff',
+  },
+  modalSub: {
+    margin: '0 0 1.5rem',
+    fontSize: '.9rem',
+    color: '#8899b0',
+    lineHeight: 1.55,
+  },
+  modalActions: {
+    display: 'flex',
+    gap: '.75rem',
+    justifyContent: 'flex-end',
+  },
+  btnCancel: {
+    padding: '.55rem 1.25rem',
+    borderRadius: 12,
+    border: '1px solid rgba(148,163,184,.2)',
+    background: 'transparent',
+    color: '#94a3b8',
+    fontSize: '.9rem',
+    cursor: 'pointer',
+    fontWeight: 500,
+  },
+  btnConfirm: {
+    padding: '.55rem 1.25rem',
+    borderRadius: 12,
+    border: 'none',
+    background: 'rgba(239,68,68,.85)',
+    color: '#fff',
+    fontSize: '.9rem',
+    cursor: 'pointer',
+    fontWeight: 600,
+  },
 };
 
 const mb = {
