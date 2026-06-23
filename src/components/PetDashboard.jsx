@@ -18,6 +18,8 @@ function isPetStale(last){
 export default function PetDashboard({ profiles, history, activeId, onSelectPet, onAddPet }) {
   const [petSearchQuery,setPetSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+
   const allSelector = "Todas las mascotas";
   const alertSelector = "Atención";
   const staleSelector = "Sin registro hoy";
@@ -74,6 +76,27 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
       return last? MOOD_ES[last.mood] === selectedFilter : false;
     }
   });
+
+  const nameAscSort="Nombre (A-Z)";
+  const nameDescSort="Nombre (Z-A)";
+  const dateAscSort="Añadidos recientemente";
+  const dateDescSort="Primeros Agregados";
+  const stateAscSort="Última actualización";
+  const stateDescSort="Actualización más antigua";
+  const needAttentionSort="Prioridad: Atención";
+  const staleSort="Prioridad: Sin registro";
+  const sortOptions = {
+    "DATE_ASC": dateAscSort,
+    "DATE_DESC": dateDescSort,
+    "NAME_ASC" : nameAscSort,
+    "NAME_DESC": nameDescSort, 
+    "STATE_ASC": stateAscSort,
+    "STATE_DESC": stateDescSort,
+    "PRIORITY_ATTENTION": needAttentionSort,
+    "PRIORITY_STALE": staleSort,
+  }
+  const [selectedSort,setSelectedSort] = useState(dateAscSort);
+
   const resultProfiles = filteredProfiles;
   const resultCards = 
     resultProfiles.map(pet => {
@@ -211,6 +234,37 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
                     onClick={() => { setSelectedFilter(selectorOptions["MOODS"][moodKey]); setIsDropdownOpen(false); }}
                   >
                     {selectorOptions["MOODS"][moodKey]}
+                  </div>
+                ))}
+
+              </div>
+            )}
+
+          </div>
+
+          <div style={s.dropdownContainer}>
+            <div 
+              className="filter-select-trigger" 
+              onClick={() => setIsSortOpen(!isSortOpen)}
+            >
+              {/*Se imprime directamente Filtro seleccionado*/}
+              <span>{selectedSort}</span>
+              {/*flechas del dropdown*/}
+              <i className={`fa-solid fa-chevron-${isSortOpen ? 'up' : 'down'}`} style={s.chevronIcon}></i>
+            </div>
+
+            {/*solo se muestra menu si esta abietrto*/}
+            {isSortOpen && (
+              <div style={s.dropdownMenu}>
+                {/*Opciones para ordenar*/}
+                <div style={s.dropdownGroupLabel}>Ordenar por</div>
+                {Object.keys(sortOptions).map(moodKey => (
+                  <div 
+                    key={moodKey}
+                    className={`dropdown-item ${selectedSort === sortOptions[moodKey] ? 'active' : ''}`}
+                    onClick={() => { setSelectedSort(sortOptions[moodKey]); setIsSortOpen(false); }}
+                  >
+                    {sortOptions[moodKey]}
                   </div>
                 ))}
 
