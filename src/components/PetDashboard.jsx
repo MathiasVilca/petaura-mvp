@@ -11,6 +11,14 @@ function lastEntryForPet( petId, history) {
 const REDUCTION_PARAMETER=72/340.0 //para aura mini
 export default function PetDashboard({ profiles, history, activeId, onSelectPet, onAddPet }) {
   const [petSearchQuery,setPetSearchQuery] = useState('');
+
+  const alertSelector = "Atención";
+  const staleSelector = "Sin registro hoy";
+  const speciesSelector = {
+    "DOG": "Perro",
+    "CAT": "Gato",
+    "OTHER": "Otro",
+  };
   const cleanQuery = petSearchQuery.toLowerCase().trim();
   const resultProfiles = (cleanQuery==='')? profiles : profiles.filter(pet => {
     const isQueryFirstInName = pet.name.toLowerCase().trim().startsWith(cleanQuery);
@@ -86,13 +94,13 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
           <select className='selector-filter'>
             <option> Todas las mascotas </option>
             <optgroup label="Por necesidad">
-              <option> Atención </option>
-              <option> Sin registro hoy </option>
+              <option> {alertSelector} </option>
+              <option> {staleSelector} </option>
             </optgroup>
             <optgroup label="Por especie">
-              <option> Perro </option>
-              <option> Gato </option>
-              <option> Otro </option>
+              <option> {speciesSelector.DOG} </option>
+              <option> {speciesSelector.CAT} </option>
+              <option> {speciesSelector.OTHER} </option>
             </optgroup>
             <optgroup label="Por estado">
               <option> {MOOD_ES[MOODS.HAPPY]} </option>
