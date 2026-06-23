@@ -64,6 +64,7 @@ export default function HistoryScreen({ petName, onBack, petId }) {
   const [selected, setSelected]       = useState(new Set()); // índices seleccionados
   const [confirmSingle, setConfirmSingle] = useState(null); // idx para borrar uno solo
   const [confirmBulk, setConfirmBulk]    = useState(false);  // confirmar borrado múltiple
+  const [hasDeleted, setHasDeleted]      = useState(false);  // flag para forzar recarga al salir
 
   /* ── helpers de selección ── */
   const allSelected = selected.size === history.length && history.length > 0;
@@ -99,6 +100,7 @@ export default function HistoryScreen({ petName, onBack, petId }) {
   const confirmDeleteSingle = () => {
     deleteByIndices(new Set([confirmSingle]));
     setConfirmSingle(null);
+    setHasDeleted(true);
   };
 
   /* ── eliminación múltiple ── */
@@ -107,6 +109,7 @@ export default function HistoryScreen({ petName, onBack, petId }) {
     setSelected(new Set());
     setSelectMode(false);
     setConfirmBulk(false);
+    setHasDeleted(true);
   };
 
   /* ── lógica de borrado real ── */
@@ -121,6 +124,14 @@ export default function HistoryScreen({ petName, onBack, petId }) {
     setExpandedIdx(null);
   };
 
+  const handleBack = () => {
+    if (hasDeleted) {
+      window.location.reload();
+    } else {
+      onBack();
+    }
+  };
+
   /* ── render ── */
   return (
     <div style={s.page}>
@@ -129,7 +140,7 @@ export default function HistoryScreen({ petName, onBack, petId }) {
         {/* Header */}
         <div style={s.header}>
           <div style={s.headerTop}>
-            <NavBackButton onClick={onBack} />
+            <NavBackButton onClick={handleBack} />
             {history.length > 0 && (
               <button
                 id="toggle-select-mode"
@@ -175,7 +186,7 @@ export default function HistoryScreen({ petName, onBack, petId }) {
               const isSelected = selected.has(idx);
               return (
                 <div
-                  key={idx}
+                  key={entry.timestamp || idx}
                   style={{
                     ...s.entryWrap,
                     ...(isSelected ? s.entryWrapSelected : {}),
@@ -288,7 +299,7 @@ export default function HistoryScreen({ petName, onBack, petId }) {
         )}
 
         {/* Modal — eliminar una */}
-        {confirmSingle !== null && (
+        {confirmSingle !== null && history[confirmSingle] && (
           <div style={s.overlay}>
             <div style={s.modal}>
               <p style={s.modalTitle}>¿Eliminar esta aura?</p>
