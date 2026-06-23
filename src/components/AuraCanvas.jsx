@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, memo } from 'react';
 
 const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=false, reduce_particle_multiplier=false, reducedBaseParticleCount=25, reducedBaseParticleMult=30 }) => {
   const canvasRef = useRef(null);
@@ -175,4 +175,21 @@ const AuraCanvas = ({ parameters, size, reduction_parameter=1,reduce_particles=f
   );
 };
 
-export default AuraCanvas;
+export default memo(AuraCanvas, (prevProps,nextProps) => {
+  const oldParameters = prevProps.parameters;
+  const newParameters = nextProps.parameters;
+  const hasSameColors = oldParameters.color===newParameters.color;
+  const hasSameSecColors = oldParameters.secondaryColor===newParameters.secondaryColor;
+  const hasSameEnergy = oldParameters.energy===newParameters.energy;
+  const hasSameStress = oldParameters.stress===newParameters.stress;
+  const hasSameWarmth = oldParameters.warmth===newParameters.warmth;
+  const hasSamePattern = oldParameters.pattern===newParameters.pattern;
+  const hasSameRedParameter = prevProps.reduction_parameter === nextProps.reduction_parameter;
+  const hasSameRedParticles = prevProps.reduce_particles === nextProps.reduce_particles;
+  const hasSameRedBasePartCount = prevProps.reducedBaseParticleCount === nextProps.reducedBaseParticleCount;
+  const hasSameRedPartMult = prevProps.reduce_particle_multiplier === nextProps.reduce_particle_multiplier;
+  const hasSameBasePartMult = prevProps.reducedBaseParticleMult === nextProps.reducedBaseParticleMult;
+  const hasSameSize = prevProps.size === prevProps.size;
+  return hasSameColors && hasSameEnergy && hasSamePattern && hasSameSecColors && hasSameStress && hasSameWarmth && hasSameSize &&
+  hasSameRedParameter && hasSameRedParticles && hasSameRedBasePartCount && hasSameRedPartMult && hasSameBasePartMult;
+});
