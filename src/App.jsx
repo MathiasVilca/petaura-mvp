@@ -253,6 +253,7 @@ function App() {
 
   const longPressRef    = useRef(null);
   const suppressClickRef = useRef(false);
+  const avatarInputRef  = useRef(null);
 
   /* ── Auto-dismiss toast ─────────────────────────────────── */
   useEffect(() => {
@@ -448,6 +449,35 @@ function App() {
     setScreen('home');
   };
 
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !petProfile) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 80;
+        canvas.height = 80;
+        const ctx = canvas.getContext('2d');
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2;
+        const sy = (img.height - side) / 2;
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, 80, 80);
+        const avatarData = canvas.toDataURL('image/jpeg', 0.8);
+        const updated = { ...petProfile, avatar: avatarData };
+        setPetProfile(updated);
+        const updatedProfiles = profiles.map(p => p.id === updated.id ? updated : p);
+        setProfiles(updatedProfiles);
+        saveProfiles(updatedProfiles);
+        saveProfile(updated);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   /* ── Screen routing ─────────────────────────────────────── */
   if (screen === null)         return null;
   if (screen === 'onboarding') return (
@@ -498,93 +528,163 @@ function App() {
           {toast}
         </div>
       )}
-      <header className="app-header" style={{ position: 'relative', zIndex: 100 }}>
-        <div className="hero-card">
 
-          {/* Identity & primary actions */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-            <div>
-              <p className="app-tag">PetAura</p>
-              <h1 style={{ margin: 0 }}>{petProfile?.name ?? 'Tu mascota'}</h1>
-              <p style={{ margin: '.35rem 0 0', color: '#8899b0', fontSize: '.9rem' }}>
-                {petProfile?.species}{petProfile?.breed ? ` · ${petProfile.breed}` : ''}
-              </p>
-              {streak > 0 && (
-                <p style={{ margin: '.3rem 0 0', color: '#7c6bff', fontSize: '.82rem', fontWeight: 700 }}>
-                  Racha: {streak} {streak === 1 ? 'dia' : 'dias'}
-                </p>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              {profiles.length > 1 && (
-                <button onClick={() => setScreen('dashboard')} style={btn.ghost}>
-                  Mis mascotas
+      <section className="home-layout">
+        {/* ── Columna izquierda: controles + resumen + recomendaciones ── */}
+        <div className="home-left">
+          <div className="hero-card">
+            {/* Identity & primary actions */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '.85rem' }}>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  style={{ display: 'none' }}
+                />
+                <button
+                  onClick={() => avatarInputRef.current?.click()}
+                  style={avatarStyles.wrap}
+                  aria-label="Cambiar foto de mascota"
+                >
+                  {petProfile?.avatar ? (
+                    <img src={petProfile.avatar} alt="" style={avatarStyles.img} />
+                  ) : (
+                    <span style={avatarStyles.initial}>
+                      {(petProfile?.name ?? '?')[0].toUpperCase()}
+                    </span>
+                  )}
+                  <span style={avatarStyles.badge}>📷</span>
                 </button>
-              )}
-              {profiles.length >= 1 && (
-                <button onClick={() => setScreen('onboarding')} style={btn.ghost}>
-                  + Mascota
+                <div>
+                  <p className="app-tag">PetAura</p>
+                  <h1 style={{ margin: 0 }}>{petProfile?.name ?? 'Tu mascota'}</h1>
+                  <p style={{ margin: '.35rem 0 0', color: '#8899b0', fontSize: '.9rem' }}>
+                    {petProfile?.species}{petProfile?.breed ? ` · ${petProfile.breed}` : ''}
+                  </p>
+                  {streak > 0 && (
+                    <p style={{ margin: '.3rem 0 0', color: '#7c6bff', fontSize: '.82rem', fontWeight: 700 }}>
+                      Racha: {streak} {streak === 1 ? 'dia' : 'dias'}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                {profiles.length > 1 && (
+                  <button onClick={() => setScreen('dashboard')} style={btn.ghost}>
+                    Mis mascotas
+                  </button>
+                )}
+                {profiles.length >= 1 && (
+                  <button onClick={() => setScreen('onboarding')} style={btn.ghost}>
+                    + Mascota
+                  </button>
+                )}
+                <button onClick={() => setScreen('history')} style={btn.ghost}>
+                  Historial
                 </button>
-              )}
-              <button onClick={() => setScreen('history')} style={btn.ghost}>
-                Historial
-              </button>
-              {/* SA1: botón de silenciar síntesis de voz */}
-              <button
-                id="voice-mute-btn"
-                onClick={() => {
-                  const next = !voiceMuted;
-                  setVoiceMuted(next);
-                  localStorage.setItem(VOICE_MUTED_KEY, String(next));
-                  if (next) window.speechSynthesis?.cancel();
-                }}
-                style={{ ...btn.ghost, fontSize: '1.1rem', padding: '.5rem .75rem', minHeight: 40 }}
-                title={voiceMuted ? 'Activar voz del aura' : 'Silenciar voz del aura'}
-                aria-label={voiceMuted ? 'Activar síntesis de voz' : 'Silenciar síntesis de voz'}
-              >
-                {voiceMuted ? '🔇' : '🔊'}
-              </button>
+                <button
+                  id="voice-mute-btn"
+                  onClick={() => {
+                    const next = !voiceMuted;
+                    setVoiceMuted(next);
+                    localStorage.setItem(VOICE_MUTED_KEY, String(next));
+                    if (next) window.speechSynthesis?.cancel();
+                  }}
+                  style={{ ...btn.ghost, fontSize: '1.1rem', padding: '.5rem .75rem', minHeight: 40 }}
+                  title={voiceMuted ? 'Activar voz del aura' : 'Silenciar voz del aura'}
+                  aria-label={voiceMuted ? 'Activar síntesis de voz' : 'Silenciar síntesis de voz'}
+                >
+                  {voiceMuted ? '🔇' : '🔊'}
+                </button>
+              </div>
             </div>
+
+            <button onClick={() => setScreen('voice')} style={btn.primary}>
+              Registrar por voz
+            </button>
+
+            <DemoMenu simulateState={simulateState} />
+
+            <TextAnalysisMenu
+              transcript={transcript}
+              setTranscript={setTranscript}
+              handleTextAnalyze={handleTextAnalyze}
+              analysisStatus={analysisStatus}
+              analysisError={analysisError}
+            />
+
+            <PhotoAnalysisMenu
+              key={petProfile?.id}
+              petProfile={petProfile}
+              onAnalyzePhoto={handlePhotoAnalyze}
+              isAnalyzing={screen === 'loading'}
+            />
+
           </div>
 
-          {/* Voice recording — main CTA */}
-          <button
-            onClick={() => setScreen('voice')}
-            style={btn.primary}
-          >
-            Registrar por voz
-          </button>
+          <section className="status-card" aria-labelledby="status-title">
+            <h3 id="status-title">Resumen</h3>
+            <div className="status-row">
+              <span className="status-label">Estado</span>
+              <span className="status-value" style={{ color: auraState.color }}>
+                {MOOD_ES[auraState.mood] || auraState.mood}
+              </span>
+            </div>
+            {auraState.mood_secondary && auraState.mood_secondary != "null" && (
+              <div className="status-row">
+                <span className="status-label">Estado Secundario</span>
+                <span className="status-value" style={{ color: auraState.secondaryColor }}>
+                  {MOOD_ES[auraState.mood_secondary] || auraState.mood_secondary}
+                </span>
+              </div>
+            )}
+            <div className="parameter-bar">
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Energía</span>
+                <span style={{ color: '#8899b0', fontSize: '.82rem' }}>{Math.round(auraState.energy * 100)}</span>
+              </div>
+              <div className="meter">
+                <span style={{ width: `${auraState.energy * 100}%`, background: auraState.color }} />
+              </div>
+            </div>
+            <div className="parameter-bar">
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Estrés</span>
+                <span style={{ color: '#8899b0', fontSize: '.82rem' }}>{Math.round(auraState.stress * 100)}</span>
+              </div>
+              <div className="meter">
+                <span style={{ width: `${auraState.stress * 100}%`, background: '#f97316' }} />
+              </div>
+            </div>
+          </section>
 
-          {/* Demo states */}
-          <DemoMenu simulateState={simulateState} />
-          
-          {/* Text analysis fallback */}
-          <TextAnalysisMenu 
-            transcript={transcript} 
-            setTranscript={setTranscript} 
-            handleTextAnalyze={handleTextAnalyze} 
-            analysisStatus={analysisStatus} 
-            analysisError={analysisError} 
-          />
-
-          <PhotoAnalysisMenu
-            key={petProfile?.id}
-            petProfile={petProfile}
-            onAnalyzePhoto={handlePhotoAnalyze}
-            isAnalyzing={screen === 'loading'}
-          />
+          <section className="detail-card" aria-labelledby="actions-title">
+            <h3 id="actions-title">Recomendaciones</h3>
+            <div style={ac.list}>
+              {auraState.actions.map((a, i) => {
+                const action = typeof a === 'string' ? a : a.action;
+                const reason = typeof a === 'string' ? '' : (a.reason || '');
+                return (
+                  <div key={i} style={ac.card}>
+                    <p style={ac.action}>{action}</p>
+                    {reason && <p style={ac.reason}>{reason}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
 
           <PayloadInjector applyAnalysisResult={applyAnalysisResult} />
 
-          {/* Reset — acción destructiva, no es flujo principal */}
           <button onClick={handleReset} style={btn.dangerSm} title="Borrar perfil e historial">
             Resetear cuenta
           </button>
         </div>
-      </header>
 
-      <main className="app-main">
-        <section className="aura-section">
+        {/* ── Columna derecha: Aura protagonista + leyenda ── */}
+        <div className="home-right">
           <article
             className="canvas-card"
             onClick={() => {
@@ -593,7 +693,6 @@ function App() {
                 setShowSummary(false);
                 return;
               }
-              //setShowLegend(v => !v);
             }}
             onMouseEnter={() => { if (auraState.summary) setShowSummary(true); }}
             onMouseLeave={() => setShowSummary(false)}
@@ -613,7 +712,6 @@ function App() {
             <AuraCanvas parameters={auraState} />
             <p className="canvas-caption">{auraState.description}</p>
 
-            {/* MVP: badge booleano. Futuro: nivel 0-2 con atenuación del aura. */}
             {auraState.health_concern && (
               <p style={healthBadge}>⚠ Posible problema de salud — obsérvalo de cerca</p>
             )}
@@ -629,85 +727,32 @@ function App() {
             )}
           </article>
 
-          <div className="status-panel">
-            <section className="status-card" aria-labelledby="status-title">
-              <h3 id="status-title">Resumen</h3>
-              <div className="status-row">
-                <span className="status-label">Estado</span>
-                <span className="status-value" style={{ color: auraState.color }}>
-                  {MOOD_ES[auraState.mood] || auraState.mood}
-                </span>
-              </div>
-              {auraState.mood_secondary && auraState.mood_secondary != "null" && (<div className="status-row">
-                <span id="" className="status-label">Estado Secundario</span>
-                <span className="status-value" style={{ color: auraState.secondaryColor }}>
-                  {MOOD_ES[auraState.mood_secondary] || auraState.mood_secondary}
-                </span>
-              </div>)}
-              <div className="parameter-bar">
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Energía</span>
-                  <span style={{ color: '#8899b0', fontSize: '.82rem' }}>{Math.round(auraState.energy * 100)}</span>
-                </div>
-                <div className="meter">
-                  <span style={{ width: `${auraState.energy * 100}%`, background: auraState.color }} />
-                </div>
-              </div>
-              <div className="parameter-bar">
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Estrés</span>
-                  <span style={{ color: '#8899b0', fontSize: '.82rem' }}>{Math.round(auraState.stress * 100)}</span>
-                </div>
-                <div className="meter">
-                  <span style={{ width: `${auraState.stress * 100}%`, background: '#f97316' }} />
-                </div>
-              </div>
-              {/* warmth es parámetro interno del motor de partículas — el usuario solo ve Energía y Estrés */}
-            </section>
+          <button
+            className="legend-toggle"
+            onClick={() => setShowLegend(v => !v)}
+            aria-expanded={showLegend}
+          >
+            {showLegend ? 'Ocultar leyenda' : 'Ver leyenda de aura'}
+          </button>
 
-            <section className="detail-card" aria-labelledby="actions-title">
-              <h3 id="actions-title">Recomendaciones</h3>
-              <div style={ac.list}>
-                {auraState.actions.map((a, i) => {
-                  const action = typeof a === 'string' ? a : a.action;
-                  const reason = typeof a === 'string' ? '' : (a.reason || '');
-                  return (
-                    <div key={i} style={ac.card}>
-                      <p style={ac.action}>{action}</p>
-                      {reason && <p style={ac.reason}>{reason}</p>}
+          {showLegend && (
+            <section className="legend-card" aria-labelledby="legend-title">
+              <h3 id="legend-title">Leyenda de colores</h3>
+              <div className="legend-grid">
+                {Object.values(mockStates).map(st => (
+                  <div key={st.mood} style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                    <span style={{ width: 12, height: 12, borderRadius: '50%', background: st.color, flexShrink: 0, display: 'inline-block' }} />
+                    <div>
+                      <strong style={{ color: st.color, fontSize: '.9rem' }}>{MOOD_ES[st.mood] || st.mood}</strong>
+                      <p style={{ margin: '0.1rem 0 0', fontSize: '.82rem' }}>{st.description.split('.')[0]}.</p>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             </section>
-
-            <button
-              className="legend-toggle"          
-              onClick={() => setShowLegend(v => !v)}
-              aria-expanded={showLegend}
-            >
-              {showLegend ? 'Ocultar leyenda' : 'Ver leyenda de aura'}
-            </button>
-
-            {showLegend && (
-              <section className="legend-card" aria-labelledby="legend-title">
-                <h3 id="legend-title">Leyenda de colores</h3>
-                <div className="legend-grid">
-                  {Object.values(mockStates).map(st => (
-                    <div key={st.mood} style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                      <span style={{ width: 12, height: 12, borderRadius: '50%', background: st.color, flexShrink: 0, display: 'inline-block' }} />
-                      <div>
-                        <strong style={{ color: st.color, fontSize: '.9rem' }}>{MOOD_ES[st.mood] || st.mood}</strong>
-                        <p style={{ margin: '0.1rem 0 0', fontSize: '.82rem' }}>{st.description.split('.')[0]}.</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>
-        </section>
-      </main>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
@@ -815,5 +860,51 @@ const so = {
   },
   hint: {
     margin: 0, color: '#7080a0', fontSize: '.75rem',
+  },
+};
+
+/* ── Pet avatar ────────────────────────────────────────────── */
+const avatarStyles = {
+  wrap: {
+    position: 'relative',
+    width: 48,
+    height: 48,
+    minWidth: 48,
+    borderRadius: '50%',
+    border: '2px solid rgba(148,163,184,.25)',
+    background: 'rgba(124,107,255,.18)',
+    cursor: 'pointer',
+    padding: 0,
+    overflow: 'visible',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  img: {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    objectFit: 'cover',
+  },
+  initial: {
+    fontSize: '1.1rem',
+    fontWeight: 700,
+    color: '#b9b0ff',
+    lineHeight: 1,
+  },
+  badge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 18,
+    height: 18,
+    borderRadius: '50%',
+    background: '#1e293b',
+    border: '1.5px solid rgba(148,163,184,.3)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '9px',
+    lineHeight: 1,
   },
 };
