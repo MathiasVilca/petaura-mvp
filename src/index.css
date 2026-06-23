@@ -98,6 +98,8 @@ h1 {
 .search-container {
   position: relative; /*posicion de elementos adentro de el va a ser relativa a el*/
   display: inline-block;
+  flex: 1; 
+  min-width: 200px;
   width: 100%; 
 }
 
@@ -106,11 +108,77 @@ h1 {
   padding: .65rem 2.5rem .65rem 1.25rem;
   min-height: 48px;
   border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: transparent;
+  color: #cee2ff;
+  font-size: .9rem;
+  cursor: text;
+  transition: all 0.2s ease;
+  background-color: rgba(15, 23, 42, 0.88);
+}
+
+.search-bar:hover{
+  border-color: rgba(124, 107, 255, 0.45);
+  box-shadow: 0 0 12px rgba(124, 107, 255, 0.05);
+}
+
+.selector-filter{
+  width: 25%;
+  padding: .65rem 2.5rem .65rem 1.25rem;
+  min-height: 48px;
+  border-radius: 999px;
   border: 1px solid rgba(148,163,184,.25);
   background: transparent;
   color: #e2e8f0;
   font-size: .9rem;
-  cursor: text;
+  cursor: pointer;
+}
+
+.filter-select-trigger {
+  min-height: 48px;
+  padding: 0 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background-color: rgba(15, 23, 42, 0.88);
+  color: #cee2ff;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.filter-select-trigger:hover {
+  border-color: rgba(124, 107, 255, 0.45);
+  box-shadow: 0 0 12px rgba(124, 107, 255, 0.05);
+}
+
+/* Opciones individuales de la lista */
+.dropdown-item {
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  color: #8899b0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+/* Hover de las opciones con micro-animación */
+.dropdown-item:hover {
+  background-color: rgba(124, 107, 255, 0.12);
+  color: #fff;
+  padding-left: 1.05rem; 
+}
+
+/* Estilo para la opción que esté seleccionada */
+.dropdown-item.active {
+  color: #7c6bff;
+  font-weight: 600;
+  background-color: rgba(124, 107, 255, 0.08);
 }
 
 .search-icon {
@@ -118,17 +186,17 @@ h1 {
   right: 15px;
   top: 50%; 
   transform: translateY(-50%);
-  color: #94a3b8; 
+  color: #8899b0; 
   pointer-events: none;
 }
 
 .search-bar:focus{
-  border: 1px solid rgba(148,163,184,.75);
+  border-color: rgba(124, 107, 255, 0.45);
   outline: none
 }
 
 .search-bar::placeholder{
-  color: #94a3b8;
+  color: #cee2ff;
   opacity: 0.6;
 }
 
