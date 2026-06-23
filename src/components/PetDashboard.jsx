@@ -9,6 +9,12 @@ function lastEntryForPet( petId, history) {
   return history.find(entry => entry.petId === petId) ?? null;
 }
 const REDUCTION_PARAMETER=72/340.0 //para aura mini
+function isPetAlert(last){
+  return (ALERT_MOODS.has(last.mood) || last.health_concern === true);
+}
+function isPetStale(last){
+  return (Date.now() - new Date(last.timestamp).getTime() > 86_400_000);
+}
 export default function PetDashboard({ profiles, history, activeId, onSelectPet, onAddPet }) {
   const [petSearchQuery,setPetSearchQuery] = useState('');
   const allSelector = "Todas las mascotas";
@@ -33,17 +39,48 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
 
   const [selectedFilter,setSelectedFilter] = useState(selectorOptions["ALL"]);
   const cleanQuery = petSearchQuery.toLowerCase().trim();
-  const resultProfiles = (cleanQuery==='')? profiles : profiles.filter(pet => {
+  const queryResultProfiles = (cleanQuery==='')? profiles : profiles.filter(pet => {
     const isQueryFirstInName = pet.name.toLowerCase().trim().startsWith(cleanQuery);
     return isQueryFirstInName;
   });
+  const filteredProfiles = (selectedFilter===selectorOptions.ALL)? queryResultProfiles : queryResultProfiles.filter(pet => {
+    
+    //se descarto ALL
+    //primero, species
+    const isFilterSpecies = Object.values(selectorOptions.SPECIES).includes(selectedFilter)
+    //solo necesita una igualdad
+    if (isFilterSpecies){
+      return pet.species === selectedFilter;
+    }
+    //para los siguientes se necesita last
+    const last = lastEntryForPet(pet.id,history);
+    //segundo, needs
+    //incluido en needs: es isAlert o isStale
+    const isFilterNeeds = Object.values(selectorOptions.NEEDS).includes(selectedFilter)
+    
+    if(isFilterNeeds){
+      if (selectedFilter === selectorOptions.NEEDS.ATTENTION) {
+        return last? isPetAlert(last):false;
+      } else if (selectedFilter === selectorOptions.NEEDS.STALE) {
+        return !last || isPetStale(last);
+      }
+    }
+
+    //tercero, moods
+    const isFilterMoods = Object.values(selectorOptions.MOODS).includes(selectedFilter)
+    //solo necesita una comparacion, se pasa al español
+    if(isFilterMoods){
+      return last? MOOD_ES[last.mood] === selectedFilter : false;
+    }
+  });
+  const resultProfiles = filteredProfiles;
   const resultCards = 
     resultProfiles.map(pet => {
             const last = lastEntryForPet(pet.id,history);
             const color = last?.color ?? COLORS_MOOD[MOODS.CALM];
             const secondaryColor = last?.secondaryColor ?? null;
-            const isAlert = last ? (ALERT_MOODS.has(last.mood) || last.health_concern === true) : false;
-            const isStale = !last || Date.now() - new Date(last.timestamp).getTime() > 86_400_000;
+            const isAlert = last ? isPetAlert(last) : false;
+            const isStale = !last || isPetStale(last);
             const isActive = pet.id === activeId;
 
             return (
@@ -131,7 +168,7 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
         
         
         {/*petSearchQuery !== '' && <p>Your query is {petSearchQuery}.</p>*/}
-        {selectedFilter !== '' && <p>Your filter is {selectedFilter}.</p>}
+        {/*selectedFilter !== '' && <p>Your filter is {selectedFilter}.</p>*/}
         <div style={s.grid}>
           {resultCards}
         </div>
