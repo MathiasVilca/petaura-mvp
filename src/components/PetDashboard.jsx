@@ -11,14 +11,27 @@ function lastEntryForPet( petId, history) {
 const REDUCTION_PARAMETER=72/340.0 //para aura mini
 export default function PetDashboard({ profiles, history, activeId, onSelectPet, onAddPet }) {
   const [petSearchQuery,setPetSearchQuery] = useState('');
-
+  const allSelector = "Todas las mascotas";
   const alertSelector = "Atención";
   const staleSelector = "Sin registro hoy";
+  const needsSelector = {
+    "ATTENTION": alertSelector,
+    "STALE": staleSelector,
+  }
   const speciesSelector = {
     "DOG": "Perro",
     "CAT": "Gato",
     "OTHER": "Otro",
   };
+
+  const selectorOptions = {
+    "ALL": allSelector,
+    "NEEDS": needsSelector,
+    "SPECIES": speciesSelector,
+    "MOODS": MOOD_ES,
+  }
+
+  const [selectedFilter,setSelectedFilter] = useState(selectorOptions["ALL"]);
   const cleanQuery = petSearchQuery.toLowerCase().trim();
   const resultProfiles = (cleanQuery==='')? profiles : profiles.filter(pet => {
     const isQueryFirstInName = pet.name.toLowerCase().trim().startsWith(cleanQuery);
@@ -91,26 +104,26 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
             />
             <i className="fa-solid fa-magnifying-glass search-icon"></i>
           </div>
-          <select className='selector-filter'>
-            <option> Todas las mascotas </option>
+          <select className='selector-filter' onChange={e => setSelectedFilter(e.target.value)}>
+            <option> {selectorOptions["ALL"]} </option>
             <optgroup label="Por necesidad">
-              <option> {alertSelector} </option>
-              <option> {staleSelector} </option>
+              <option> {selectorOptions["NEEDS"].ATTENTION} </option>
+              <option> {selectorOptions["NEEDS"].STALE} </option>
             </optgroup>
             <optgroup label="Por especie">
-              <option> {speciesSelector.DOG} </option>
-              <option> {speciesSelector.CAT} </option>
-              <option> {speciesSelector.OTHER} </option>
+              <option> {selectorOptions["SPECIES"].DOG} </option>
+              <option> {selectorOptions["SPECIES"].CAT} </option>
+              <option> {selectorOptions["SPECIES"].OTHER} </option>
             </optgroup>
             <optgroup label="Por estado">
-              <option> {MOOD_ES[MOODS.HAPPY]} </option>
-              <option> {MOOD_ES[MOODS.CALM]} </option>
-              <option> {MOOD_ES[MOODS.TIRED]} </option>
-              <option> {MOOD_ES[MOODS.ANXIOUS]} </option>
-              <option> {MOOD_ES[MOODS.PLAYFUL]} </option>
-              <option> {MOOD_ES[MOODS.AFFECTIONATE]} </option>
-              <option> {MOOD_ES[MOODS.CURIOUS]} </option>
-              <option> {MOOD_ES[MOODS.IRRITABLE]} </option>             
+              <option> {selectorOptions["MOODS"][MOODS.HAPPY]} </option>
+              <option> {selectorOptions["MOODS"][MOODS.CALM]} </option>
+              <option> {selectorOptions["MOODS"][MOODS.TIRED]} </option>
+              <option> {selectorOptions["MOODS"][MOODS.ANXIOUS]} </option>
+              <option> {selectorOptions["MOODS"][MOODS.PLAYFUL]} </option>
+              <option> {selectorOptions["MOODS"][MOODS.AFFECTIONATE]} </option>
+              <option> {selectorOptions["MOODS"][MOODS.CURIOUS]} </option>
+              <option> {selectorOptions["MOODS"][MOODS.IRRITABLE]} </option>             
             </optgroup>
             
           </select>
@@ -118,7 +131,7 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
         
         
         {/*petSearchQuery !== '' && <p>Your query is {petSearchQuery}.</p>*/}
-        
+        {selectedFilter !== '' && <p>Your filter is {selectedFilter}.</p>}
         <div style={s.grid}>
           {resultCards}
         </div>
