@@ -1,6 +1,6 @@
 import AuraCanvas from './AuraCanvas';
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { MOODS,COLORS_MOOD } from '../moods.js';
+import { MOODS,COLORS_MOOD,MOOD_ES } from '../moods.js';
 
 const ALERT_MOODS = new Set([MOODS.ANXIOUS, MOODS.IRRITABLE]);
 
@@ -70,18 +70,45 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
             + Agregar
           </button>
         </div>
-        <div className="search-container">
-          
-          <input
-            name="pet-name-input"
-            value={petSearchQuery}
-            onChange={e => setPetSearchQuery(e.target.value)}
-            type="text"
-            placeholder='Buscar mascotas...'
-            className="search-bar"
-          />
-          <i className="fa-solid fa-magnifying-glass search-icon"></i>
+        <div style={s.toolbar}>
+          <div className="search-container">
+
+            <input
+              name="pet-name-input"
+              value={petSearchQuery}
+              onChange={e => setPetSearchQuery(e.target.value)}
+              type="text"
+              placeholder='Buscar mascotas...'
+              className="search-bar"
+            />
+            <i className="fa-solid fa-magnifying-glass search-icon"></i>
+          </div>
+          <select className='selector-filter'>
+            <option> Todas las mascotas </option>
+            <optgroup label="Por necesidad">
+              <option> Atención </option>
+              <option> Sin registro hoy </option>
+            </optgroup>
+            <optgroup label="Por especie">
+              <option> Perro </option>
+              <option> Gato </option>
+              <option> Otro </option>
+            </optgroup>
+            <optgroup label="Por estado">
+              <option> {MOOD_ES[MOODS.HAPPY]} </option>
+              <option> {MOOD_ES[MOODS.CALM]} </option>
+              <option> {MOOD_ES[MOODS.TIRED]} </option>
+              <option> {MOOD_ES[MOODS.ANXIOUS]} </option>
+              <option> {MOOD_ES[MOODS.PLAYFUL]} </option>
+              <option> {MOOD_ES[MOODS.AFFECTIONATE]} </option>
+              <option> {MOOD_ES[MOODS.CURIOUS]} </option>
+              <option> {MOOD_ES[MOODS.IRRITABLE]} </option>             
+            </optgroup>
+            
+          </select>
         </div>
+        
+        
         {/*petSearchQuery !== '' && <p>Your query is {petSearchQuery}.</p>*/}
         
         <div style={s.grid}>
@@ -141,6 +168,11 @@ const s = {
   cardActive: {
     border: '1px solid rgba(124,107,255,.45)',
     boxShadow: '0 0 24px rgba(124,107,255,.15)',
+  },
+  toolbar: {
+    display:'flex',
+    alignItems: 'center',
+    gap: '1rem',
   },
   cardTop: { display: 'flex', gap: '1rem', alignItems: 'center' },
   petInfo: { display: 'flex', flexDirection: 'column', gap: '.25rem', flex: 1 },

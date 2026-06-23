@@ -113,6 +113,18 @@ h1 {
   cursor: text;
 }
 
+.selector-filter{
+  width: 25%;
+  padding: .65rem 2.5rem .65rem 1.25rem;
+  min-height: 48px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,.25);
+  background: transparent;
+  color: #e2e8f0;
+  font-size: .9rem;
+  cursor: pointer;
+}
+
 .search-icon {
   position: absolute; /* Hace que no empuje a la barra */
   right: 15px;
