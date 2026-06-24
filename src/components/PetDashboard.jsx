@@ -20,6 +20,29 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
   const [petSearchQuery,setPetSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const confirmDeleteAction = () => {
+    if (!confirmDelete) return;
+    const petId = confirmDelete;
+    const updatedProfiles = profiles.filter(p => p.id !== petId);
+    localStorage.setItem('petaura_profiles', JSON.stringify(updatedProfiles));
+    
+    const remainingHistory = history.filter(e => e.petId !== petId);
+    localStorage.setItem('petaura_history', JSON.stringify(remainingHistory));
+    
+    if (activeId === petId) {
+      if (updatedProfiles.length > 0) {
+        localStorage.setItem('petaura_active_pet', updatedProfiles[0].id);
+        localStorage.setItem('petaura_profile', JSON.stringify(updatedProfiles[0]));
+      } else {
+        localStorage.removeItem('petaura_active_pet');
+        localStorage.removeItem('petaura_profile');
+      }
+    }
+    
+    window.location.reload();
+  };
 
   const allSelector = "Todas las mascotas";
   const alertSelector = "Atención";
@@ -149,12 +172,24 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
             const isActive = pet.id === activeId;
 
             return (
-              <button
+              <div
                 key={pet.id}
                 onClick={() => onSelectPet(pet.id)}
-                style={{ ...s.card, ...(isActive ? s.cardActive : {}) }}
+                style={{ ...s.card, ...(isActive ? s.cardActive : {}), position: 'relative' }}
                 aria-label={`Ver aura de ${pet.name}`}
+                role="button"
+                tabIndex={0}
               >
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setConfirmDelete(pet.id);
+                  }}
+                  style={s.deleteBtn}
+                  title="Eliminar mascota"
+                >
+                  ✕
+                </div>
                 <div style={s.cardTop}>
                   <AuraCanvas parameters={
                     {color,secondaryColor,
@@ -177,7 +212,7 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
                   </div>
                 </div>
                 <span style={s.cta}>Ver aura →</span>
-              </button>
+              </div>
             );
           });
   return (
@@ -322,6 +357,21 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
           {resultCards}
         </div>
 
+        {confirmDelete && (
+          <div style={s.overlay}>
+            <div style={s.modal}>
+              <p style={s.modalTitle}>¿Eliminar mascota?</p>
+              <p style={s.modalSub}>
+                Esta acción no se puede deshacer. Se eliminará permanentemente la mascota y todo su historial de auras.
+              </p>
+              <div style={s.modalActions}>
+                <button onClick={() => setConfirmDelete(null)} style={s.btnCancel}>Cancelar</button>
+                <button onClick={confirmDeleteAction} style={s.btnConfirm}>Eliminar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
@@ -430,4 +480,42 @@ const s = {
     border: '1px solid rgba(250,204,21,.2)',
   },
   cta: { color: '#7c6bff', fontSize: '.85rem', fontWeight: 600, alignSelf: 'flex-end' },
+  deleteBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 26,
+    height: 26,
+    borderRadius: '50%',
+    border: '1px solid rgba(248,113,113,.35)',
+    background: 'rgba(248,113,113,.15)',
+    color: '#f87171',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    fontSize: '.85rem',
+    transition: 'all .2s',
+  },
+  overlay: {
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(0,0,0,.6)', display: 'flex', alignItems: 'center',
+    justifyContent: 'center', zIndex: 9999, backdropFilter: 'blur(4px)',
+  },
+  modal: {
+    background: '#1e293b', border: '1px solid rgba(148,163,184,.2)',
+    borderRadius: 24, padding: '2rem', width: '90%', maxWidth: 360,
+    boxShadow: '0 20px 40px rgba(0,0,0,.4)', textAlign: 'center',
+  },
+  modalTitle: { margin: '0 0 .5rem', color: '#f0f0ff', fontSize: '1.25rem', fontWeight: 600 },
+  modalSub: { margin: '0 0 1.5rem', color: '#94a3b8', fontSize: '.9rem', lineHeight: 1.5 },
+  modalActions: { display: 'flex', gap: '1rem' },
+  btnCancel: {
+    flex: 1, padding: '.75rem', borderRadius: 999, border: '1px solid rgba(148,163,184,.3)',
+    background: 'transparent', color: '#cbd5e1', fontWeight: 600, cursor: 'pointer',
+  },
+  btnConfirm: {
+    flex: 1, padding: '.75rem', borderRadius: 999, border: 'none',
+    background: '#ef4444', color: '#fff', fontWeight: 600, cursor: 'pointer',
+  }
 };
