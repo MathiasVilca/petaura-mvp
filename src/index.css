@@ -152,6 +152,14 @@ h1 {
   transition: all 0.2s ease;
   user-select: none;
   white-space: nowrap;
+  max-width: 190px;
+}
+
+.filter-select-trigger span {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Esto agrega los "..." al final */
 }
 
 .filter-select-trigger:hover {

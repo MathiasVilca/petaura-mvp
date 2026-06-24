@@ -1,6 +1,7 @@
 import AuraCanvas from './AuraCanvas';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { MOODS,COLORS_MOOD,MOOD_ES } from '../moods.js';
+import { unstable_renderSubtreeIntoContainer } from 'react-dom';
 
 const ALERT_MOODS = new Set([MOODS.ANXIOUS, MOODS.IRRITABLE]);
 
@@ -18,6 +19,8 @@ function isPetStale(last){
 export default function PetDashboard({ profiles, history, activeId, onSelectPet, onAddPet }) {
   const [petSearchQuery,setPetSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+
   const allSelector = "Todas las mascotas";
   const alertSelector = "Atención";
   const staleSelector = "Sin registro hoy";
@@ -74,7 +77,68 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
       return last? MOOD_ES[last.mood] === selectedFilter : false;
     }
   });
-  const resultProfiles = filteredProfiles;
+
+  const nameAscSort="Nombre (A-Z)";
+  const nameDescSort="Nombre (Z-A)";
+  const dateAscSort="Añadidos recientemente";
+  const dateDescSort="Primeros Agregados";
+  const stateAscSort="Actualización más antigua";
+  const stateDescSort="Última actualización";
+  const needAttentionSort="Prioridad: Atención";
+  const staleSort="Prioridad: Sin registro";
+  const sortOptions = {
+    "STATE_DESC": stateDescSort,
+    "STATE_ASC": stateAscSort,
+    "NAME_ASC" : nameAscSort,
+    "NAME_DESC": nameDescSort,
+    "PRIORITY_ATTENTION": needAttentionSort,
+    "PRIORITY_STALE": staleSort,
+    "DATE_ASC": dateAscSort,
+    "DATE_DESC": dateDescSort,
+  }
+  const [selectedSort,setSelectedSort] = useState(stateDescSort);
+
+  const sortedProfiles = filteredProfiles.toSorted(
+    (a,b) => {
+      if(selectedSort === sortOptions.DATE_ASC){
+        //orden al reves
+        return -1;
+      } else if (selectedSort === sortOptions.DATE_DESC){
+        //orden normal
+        return 0;
+      } else if (selectedSort === sortOptions.NAME_ASC){
+        return a.name.localeCompare(b.name);
+      } else if (selectedSort === sortOptions.NAME_DESC){
+        return b.name.localeCompare(a.name);
+      } else if (selectedSort === sortOptions.STATE_ASC){
+        const lastA = lastEntryForPet(a.id,history);
+        const lastB = lastEntryForPet(b.id,history);
+        const timestampA= lastA? new Date(lastA.timestamp).getTime() : Infinity;
+        const timestampB= lastB? new Date(lastB.timestamp).getTime() : Infinity;
+        return timestampA-timestampB;
+      } else if (selectedSort === sortOptions.STATE_DESC){
+        const lastA = lastEntryForPet(a.id,history);
+        const lastB = lastEntryForPet(b.id,history);
+        const timestampA= lastA? new Date(lastA.timestamp).getTime() : 0;
+        const timestampB= lastB? new Date(lastB.timestamp).getTime() : 0;
+        return timestampB-timestampA;
+      } else if (selectedSort === sortOptions.PRIORITY_ATTENTION){
+        const lastA = lastEntryForPet(a.id,history);
+        const lastB = lastEntryForPet(b.id,history);
+        const isAlertA=lastA? isPetAlert(lastA): false;
+        const isAlertB=lastB? isPetAlert(lastB): false;
+        return isAlertB-isAlertA;
+      } else if (selectedSort === sortOptions.PRIORITY_STALE){
+        const lastA = lastEntryForPet(a.id,history);
+        const lastB = lastEntryForPet(b.id,history);
+        const isStaleA=lastA? isPetStale(lastA): true;
+        const isStaleB=lastB? isPetStale(lastB): true;
+        return isStaleB-isStaleA;
+      }
+      return 0;
+    }
+  );
+  const resultProfiles = sortedProfiles;
   const resultCards = 
     resultProfiles.map(pet => {
             const last = lastEntryForPet(pet.id,history);
@@ -211,6 +275,37 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
                     onClick={() => { setSelectedFilter(selectorOptions["MOODS"][moodKey]); setIsDropdownOpen(false); }}
                   >
                     {selectorOptions["MOODS"][moodKey]}
+                  </div>
+                ))}
+
+              </div>
+            )}
+
+          </div>
+
+          <div style={s.dropdownContainer}>
+            <div 
+              className="filter-select-trigger" 
+              onClick={() => setIsSortOpen(!isSortOpen)}
+            >
+              {/*Se imprime directamente Filtro seleccionado*/}
+              <span>{selectedSort}</span>
+              {/*flechas del dropdown*/}
+              <i className={`fa-solid fa-chevron-${isSortOpen ? 'up' : 'down'}`} style={s.chevronIcon}></i>
+            </div>
+
+            {/*solo se muestra menu si esta abietrto*/}
+            {isSortOpen && (
+              <div style={s.dropdownMenu}>
+                {/*Opciones para ordenar*/}
+                <div style={s.dropdownGroupLabel}>Ordenar por</div>
+                {Object.keys(sortOptions).map(moodKey => (
+                  <div 
+                    key={moodKey}
+                    className={`dropdown-item ${selectedSort === sortOptions[moodKey] ? 'active' : ''}`}
+                    onClick={() => { setSelectedSort(sortOptions[moodKey]); setIsSortOpen(false); }}
+                  >
+                    {sortOptions[moodKey]}
                   </div>
                 ))}
 
