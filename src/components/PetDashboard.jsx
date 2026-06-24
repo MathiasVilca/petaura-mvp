@@ -1,6 +1,7 @@
 import AuraCanvas from './AuraCanvas';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { MOODS,COLORS_MOOD,MOOD_ES } from '../moods.js';
+import { unstable_renderSubtreeIntoContainer } from 'react-dom';
 
 const ALERT_MOODS = new Set([MOODS.ANXIOUS, MOODS.IRRITABLE]);
 
@@ -86,16 +87,16 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
   const needAttentionSort="Prioridad: Atención";
   const staleSort="Prioridad: Sin registro";
   const sortOptions = {
-    "DATE_ASC": dateAscSort,
-    "DATE_DESC": dateDescSort,
-    "NAME_ASC" : nameAscSort,
-    "NAME_DESC": nameDescSort, 
     "STATE_DESC": stateDescSort,
     "STATE_ASC": stateAscSort,
+    "NAME_ASC" : nameAscSort,
+    "NAME_DESC": nameDescSort,
     "PRIORITY_ATTENTION": needAttentionSort,
     "PRIORITY_STALE": staleSort,
+    "DATE_ASC": dateAscSort,
+    "DATE_DESC": dateDescSort,
   }
-  const [selectedSort,setSelectedSort] = useState(dateAscSort);
+  const [selectedSort,setSelectedSort] = useState(stateDescSort);
 
   const sortedProfiles = filteredProfiles.toSorted(
     (a,b) => {
