@@ -81,8 +81,8 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
   const nameDescSort="Nombre (Z-A)";
   const dateAscSort="Añadidos recientemente";
   const dateDescSort="Primeros Agregados";
-  const stateAscSort="Última actualización";
-  const stateDescSort="Actualización más antigua";
+  const stateAscSort="Actualización más antigua";
+  const stateDescSort="Última actualización";
   const needAttentionSort="Prioridad: Atención";
   const staleSort="Prioridad: Sin registro";
   const sortOptions = {
@@ -90,14 +90,54 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
     "DATE_DESC": dateDescSort,
     "NAME_ASC" : nameAscSort,
     "NAME_DESC": nameDescSort, 
-    "STATE_ASC": stateAscSort,
     "STATE_DESC": stateDescSort,
+    "STATE_ASC": stateAscSort,
     "PRIORITY_ATTENTION": needAttentionSort,
     "PRIORITY_STALE": staleSort,
   }
   const [selectedSort,setSelectedSort] = useState(dateAscSort);
 
-  const resultProfiles = filteredProfiles;
+  const sortedProfiles = filteredProfiles.toSorted(
+    (a,b) => {
+      if(selectedSort === sortOptions.DATE_ASC){
+        //orden al reves
+        return -1;
+      } else if (selectedSort === sortOptions.DATE_DESC){
+        //orden normal
+        return 0;
+      } else if (selectedSort === sortOptions.NAME_ASC){
+        return a.name.localeCompare(b.name);
+      } else if (selectedSort === sortOptions.NAME_DESC){
+        return b.name.localeCompare(a.name);
+      } else if (selectedSort === sortOptions.STATE_ASC){
+        const lastA = lastEntryForPet(a.id,history);
+        const lastB = lastEntryForPet(b.id,history);
+        const timestampA= lastA? new Date(lastA.timestamp).getTime() : Infinity;
+        const timestampB= lastB? new Date(lastB.timestamp).getTime() : Infinity;
+        return timestampA-timestampB;
+      } else if (selectedSort === sortOptions.STATE_DESC){
+        const lastA = lastEntryForPet(a.id,history);
+        const lastB = lastEntryForPet(b.id,history);
+        const timestampA= lastA? new Date(lastA.timestamp).getTime() : 0;
+        const timestampB= lastB? new Date(lastB.timestamp).getTime() : 0;
+        return timestampB-timestampA;
+      } else if (selectedSort === sortOptions.PRIORITY_ATTENTION){
+        const lastA = lastEntryForPet(a.id,history);
+        const lastB = lastEntryForPet(b.id,history);
+        const isAlertA=lastA? isPetAlert(lastA): false;
+        const isAlertB=lastB? isPetAlert(lastB): false;
+        return isAlertB-isAlertA;
+      } else if (selectedSort === sortOptions.PRIORITY_STALE){
+        const lastA = lastEntryForPet(a.id,history);
+        const lastB = lastEntryForPet(b.id,history);
+        const isStaleA=lastA? isPetStale(lastA): true;
+        const isStaleB=lastB? isPetStale(lastB): true;
+        return isStaleB-isStaleA;
+      }
+      return 0;
+    }
+  );
+  const resultProfiles = sortedProfiles;
   const resultCards = 
     resultProfiles.map(pet => {
             const last = lastEntryForPet(pet.id,history);
