@@ -21,6 +21,9 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState(new Set());
+  const [confirmBulk, setConfirmBulk] = useState(false);
 
   const confirmDeleteAction = () => {
     if (!confirmDelete) return;
@@ -32,6 +35,26 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
     localStorage.setItem('petaura_history', JSON.stringify(remainingHistory));
     
     if (activeId === petId) {
+      if (updatedProfiles.length > 0) {
+        localStorage.setItem('petaura_active_pet', updatedProfiles[0].id);
+        localStorage.setItem('petaura_profile', JSON.stringify(updatedProfiles[0]));
+      } else {
+        localStorage.removeItem('petaura_active_pet');
+        localStorage.removeItem('petaura_profile');
+      }
+    }
+    
+    window.location.reload();
+  };
+
+  const confirmDeleteBulkAction = () => {
+    const updatedProfiles = profiles.filter(p => !selected.has(p.id));
+    localStorage.setItem('petaura_profiles', JSON.stringify(updatedProfiles));
+    
+    const remainingHistory = history.filter(e => !selected.has(e.petId));
+    localStorage.setItem('petaura_history', JSON.stringify(remainingHistory));
+    
+    if (selected.has(activeId)) {
       if (updatedProfiles.length > 0) {
         localStorage.setItem('petaura_active_pet', updatedProfiles[0].id);
         localStorage.setItem('petaura_profile', JSON.stringify(updatedProfiles[0]));
@@ -162,6 +185,31 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
     }
   );
   const resultProfiles = sortedProfiles;
+
+  const allSelected = selected.size === resultProfiles.length && resultProfiles.length > 0;
+
+  const toggleSelectMode = () => {
+    setSelectMode(v => !v);
+    setSelected(new Set());
+  };
+
+  const toggleOne = id => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(resultProfiles.map(p => p.id)));
+    }
+  };
+
   const resultCards = 
     resultProfiles.map(pet => {
             const last = lastEntryForPet(pet.id,history);
@@ -170,26 +218,41 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
             const isAlert = last ? isPetAlert(last) : false;
             const isStale = !last || isPetStale(last);
             const isActive = pet.id === activeId;
+            const isSelected = selected.has(pet.id);
 
             return (
               <div
                 key={pet.id}
-                onClick={() => onSelectPet(pet.id)}
-                style={{ ...s.card, ...(isActive ? s.cardActive : {}), position: 'relative' }}
+                onClick={() => {
+                  if (selectMode) toggleOne(pet.id);
+                  else onSelectPet(pet.id);
+                }}
+                style={{ 
+                  ...s.card, 
+                  ...(isActive && !selectMode ? s.cardActive : {}), 
+                  ...(isSelected ? s.cardSelected : {}),
+                  position: 'relative' 
+                }}
                 aria-label={`Ver aura de ${pet.name}`}
                 role="button"
                 tabIndex={0}
               >
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirmDelete(pet.id);
-                  }}
-                  style={s.deleteBtn}
-                  title="Eliminar mascota"
-                >
-                  ✕
-                </div>
+                {selectMode ? (
+                  <div style={isSelected ? s.checkOn : s.checkOff} aria-hidden>
+                    {isSelected && <span style={s.checkMark}>✓</span>}
+                  </div>
+                ) : (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmDelete(pet.id);
+                    }}
+                    style={s.deleteBtn}
+                    title="Eliminar mascota"
+                  >
+                    ✕
+                  </div>
+                )}
                 <div style={s.cardTop}>
                   <AuraCanvas parameters={
                     {color,secondaryColor,
@@ -224,10 +287,39 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
             <p style={s.eyebrow}>PetAura</p>
             <h2 style={s.title}>Mis mascotas</h2>
           </div>
-          <button onClick={onAddPet} style={s.addBtn} aria-label="Agregar mascota">
-            + Agregar
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {profiles.length > 0 && (
+              <button
+                onClick={toggleSelectMode}
+                style={selectMode ? s.btnSelectActive : s.btnSelect}
+              >
+                {selectMode ? 'Cancelar' : 'Seleccionar'}
+              </button>
+            )}
+            <button onClick={onAddPet} style={s.addBtn} aria-label="Agregar mascota">
+              + Agregar
+            </button>
+          </div>
         </div>
+        
+        {selectMode && resultProfiles.length > 0 && (
+          <div style={s.selectionBar}>
+            <button onClick={toggleAll} style={s.btnSelAll}>
+              {allSelected ? 'Deseleccionar todo' : 'Seleccionar todo'}
+            </button>
+            <span style={s.selCount}>
+              {selected.size > 0 ? `${selected.size} seleccionada${selected.size > 1 ? 's' : ''}` : 'Ninguna'}
+            </span>
+            <button
+              onClick={() => selected.size > 0 && setConfirmBulk(true)}
+              style={selected.size > 0 ? s.btnDeleteSel : s.btnDeleteSelDisabled}
+              disabled={selected.size === 0}
+            >
+              Eliminar
+            </button>
+          </div>
+        )}
+
         <div style={s.toolbar}>
           <div className="search-container">
 
@@ -367,6 +459,21 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
               <div style={s.modalActions}>
                 <button onClick={() => setConfirmDelete(null)} style={s.btnCancel}>Cancelar</button>
                 <button onClick={confirmDeleteAction} style={s.btnConfirm}>Eliminar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {confirmBulk && (
+          <div style={s.overlay}>
+            <div style={s.modal}>
+              <p style={s.modalTitle}>¿Eliminar {selected.size} mascota{selected.size > 1 ? 's' : ''}?</p>
+              <p style={s.modalSub}>
+                Esta acción no se puede deshacer. Se eliminarán permanentemente las mascotas seleccionadas y todo su historial de auras.
+              </p>
+              <div style={s.modalActions}>
+                <button onClick={() => setConfirmBulk(false)} style={s.btnCancel}>Cancelar</button>
+                <button onClick={confirmDeleteBulkAction} style={s.btnConfirm}>Eliminar {selected.size}</button>
               </div>
             </div>
           </div>
@@ -517,5 +624,108 @@ const s = {
   btnConfirm: {
     flex: 1, padding: '.75rem', borderRadius: 999, border: 'none',
     background: '#ef4444', color: '#fff', fontWeight: 600, cursor: 'pointer',
+  },
+  btnSelect: {
+    padding: '.4rem 1rem',
+    borderRadius: 20,
+    border: '1px solid rgba(148,163,184,.25)',
+    background: 'transparent',
+    color: '#94a3b8',
+    fontSize: '.85rem',
+    cursor: 'pointer',
+    fontWeight: 500,
+  },
+  btnSelectActive: {
+    padding: '.4rem 1rem',
+    borderRadius: 20,
+    border: '1px solid rgba(239,68,68,.4)',
+    background: 'rgba(239,68,68,.1)',
+    color: '#f87171',
+    fontSize: '.85rem',
+    cursor: 'pointer',
+    fontWeight: 600,
+  },
+  selectionBar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '.75rem',
+    background: 'rgba(15,23,42,.9)',
+    border: '1px solid rgba(148,163,184,.15)',
+    borderRadius: 16,
+    padding: '.65rem 1rem',
+  },
+  btnSelAll: {
+    background: 'none',
+    border: 'none',
+    color: '#60a5fa',
+    fontSize: '.85rem',
+    cursor: 'pointer',
+    fontWeight: 600,
+    padding: 0,
+    whiteSpace: 'nowrap',
+  },
+  selCount: {
+    flex: 1,
+    color: '#8899b0',
+    fontSize: '.85rem',
+    textAlign: 'center',
+  },
+  btnDeleteSel: {
+    padding: '.4rem 1rem',
+    borderRadius: 12,
+    border: 'none',
+    background: 'rgba(239,68,68,.85)',
+    color: '#fff',
+    fontSize: '.85rem',
+    cursor: 'pointer',
+    fontWeight: 600,
+    whiteSpace: 'nowrap',
+  },
+  btnDeleteSelDisabled: {
+    padding: '.4rem 1rem',
+    borderRadius: 12,
+    border: 'none',
+    background: 'rgba(148,163,184,.12)',
+    color: '#4a5568',
+    fontSize: '.85rem',
+    cursor: 'not-allowed',
+    fontWeight: 600,
+    whiteSpace: 'nowrap',
+  },
+  cardSelected: {
+    border: '1px solid rgba(96,165,250,.45)',
+    background: 'rgba(30,58,138,.18)',
+  },
+  checkOff: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 22,
+    height: 22,
+    borderRadius: '50%',
+    border: '2px solid rgba(148,163,184,.35)',
+    background: 'transparent',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkOn: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 22,
+    height: 22,
+    borderRadius: '50%',
+    border: '2px solid #60a5fa',
+    background: '#2563eb',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkMark: {
+    color: '#fff',
+    fontSize: '.7rem',
+    fontWeight: 800,
+    lineHeight: 1,
   }
 };
