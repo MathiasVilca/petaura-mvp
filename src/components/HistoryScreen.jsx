@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import NavBackButton from './NavBackButton';
-import { MOOD_ES } from '../moods.js';
+import { MOOD_ES, mockStates } from '../moods.js';
 import AuraCanvas from './AuraCanvas';
 
 function loadHistory() {
@@ -58,13 +58,13 @@ function buildHistory(petId) {
 }
 
 export default function HistoryScreen({ petName, onBack, petId }) {
-  const [history, setHistory]         = useState(() => buildHistory(petId));
+  const [history, setHistory] = useState(() => buildHistory(petId));
   const [expandedIdx, setExpandedIdx] = useState(null);   // detalle abierto (modo normal)
-  const [selectMode, setSelectMode]   = useState(false);  // modo selección múltiple
-  const [selected, setSelected]       = useState(new Set()); // índices seleccionados
+  const [selectMode, setSelectMode] = useState(false);  // modo selección múltiple
+  const [selected, setSelected] = useState(new Set()); // índices seleccionados
   const [confirmSingle, setConfirmSingle] = useState(null); // idx para borrar uno solo
-  const [confirmBulk, setConfirmBulk]    = useState(false);  // confirmar borrado múltiple
-  const [hasDeleted, setHasDeleted]      = useState(false);  // flag para forzar recarga al salir
+  const [confirmBulk, setConfirmBulk] = useState(false);  // confirmar borrado múltiple
+  const [hasDeleted, setHasDeleted] = useState(false);  // flag para sincronizar al salir
 
   /* ── helpers de selección ── */
   const allSelected = selected.size === history.length && history.length > 0;
@@ -125,10 +125,75 @@ export default function HistoryScreen({ petName, onBack, petId }) {
   };
 
   const handleBack = () => {
+    onBack();
     if (hasDeleted) {
-      window.location.reload();
-    } else {
-      onBack();
+      // Inyectar CSS para ocultar completamente el menú de estados y evitar el parpadeo
+      const style = document.createElement('style');
+      style.innerHTML = `.state-buttons { opacity: 0 !important; visibility: hidden !important; }`;
+      document.head.appendChild(style);
+
+      setTimeout(() => {
+        try {
+          const historyData = loadHistory().filter(e => e.petId === petId);
+          const last = historyData.length > 0 ? historyData[0] : null;
+          
+          const closeDemoMenu = () => {
+            setTimeout(() => {
+              const demoToggle = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Probar estados (demo)'));
+              if (demoToggle && demoToggle.textContent.includes('▼')) {
+                demoToggle.click();
+              }
+              setTimeout(() => {
+                if (document.head.contains(style)) document.head.removeChild(style);
+              }, 50);
+            }, 10);
+          };
+          
+          if (!last) {
+            const btns = Array.from(document.querySelectorAll('.state-button'));
+            const calmBtn = btns.find(b => b.textContent === 'Tranquilo');
+            if (calmBtn) {
+              calmBtn.click();
+              closeDemoMenu();
+            } else {
+              if (document.head.contains(style)) document.head.removeChild(style);
+            }
+          } else {
+            const originalMock = { ...mockStates[last.mood] };
+            
+            mockStates[last.mood] = {
+              ...originalMock,
+              energy: last.energy ?? 0.5,
+              stress: last.stress ?? 0.5,
+              warmth: last.warmth ?? 0.5,
+              pattern: last.pattern || 'flow',
+              summary: last.summary || '',
+              description: last.description || '',
+              actions: last.actions || [],
+              mood_secondary: last.mood_secondary || null,
+              secondaryColor: last.secondaryColor || null,
+              health_concern: last.health_concern || false
+            };
+            
+            const btns = Array.from(document.querySelectorAll('.state-button'));
+            const targetBtn = btns.find(b => b.textContent === (MOOD_ES[last.mood] || last.mood));
+            
+            if (targetBtn) {
+              targetBtn.click();
+              closeDemoMenu();
+            } else {
+              if (document.head.contains(style)) document.head.removeChild(style);
+            }
+            
+            setTimeout(() => {
+              mockStates[last.mood] = originalMock;
+            }, 10);
+          }
+        } catch (e) {
+          console.error("Sincronización fallida", e);
+          if (document.head.contains(style)) document.head.removeChild(style);
+        }
+      }, 50);
     }
   };
 
@@ -182,11 +247,11 @@ export default function HistoryScreen({ petName, onBack, petId }) {
         ) : (
           <div style={s.list}>
             {history.map((entry, idx) => {
-              const isOpen     = !selectMode && expandedIdx === idx;
+              const isOpen = !selectMode && expandedIdx === idx;
               const isSelected = selected.has(idx);
               return (
                 <div
-                  key={entry.timestamp || idx}
+                  key={idx}
                   style={{
                     ...s.entryWrap,
                     ...(isSelected ? s.entryWrapSelected : {}),
@@ -242,7 +307,7 @@ export default function HistoryScreen({ petName, onBack, petId }) {
                       {!selectMode && (
                         <div style={s.bars}>
                           <MiniBar label="E" value={entry.energy} color={entry.color} />
-                          <MiniBar label="S" value={entry.stress}  color="#f97316" />
+                          <MiniBar label="S" value={entry.stress} color="#f97316" />
                         </div>
                       )}
 
@@ -299,7 +364,7 @@ export default function HistoryScreen({ petName, onBack, petId }) {
         )}
 
         {/* Modal — eliminar una */}
-        {confirmSingle !== null && history[confirmSingle] && (
+        {confirmSingle !== null && (
           <div style={s.overlay}>
             <div style={s.modal}>
               <p style={s.modalTitle}>¿Eliminar esta aura?</p>
