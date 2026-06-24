@@ -189,7 +189,7 @@ export default memo(AuraCanvas, (prevProps,nextProps) => {
   const hasSameRedBasePartCount = prevProps.reducedBaseParticleCount === nextProps.reducedBaseParticleCount;
   const hasSameRedPartMult = prevProps.reduce_particle_multiplier === nextProps.reduce_particle_multiplier;
   const hasSameBasePartMult = prevProps.reducedBaseParticleMult === nextProps.reducedBaseParticleMult;
-  const hasSameSize = prevProps.size === prevProps.size;
+  const hasSameSize = prevProps.size === nextProps.size;
   return hasSameColors && hasSameEnergy && hasSamePattern && hasSameSecColors && hasSameStress && hasSameWarmth && hasSameSize &&
   hasSameRedParameter && hasSameRedParticles && hasSameRedBasePartCount && hasSameRedPartMult && hasSameBasePartMult;
 });
