@@ -5,7 +5,7 @@ import VoiceScreen       from './components/VoiceScreen';
 import LoadingScreen     from './components/LoadingScreen';
 import HistoryScreen     from './components/HistoryScreen';
 import PetDashboard      from './components/PetDashboard';
-import { PayloadInjector } from './components/PayloadInyector.jsx';
+// import { PayloadInjector } from './components/PayloadInyector.jsx';
 import { analyzeTranscriptWithAI } from './ai/analyzeTranscript';
 import { generateAuraFromPhoto } from './services/groqService';
 import PhotoAnalysisMenu from './components/PhotoAnalysisMenu';
@@ -676,11 +676,11 @@ function App() {
             </div>
           </section>
 
-          <PayloadInjector applyAnalysisResult={applyAnalysisResult} />
+          {/* <PayloadInjector applyAnalysisResult={applyAnalysisResult} /> */}
 
-          <button onClick={handleReset} style={btn.dangerSm} title="Borrar perfil e historial">
+          {/* <button onClick={handleReset} style={btn.dangerSm} title="Borrar perfil e historial">
             Resetear cuenta
-          </button>
+          </button> */}
         </div>
 
         {/* ── Columna derecha: Aura protagonista + leyenda ── */}
