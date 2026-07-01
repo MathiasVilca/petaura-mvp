@@ -534,8 +534,8 @@ function App() {
         <div className="home-left">
           <div className="hero-card">
             {/* Identity & primary actions */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-              <div style={{ display: 'grid', gap: '.75rem' }}>
+            <div style={{ display: 'grid', gap: '.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '.75rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '.65rem' }}>
                   <button
                     onClick={() => setScreen('dashboard')}
@@ -546,69 +546,64 @@ function App() {
                   </button>
                   <p className="app-tag" style={{ margin: 0 }}>Inicio</p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingLeft: '.15rem', marginTop: '.35rem' }}>
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    style={{ display: 'none' }}
-                  />
-                  <button
-                    onClick={() => avatarInputRef.current?.click()}
-                    style={avatarStyles.wrap}
-                    aria-label="Cambiar foto de mascota"
-                  >
-                    {petProfile?.avatar ? (
-                      <img src={petProfile.avatar} alt="" style={avatarStyles.img} />
-                    ) : (
-                      <span style={avatarStyles.initial}>
-                        {(petProfile?.name ?? '?')[0].toUpperCase()}
-                      </span>
-                    )}
-                    <span style={avatarStyles.badge}>📷</span>
+                <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  {profiles.length >= 1 && (
+                    <button onClick={() => setScreen('onboarding')} style={btn.ghost}>
+                      + Mascota
+                    </button>
+                  )}
+                  <button onClick={() => setScreen('history')} style={btn.ghost}>
+                    Historial
                   </button>
-                  <div style={{ display: 'grid', gap: '.25rem' }}>
-                    <h1 style={{ margin: 0, lineHeight: 1.05 }}>{petProfile?.name ?? 'Tu mascota'}</h1>
-                    <p style={{ margin: 0, color: '#8899b0', fontSize: '.9rem' }}>
-                      {petProfile?.species}{petProfile?.breed ? ` · ${petProfile.breed}` : ''}
-                    </p>
-                    {streak > 0 && (
-                      <p style={{ margin: '.2rem 0 0', color: '#7c6bff', fontSize: '.82rem', fontWeight: 700 }}>
-                        Racha: {streak} {streak === 1 ? 'dia' : 'dias'}
-                      </p>
-                    )}
-                  </div>
+                  <button
+                    id="voice-mute-btn"
+                    onClick={() => {
+                      const next = !voiceMuted;
+                      setVoiceMuted(next);
+                      localStorage.setItem(VOICE_MUTED_KEY, String(next));
+                      if (next) window.speechSynthesis?.cancel();
+                    }}
+                    style={{ ...btn.ghost, fontSize: '1.1rem', padding: '.6rem 1rem' }}
+                    title={voiceMuted ? 'Activar voz del aura' : 'Silenciar voz del aura'}
+                    aria-label={voiceMuted ? 'Activar síntesis de voz' : 'Silenciar síntesis de voz'}
+                  >
+                    {voiceMuted ? '🔇' : '🔊'}
+                  </button>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                {profiles.length > 1 && (
-                  <button onClick={() => setScreen('dashboard')} style={btn.ghost}>
-                    Mis mascotas
-                  </button>
-                )}
-                {profiles.length >= 1 && (
-                  <button onClick={() => setScreen('onboarding')} style={btn.ghost}>
-                    + Mascota
-                  </button>
-                )}
-                <button onClick={() => setScreen('history')} style={btn.ghost}>
-                  Historial
-                </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingLeft: '.15rem', marginTop: '.15rem' }}>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  style={{ display: 'none' }}
+                />
                 <button
-                  id="voice-mute-btn"
-                  onClick={() => {
-                    const next = !voiceMuted;
-                    setVoiceMuted(next);
-                    localStorage.setItem(VOICE_MUTED_KEY, String(next));
-                    if (next) window.speechSynthesis?.cancel();
-                  }}
-                  style={{ ...btn.ghost, fontSize: '1.1rem', padding: '.5rem .75rem', minHeight: 40 }}
-                  title={voiceMuted ? 'Activar voz del aura' : 'Silenciar voz del aura'}
-                  aria-label={voiceMuted ? 'Activar síntesis de voz' : 'Silenciar síntesis de voz'}
+                  onClick={() => avatarInputRef.current?.click()}
+                  style={avatarStyles.wrap}
+                  aria-label="Cambiar foto de mascota"
                 >
-                  {voiceMuted ? '🔇' : '🔊'}
+                  {petProfile?.avatar ? (
+                    <img src={petProfile.avatar} alt="" style={avatarStyles.img} />
+                  ) : (
+                    <span style={avatarStyles.initial}>
+                      {(petProfile?.name ?? '?')[0].toUpperCase()}
+                    </span>
+                  )}
+                  <span style={avatarStyles.badge}>📷</span>
                 </button>
+                <div style={{ display: 'grid', gap: '.25rem' }}>
+                  <h1 style={{ margin: 0, lineHeight: 1.05 }}>{petProfile?.name ?? 'Tu mascota'}</h1>
+                  <p style={{ margin: 0, color: '#8899b0', fontSize: '.9rem' }}>
+                    {petProfile?.species}{petProfile?.breed ? ` · ${petProfile.breed}` : ''}
+                  </p>
+                  {streak > 0 && (
+                    <p style={{ margin: '.2rem 0 0', color: '#7c6bff', fontSize: '.82rem', fontWeight: 700 }}>
+                      Racha: {streak} {streak === 1 ? 'dia' : 'dias'}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -793,6 +788,10 @@ const btn = {
     color: '#94a3b8',
     fontSize: '.9rem',
     cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    lineHeight: 1,
   },
   danger: {
     padding: '.6rem 1rem',
