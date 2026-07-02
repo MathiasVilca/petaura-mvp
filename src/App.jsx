@@ -719,8 +719,13 @@ function App() {
             <p className="canvas-caption">{auraState.description}</p>
 
             {auraState.health_concern && (
-              <p style={healthBadge}>⚠ Posible problema de salud — obsérvalo de cerca</p>
+              <p style={healthBadge}> &#9888;&#65039; Posible problema de salud — obsérvalo de cerca</p>
             )}
+
+            {auraState.health_concern && (
+              <p style={hintBadge}> &#128161; Tip: Al pasar el mouse por encima del aura, puedes ver el razonamiento de la IA!</p>
+            )}
+
 
             {showSummary && auraState.summary && (
               <div style={summaryOverlay}>
@@ -864,6 +869,19 @@ const healthBadge = {
   background: 'rgba(220,38,38,.12)',
   border: '1px solid rgba(220,38,38,.4)',
   color: '#fca5a5',
+  fontSize: '.82rem',
+  fontWeight: 600,
+};
+
+/* ── Hint badge ────────────────────── */
+const hintBadge = {
+  margin: '.6rem auto 0',
+  display: 'inline-block',
+  padding: '.4rem .9rem',
+  borderRadius: 999,
+  background: 'rgba(220, 204, 21, 0.12)',
+  border: '1px solid rgba(220, 204, 21,.4)',
+  color: '#fbbf24',
   fontSize: '.82rem',
   fontWeight: 600,
 };
