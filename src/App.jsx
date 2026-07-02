@@ -755,7 +755,7 @@ const shouldShowHint =
 
             
             {shouldShowHint && (
-              <p style={hintBadge}> &#128161; Tip: Al pasar el mouse por encima del aura, puedes ver el razonamiento de la IA! Coso {JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]').length}</p>
+              <p style={hintBadge}> &#128161; Tip: Al pasar el mouse por encima del aura, puedes ver el razonamiento de la IA!</p>
             )}
 
 
@@ -911,9 +911,9 @@ const hintBadge = {
   display: 'inline-block',
   padding: '.4rem .9rem',
   borderRadius: 999,
-  background: 'rgba(220, 204, 21, 0.12)',
-  border: '1px solid rgba(220, 204, 21,.4)',
-  color: '#fbbf24',
+  background: 'rgba(217, 119, 6, 0.12)',
+  border: '1px solid rgba(217, 119, 6, 0.4)',
+  color: '#fcd34d',
   fontSize: '.82rem',
   fontWeight: 600,
 };
