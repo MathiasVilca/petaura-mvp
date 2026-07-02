@@ -268,8 +268,8 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
                     </span>
                     {(isAlert || isStale) && (
                       <div style={s.badges}>
-                        {isAlert && <span style={s.badgeAlert}>⚠ Atención</span>}
-                        {isStale && <span style={s.badgeStale}>Sin registro hoy</span>}
+                        {isAlert && <span style={s.badgeAlert}>&#9888;&#65039; Atención</span>}
+                        {isStale && <span style={s.badgeStale}>&#127774; Sin registro hoy</span>}
                       </div>
                     )}
                   </div>
