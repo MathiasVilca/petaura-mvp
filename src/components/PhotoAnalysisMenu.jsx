@@ -115,7 +115,7 @@ export default function PhotoAnalysisMenu({ petProfile, onAnalyzePhoto, isAnalyz
 
 const s = {
   toggle: {
-    color: '#7080a0',
+    color: 'var(--text-intermediate-color)',
     fontSize: '.85rem',
     cursor: 'pointer',
     userSelect: 'none',

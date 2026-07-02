@@ -138,7 +138,7 @@ const DemoMenu = ({ simulateState }) => {
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen} 
         style={{ 
-          color: '#7080a0', 
+          color: 'var(--text-intermediate-color)', 
           fontSize: '.85rem', 
           cursor: 'pointer', 
           background: 'transparent', 
@@ -194,7 +194,7 @@ const TextAnalysisMenu = ({transcript,setTranscript,handleTextAnalyze,analysisSt
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         style={{ 
-          color: '#7080a0', 
+          color: 'var(--text-intermediate-color)', 
           fontSize: '.85rem', 
           cursor: 'pointer', 
           userSelect: 'none',
@@ -573,9 +573,9 @@ const shouldShowHint =
                     style={btn.icon}
                     aria-label="Ir al dashboard"
                   >
-                    ←
+                    <i className="fa-solid fa-arrow-left"></i>
                   </button>
-                  <p className="app-tag" style={{ margin: 0 }}>Inicio</p>
+                  <p className="app-tag" style={{ margin: 0 }}>Ir al dashboard</p>
                 </div>
                 <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                   {profiles.length >= 1 && (
@@ -626,7 +626,7 @@ const shouldShowHint =
                 </button>
                 <div style={{ display: 'grid', gap: '.25rem' }}>
                   <h1 style={{ margin: 0, lineHeight: 1.05 }}>{petProfile?.name ?? 'Tu mascota'}</h1>
-                  <p style={{ margin: 0, color: '#8899b0', fontSize: '.9rem' }}>
+                  <p style={{ margin: 0, color: '#a0adbd', fontSize: '.9rem' }}>
                     {petProfile?.species}{petProfile?.breed ? ` · ${petProfile.breed}` : ''}
                   </p>
                   {streak > 0 && (
@@ -680,7 +680,7 @@ const shouldShowHint =
             <div className="parameter-bar">
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Energía</span>
-                <span style={{ color: '#8899b0', fontSize: '.82rem' }}>{Math.round(auraState.energy * 100)}</span>
+                <span style={{ color: 'var(--text-intermediate-color)', fontSize: '.82rem' }}>{Math.round(auraState.energy * 100)}</span>
               </div>
               <div className="meter">
                 <span style={{ width: `${auraState.energy * 100}%`, background: auraState.color }} />
@@ -689,7 +689,7 @@ const shouldShowHint =
             <div className="parameter-bar">
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Estrés</span>
-                <span style={{ color: '#8899b0', fontSize: '.82rem' }}>{Math.round(auraState.stress * 100)}</span>
+                <span style={{ color: 'var(--text-intermediate-color)', fontSize: '.82rem' }}>{Math.round(auraState.stress * 100)}</span>
               </div>
               <div className="meter">
                 <span style={{ width: `${auraState.stress * 100}%`, background: '#f97316' }} />
@@ -822,7 +822,7 @@ const btn = {
     borderRadius: 999,
     border: '1px solid rgba(148,163,184,.25)',
     background: 'transparent',
-    color: '#94a3b8',
+    color: 'var(--text-intermediate-color)',
     fontSize: '.9rem',
     cursor: 'pointer',
     display: 'inline-flex',
@@ -858,7 +858,7 @@ const btn = {
     borderRadius: '50%',
     border: '1px solid rgba(148,163,184,.25)',
     background: 'rgba(15,23,42,.85)',
-    color: '#94a3b8',
+    color: 'var(--text-intermediate-color)',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -888,8 +888,8 @@ const inp = {
 const ac = {
   list:   { display: 'flex', flexDirection: 'column', gap: '.5rem' },
   card:   { background: 'rgba(148,163,184,.06)', border: '1px solid rgba(148,163,184,.1)', borderRadius: 12, padding: '.6rem .85rem' },
-  action: { margin: 0, color: '#cbd5e1', fontSize: '.88rem', lineHeight: 1.55, fontWeight: 500 },
-  reason: { margin: '.3rem 0 0', color: '#7080a0', fontSize: '.8rem', lineHeight: 1.5 },
+  action: { margin: 0, color: 'var(--text-intermediate-color)', fontSize: '.88rem', lineHeight: 1.55, fontWeight: 500 },
+  reason: { margin: '.3rem 0 0', color: 'var(--text-subtitle-color)', fontSize: '.8rem', lineHeight: 1.5 },
 };
 
 /* ── Health concern badge (MVP booleano) ────────────────────── */

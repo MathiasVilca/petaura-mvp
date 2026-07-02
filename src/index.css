@@ -1,6 +1,9 @@
 :root {
   color-scheme: dark;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --text-regular-color: rgb(240, 246, 255);
+  --text-intermediate-color: rgb(203, 210, 222);
+  --text-subtitle-color: rgb(160, 174, 189);
 }
 
 * {
@@ -15,7 +18,7 @@ html, body, #root {
 body {
   margin: 0;
   background: radial-gradient(circle at top, #111827 0%, #020617 65%, #000000 100%);
-  color: #e2e8f0;
+  color: var(--text-regular-color);
 }
 
 button {
@@ -38,7 +41,7 @@ button {
 
 .app-tag {
   margin: 0 0 0.75rem;
-  color: #94a3b8;
+  color: var(--text-intermediate-color);
   font-size: 0.95rem;
 }
 
@@ -143,7 +146,7 @@ h1 {
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.12);
   background-color: rgba(15, 23, 42, 0.88);
-  color: #cee2ff;
+  color: var(--text-intermediate-color);
   font-size: 0.9rem;
   display: flex;
   align-items: center;
@@ -228,7 +231,7 @@ h1 {
 
 .canvas-caption {
   margin-top: 1rem;
-  color: #94a3b8;
+  color: var(--text-intermediate-color);
   text-align: center;
   font-size: 0.95rem;
 }
@@ -262,7 +265,7 @@ h1 {
 }
 
 .status-label {
-  color: #94a3b8;
+  color: var(--text-intermediate-color);
   font-size: 0.95rem;
 }
 
@@ -338,7 +341,7 @@ h1 {
 .legend-grid p,
 .legend-example p {
   margin: 0.35rem 0 0;
-  color: #cbd5e1;
+  color: var(--text-intermediate-color);
 }
 
 .legend-example {
