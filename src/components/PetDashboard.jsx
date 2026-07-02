@@ -268,8 +268,8 @@ export default function PetDashboard({ profiles, history, activeId, onSelectPet,
                     </span>
                     {(isAlert || isStale) && (
                       <div style={s.badges}>
-                        {isAlert && <span style={s.badgeAlert}>⚠ Atención</span>}
-                        {isStale && <span style={s.badgeStale}>Sin registro hoy</span>}
+                        {isAlert && <span style={s.badgeAlert}>&#9888;&#65039; Atención</span>}
+                        {isStale && <span style={s.badgeStale}>&#127774; Sin registro hoy</span>}
                       </div>
                     )}
                   </div>
@@ -577,14 +577,14 @@ const s = {
   badgeAlert: {
     display: 'inline-block', padding: '.2rem .6rem', borderRadius: 999,
     fontSize: '.75rem', fontWeight: 600,
-    background: 'rgba(248,113,113,.15)', color: '#f87171',
-    border: '1px solid rgba(248,113,113,.25)',
+    background: 'rgba(220,38,38,.12)', color: '#fca5a5',
+    border: '1px solid rgba(220,38,38,.4)',
   },
   badgeStale: {
     display: 'inline-block', padding: '.2rem .6rem', borderRadius: 999,
     fontSize: '.75rem', fontWeight: 600,
-    background: 'rgba(250,204,21,.1)', color: '#fbbf24',
-    border: '1px solid rgba(250,204,21,.2)',
+    background: 'rgba(217, 119, 6, 0.12)', color: '#fcd34d',
+    border: '1px solid rgba(217, 119, 6, 0.4)',
   },
   cta: { color: '#7c6bff', fontSize: '.85rem', fontWeight: 600, alignSelf: 'flex-end' },
   deleteBtn: {

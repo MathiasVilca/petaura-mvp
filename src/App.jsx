@@ -18,6 +18,7 @@ const PROFILES_KEY = 'petaura_profiles';   // nuevo: array de perfiles
 const ACTIVE_PET_KEY = 'petaura_active_pet'; // nuevo: id del perfil activo
 const HISTORY_KEY  = 'petaura_history';
 const STREAK_KEY   = 'petaura_streak';
+const historyTotalLength= JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]').length;
 
 function loadProfile() {
   try { return JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch { return null; }
@@ -239,6 +240,7 @@ function App() {
   const [petProfile,     setPetProfile]     = useState(null);
   const [profiles,       setProfiles]       = useState([]);  // F1: multi-perfil
   const [auraState,      setAuraState]      = useState(mockStates.calm);
+  const [isDemoAura, setIsDemoAura] = useState(true);
   const [showLegend,     setShowLegend]     = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState('');
   const [analysisError,  setAnalysisError]  = useState('');
@@ -254,6 +256,8 @@ function App() {
   const longPressRef    = useRef(null);
   const suppressClickRef = useRef(false);
   const avatarInputRef  = useRef(null);
+
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
 
   /* ── Auto-dismiss toast ─────────────────────────────────── */
   useEffect(() => {
@@ -315,6 +319,7 @@ function App() {
       ...(Array.isArray(result.actions)         ? { actions:        result.actions }        : {}),
     };
     setAuraState(next);
+    setIsDemoAura(false);
     saveAuraToHistory(next, petProfile?.id);
 
     // SA1: leer el summary en voz alta al generar aura
@@ -407,6 +412,7 @@ function App() {
 
   const simulateState = (key) => {
     setAuraState(mockStates[key]);
+    setIsDemoAura(true);
     setAnalysisError('');
     if (navigator.vibrate) navigator.vibrate([80]);
   };
@@ -436,8 +442,10 @@ function App() {
           health_concern: last.health_concern ?? false,
           actions:        Array.isArray(last.actions) ? last.actions : mockStates[mood].actions,
         });
+        setIsDemoAura(false);
       } else {
         setAuraState(mockStates[MOODS.CALM]);
+        setIsDemoAura(true);
       }
     } catch {
       setAuraState(mockStates[MOODS.CALM]);
@@ -512,6 +520,29 @@ function App() {
       onAddPet={() => setScreen('onboarding')}
     />
   );
+
+  //contiene cuenta de estados de todos los perfiles
+  const auraCountByPet = history.reduce((counts, entry) => {
+    counts[entry.petId] = (counts[entry.petId] || 0) + 1;
+    return counts;
+  }, {});
+  //se fija la cantidad de auras del perfil
+  const activePetAuraCount = petProfile?.id
+    ? auraCountByPet[petProfile.id] || 0
+    : 0;
+  //tiene menos de tres perfiles
+  const hasLessThanThreeProfiles = profiles.length < 3;
+  //tiene cualquier perfil con más de una aura
+  const hasAnyPetWithMoreThanOneAura = profiles.some((profile) => {
+    return (auraCountByPet[profile.id] || 0) > 1;
+  });
+
+
+const shouldShowHint =
+  !isDemoAura &&
+  activePetAuraCount > 0 &&
+  hasLessThanThreeProfiles &&
+  !hasAnyPetWithMoreThanOneAura;
 
   /* ── Home screen ────────────────────────────────────────── */
   return (
@@ -719,8 +750,14 @@ function App() {
             <p className="canvas-caption">{auraState.description}</p>
 
             {auraState.health_concern && (
-              <p style={healthBadge}>⚠ Posible problema de salud — obsérvalo de cerca</p>
+              <p style={healthBadge}> &#9888;&#65039; Posible problema de salud — obsérvalo de cerca</p>
             )}
+
+            
+            {shouldShowHint && (
+              <p style={hintBadge}> &#128161; Tip: Al pasar el mouse por encima del aura, puedes ver el razonamiento de la IA!</p>
+            )}
+
 
             {showSummary && auraState.summary && (
               <div style={summaryOverlay}>
@@ -864,6 +901,19 @@ const healthBadge = {
   background: 'rgba(220,38,38,.12)',
   border: '1px solid rgba(220,38,38,.4)',
   color: '#fca5a5',
+  fontSize: '.82rem',
+  fontWeight: 600,
+};
+
+/* ── Hint badge ────────────────────── */
+const hintBadge = {
+  margin: '.6rem auto 0',
+  display: 'inline-block',
+  padding: '.4rem .9rem',
+  borderRadius: 999,
+  background: 'rgba(217, 119, 6, 0.12)',
+  border: '1px solid rgba(217, 119, 6, 0.4)',
+  color: '#fcd34d',
   fontSize: '.82rem',
   fontWeight: 600,
 };
