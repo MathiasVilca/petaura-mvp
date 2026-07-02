@@ -18,6 +18,7 @@ const PROFILES_KEY = 'petaura_profiles';   // nuevo: array de perfiles
 const ACTIVE_PET_KEY = 'petaura_active_pet'; // nuevo: id del perfil activo
 const HISTORY_KEY  = 'petaura_history';
 const STREAK_KEY   = 'petaura_streak';
+const historyTotalLength= JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]').length;
 
 function loadProfile() {
   try { return JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch { return null; }
@@ -722,8 +723,9 @@ function App() {
               <p style={healthBadge}> &#9888;&#65039; Posible problema de salud — obsérvalo de cerca</p>
             )}
 
-            {auraState.health_concern && (
-              <p style={hintBadge}> &#128161; Tip: Al pasar el mouse por encima del aura, puedes ver el razonamiento de la IA!</p>
+            
+            {profiles.length + historyTotalLength < 5 && historyTotalLength < profiles.length && (
+              <p style={hintBadge}> &#128161; Tip: Al pasar el mouse por encima del aura, puedes ver el razonamiento de la IA! Coso {JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]').length}</p>
             )}
 
 
