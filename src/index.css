@@ -374,6 +374,11 @@ h1 {
   top: 1.5rem;
 }
 
+.voice-textarea::placeholder {
+  color: var(--text-subtitle-color); /* Esto usa el gris azulado #8899b0 de tus variables */
+  opacity: 1; /* Obligatorio: Firefox le baja la opacidad por defecto a los placeholders */
+}
+
 @media (max-width: 900px) {
   .aura-section {
     grid-template-columns: 1fr;
