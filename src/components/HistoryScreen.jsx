@@ -312,7 +312,7 @@ export default function HistoryScreen({ petName, onBack, petId }) {
                       )}
 
                       {!selectMode && (
-                        <span style={{ color: '#7080a0', fontSize: '.8rem' }}>
+                        <span style={{ color: 'var(--text-intermediate-color)', fontSize: '.8rem' }}>
                           {isOpen ? '▲' : '▼'}
                         </span>
                       )}
@@ -433,15 +433,15 @@ const s = {
   },
   header: { display: 'flex', flexDirection: 'column', gap: '.5rem' },
   headerTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  eyebrow: { margin: 0, color: '#94a3b8', fontSize: '.85rem', letterSpacing: '.06em', textTransform: 'uppercase' },
-  title: { margin: '.2rem 0 0', fontSize: '1.5rem', color: '#f0f0ff' },
+  eyebrow: { margin: 0, color: 'var(--text-subtitle-color)', fontSize: '.85rem', letterSpacing: '.06em', textTransform: 'uppercase' },
+  title: { margin: '.2rem 0 0', fontSize: '1.5rem', color: 'var(--text-regular-color)' },
 
   btnSelect: {
     padding: '.4rem 1rem',
     borderRadius: 20,
     border: '1px solid rgba(148,163,184,.25)',
     background: 'transparent',
-    color: '#94a3b8',
+    color: 'var(--text-intermediate-color)',
     fontSize: '.85rem',
     cursor: 'pointer',
     fontWeight: 500,
@@ -561,16 +561,16 @@ const s = {
   },
 
   entryInfo: { flex: 1, display: 'flex', flexDirection: 'column', gap: '.15rem' },
-  entryMood: { color: '#e2e8f0', fontWeight: 700, fontSize: '1rem' },
-  entrySecondaryMood: { color: '#6B819E', fontWeight: 'normal', fontSize: '1rem' },
-  entryDate: { color: '#8899b0', fontSize: '.8rem' },
+  entryMood: { color: 'var(--text-regular-color)', fontWeight: 700, fontSize: '1rem' },
+  entrySecondaryMood: { color: 'var(--text-intermediate-color)', fontWeight: 'normal', fontSize: '1rem' },
+  entryDate: { color: 'var(--text-subtitle-color)', fontSize: '.8rem' },
   bars: { display: 'flex', flexDirection: 'column', gap: '.2rem', minWidth: 80 },
   detail: {
     padding: '0 1.25rem 1.25rem',
     borderTop: '1px solid rgba(148,163,184,.1)',
   },
-  detailText: { color: '#cbd5e1', fontSize: '.9rem', lineHeight: 1.6, margin: '.75rem 0 .5rem' },
-  detailLabel: { color: '#94a3b8', fontSize: '.8rem', fontWeight: 600, margin: '.75rem 0 .5rem', textTransform: 'uppercase', letterSpacing: '.06em' },
+  detailText: { color: 'var(--text-intermediate-color)', fontSize: '.9rem', lineHeight: 1.6, margin: '.75rem 0 .5rem' },
+  detailLabel: { color: 'var(--text-regular-color)', fontSize: '.8rem', fontWeight: 600, margin: '.75rem 0 .5rem', textTransform: 'uppercase', letterSpacing: '.06em' },
   actionCards: { display: 'flex', flexDirection: 'column', gap: '.5rem' },
   actionCard: {
     background: 'rgba(148,163,184,.06)',
@@ -578,8 +578,8 @@ const s = {
     borderRadius: 12,
     padding: '.6rem .85rem',
   },
-  actionText: { margin: 0, color: '#cbd5e1', fontSize: '.88rem', lineHeight: 1.55, fontWeight: 500 },
-  actionReason: { margin: '.3rem 0 0', color: '#7080a0', fontSize: '.8rem', lineHeight: 1.5 },
+  actionText: { margin: 0, color: 'var(--text-intermediate-color)', fontSize: '.88rem', lineHeight: 1.55, fontWeight: 500 },
+  actionReason: { margin: '.3rem 0 0', color: 'var(--text-subtitle-color)', fontSize: '.8rem', lineHeight: 1.5 },
   empty: {
     background: 'rgba(15,23,42,.88)',
     border: '1px solid rgba(148,163,184,.12)',
@@ -660,8 +660,8 @@ const s = {
 
 const mb = {
   wrap: { display: 'flex', alignItems: 'center', gap: '.3rem' },
-  label: { color: '#7080a0', fontSize: '.72rem', fontWeight: 700, width: 10 },
+  label: { color: 'var(--text-subtitle-color)', fontSize: '.72rem', fontWeight: 700, width: 10 },
   track: { flex: 1, height: 4, background: 'rgba(148,163,184,.15)', borderRadius: 999, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 999, transition: 'width .3s ease' },
-  value: { color: '#7080a0', fontSize: '.7rem', minWidth: 20, textAlign: 'right' },
+  value: { color: 'var(--text-subtitle-color)', fontSize: '.7rem', minWidth: 20, textAlign: 'right' },
 };

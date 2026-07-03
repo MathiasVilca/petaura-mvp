@@ -10,7 +10,7 @@ const s = {
   alignSelf: 'flex-start',
   background: 'none',
   border: 'none',
-  color: '#8899b0',
+  color: 'var(--text-intermediate-color)',
   cursor: 'pointer',
   fontSize: '.9rem',
   padding: '.5rem 0',
