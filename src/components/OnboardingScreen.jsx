@@ -84,10 +84,11 @@ export default function OnboardingScreen({ onComplete, onBack }) {
 
             <div>
               <label htmlFor="pet-breed" style={s.label}>
-                ¿Cuál es su raza? <span style={{ color: '#8899b0', fontWeight: 400 }}>(opcional)</span>
+                ¿Cuál es su raza? <span style={{ color: 'var(--text-subtitle-color)', fontWeight: 400 }}>(opcional)</span>
               </label>
               <input
                 id="pet-breed"
+                className='voice-textarea'
                 type="text"
                 value={breed}
                 onChange={e => setBreed(e.target.value)}
@@ -134,7 +135,7 @@ const s = {
   },
   eyebrow: {
     margin: '0 0 .4rem',
-    color: '#94a3b8',
+    color: 'var(--text-subtitle-color)',
     fontSize: '.85rem',
     letterSpacing: '.08em',
     textTransform: 'uppercase',
@@ -142,11 +143,11 @@ const s = {
   title: {
     margin: '0 0 .5rem',
     fontSize: 'clamp(1.5rem, 4vw, 2rem)',
-    color: '#f0f0ff',
+    color: 'var(--text-regular-color)',
   },
   body: {
     margin: '0 0 1.5rem',
-    color: '#94a3b8',
+    color: 'var(--text-subtitle-color)',
     lineHeight: 1.6,
     fontSize: '.95rem',
   },
@@ -154,7 +155,7 @@ const s = {
   label: {
     display: 'block',
     marginBottom: '.4rem',
-    color: '#cbd5e1',
+    color: 'var(--text-intermediate-color)',
     fontSize: '.88rem',
     fontWeight: 600,
   },
@@ -164,7 +165,7 @@ const s = {
     borderRadius: 16,
     border: '1px solid rgba(148,163,184,.25)',
     background: 'rgba(15,23,42,.9)',
-    color: '#f0f0ff',
+    color: 'var(--text-regular-color)',
     fontSize: '1rem',
     outline: 'none',
     boxSizing: 'border-box',
@@ -177,7 +178,7 @@ const s = {
     borderRadius: 16,
     border: '1px solid rgba(148,163,184,.25)',
     background: 'rgba(15,23,42,.6)',
-    color: '#94a3b8',
+    color: 'var(--text-subtitle-color)',
     cursor: 'pointer',
     fontSize: '.9rem',
     fontWeight: 600,

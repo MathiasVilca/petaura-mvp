@@ -205,6 +205,7 @@ export default function VoiceScreen({ petName, onConfirm, onBack }) {
             </label>
             <textarea
               id="transcript-edit"
+              className='voice-textarea'
               value={transcript}
               onChange={e => setTranscript(e.target.value)}
               placeholder={`Cuenta cómo estuvo ${petName} hoy...`}
@@ -256,8 +257,8 @@ const s = {
     gap: '1.5rem',
   },
   header: { display: 'flex', flexDirection: 'column', gap: '.75rem' },
-  eyebrow: { margin: 0, color: '#94a3b8', fontSize: '.85rem', letterSpacing: '.06em', textTransform: 'uppercase' },
-  title: { margin: '.25rem 0 0', fontSize: '1.4rem', color: '#f0f0ff' },
+  eyebrow: { margin: 0, color: 'var(--text-subtitle-color)', fontSize: '.85rem', letterSpacing: '.06em', textTransform: 'uppercase' },
+  title: { margin: '.25rem 0 0', fontSize: '1.4rem', color: 'var(--text-regular-color)' },
   micZone: {
     display: 'flex',
     flexDirection: 'column',
@@ -278,16 +279,17 @@ const s = {
   },
   micLabel: {
     margin: 0,
-    color: '#8899b0',
+    color: '#a78bfa',
     fontSize: '.88rem',
     textAlign: 'center',
+    fontWeight: 500,
   },
   label: {
     display: 'block',
     marginBottom: '.4rem',
-    color: '#94a3b8',
+    color: 'var(--text-regular-color)',
     fontSize: '.85rem',
-    fontWeight: 600,
+    fontWeight:600,
   },
   textarea: {
     width: '100%',
@@ -295,7 +297,7 @@ const s = {
     borderRadius: 16,
     border: '1px solid rgba(148,163,184,.25)',
     background: 'rgba(15,23,42,.9)',
-    color: '#f0f0ff',
+    color: 'var(--text-regular-color)',
     fontSize: '.95rem',
     padding: '.85rem 1rem',
     resize: 'vertical',
@@ -324,7 +326,7 @@ const s = {
     borderRadius: 999,
     border: '1px solid rgba(148,163,184,.2)',
     background: 'transparent',
-    color: '#8899b0',
+    color: 'var(--text-intermediate-color)',
     fontSize: '.95rem',
     cursor: 'pointer',
   },
