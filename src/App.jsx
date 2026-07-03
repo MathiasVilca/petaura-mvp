@@ -829,6 +829,7 @@ const btn = {
     alignItems: 'center',
     justifyContent: 'center',
     lineHeight: 1,
+    fontWeight: 500,
   },
   danger: {
     padding: '.6rem 1rem',
@@ -932,10 +933,10 @@ const so = {
     fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em',
   },
   text: {
-    margin: 0, color: '#e2e8f0', fontSize: '.95rem', lineHeight: 1.65,
+    margin: 0, color: 'var(--text-regular-color)', fontSize: '.95rem', lineHeight: 1.65,
   },
   hint: {
-    margin: 0, color: '#7080a0', fontSize: '.75rem',
+    margin: 0, color: 'var(--text-subtitle-color)', fontSize: '.75rem',
   },
 };
 
