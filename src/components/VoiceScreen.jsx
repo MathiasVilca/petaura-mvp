@@ -297,7 +297,7 @@ const s = {
     borderRadius: 16,
     border: '1px solid rgba(148,163,184,.25)',
     background: 'rgba(15,23,42,.9)',
-    color: 'var(--text-intermediate-color)',
+    color: 'var(--text-regular-color)',
     fontSize: '.95rem',
     padding: '.85rem 1rem',
     resize: 'vertical',
