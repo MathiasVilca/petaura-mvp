@@ -186,32 +186,15 @@ const DemoMenu = ({ simulateState }) => {
   );
 };
 
-const TextAnalysisMenu = ({transcript,setTranscript,handleTextAnalyze,analysisStatus,analysisError}) => {
-  const [isOpen, setIsOpen] = useState(false);
+const TextAnalysisMenu = ({transcript, setTranscript, handleTextAnalyze, analysisStatus, analysisError, isOpen}) => {
   return (
     <div>
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        aria-expanded={isOpen}
-        style={{ 
-          color: 'var(--text-intermediate-color)', 
-          fontSize: '.85rem', 
-          cursor: 'pointer', 
-          userSelect: 'none',
-          background: 'transparent', 
-          border: 'none',
-          padding: 0
-        }}
-      >
-        {isOpen ? '▼' : '▶'} Analizar por texto
-      </button>
       <div style={{ marginTop: '.75rem', display: 'grid', gap: '.75rem' }}>
         { isOpen && (
           <textarea
             value={transcript}
             onChange={e => setTranscript(e.target.value)}
             placeholder="Describe cómo estuvo tu mascota..."
-            display='none'
             style={
               inp.textarea
             }
@@ -248,6 +231,8 @@ function App() {
   const [streak,         setStreak]         = useState(0);
   const [toast,          setToast]          = useState('');
   const [showSummary,    setShowSummary]    = useState(false);
+  const [activeInput,    setActiveInput]    = useState(null);  // null | 'photo' | 'text'
+
   // SA1: voz — leer del localStorage para recordar preferencia
   const [voiceMuted,     setVoiceMuted]     = useState(
     () => localStorage.getItem(VOICE_MUTED_KEY) === 'true'
@@ -638,11 +623,46 @@ const shouldShowHint =
               </div>
             </div>
 
-            <button onClick={() => setScreen('voice')} style={btn.primary}>
-              Registrar por voz
-            </button>
+            {/* ── Métodos de registro ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '.65rem' }}>
+              <button
+                id="register-voice-btn"
+                onClick={() => setScreen('voice')}
+                style={btn.method}
+                aria-label="Registrar por voz"
+              >
+                <i className="fa-solid fa-microphone" style={{ fontSize: '1.25rem' }} />
+                <span style={{ fontSize: '.8rem', fontWeight: 600 }}>Voz</span>
+              </button>
+              <button
+                id="register-photo-btn"
+                onClick={() => setActiveInput(activeInput === 'photo' ? null : 'photo')}
+                style={activeInput === 'photo' ? btn.methodActive : btn.method}
+                aria-expanded={activeInput === 'photo'}
+                aria-label="Registrar por foto"
+              >
+                <i className="fa-solid fa-camera" style={{ fontSize: '1.25rem' }} />
+                <span style={{ fontSize: '.8rem', fontWeight: 600 }}>Foto</span>
+              </button>
+              <button
+                id="register-text-btn"
+                onClick={() => setActiveInput(activeInput === 'text' ? null : 'text')}
+                style={activeInput === 'text' ? btn.methodActive : btn.method}
+                aria-expanded={activeInput === 'text'}
+                aria-label="Registrar por texto"
+              >
+                <i className="fa-solid fa-pen-to-square" style={{ fontSize: '1.25rem' }} />
+                <span style={{ fontSize: '.8rem', fontWeight: 600 }}>Texto</span>
+              </button>
+            </div>
 
-            <DemoMenu simulateState={simulateState} />
+            <PhotoAnalysisMenu
+              key={petProfile?.id}
+              petProfile={petProfile}
+              onAnalyzePhoto={handlePhotoAnalyze}
+              isAnalyzing={screen === 'loading'}
+              isOpen={activeInput === 'photo'}
+            />
 
             <TextAnalysisMenu
               transcript={transcript}
@@ -650,14 +670,10 @@ const shouldShowHint =
               handleTextAnalyze={handleTextAnalyze}
               analysisStatus={analysisStatus}
               analysisError={analysisError}
+              isOpen={activeInput === 'text'}
             />
 
-            <PhotoAnalysisMenu
-              key={petProfile?.id}
-              petProfile={petProfile}
-              onAnalyzePhoto={handlePhotoAnalyze}
-              isAnalyzing={screen === 'loading'}
-            />
+            <DemoMenu simulateState={simulateState} />
 
           </div>
 
@@ -867,6 +883,41 @@ const btn = {
     fontSize: '1rem',
     padding: 0,
     lineHeight: 1,
+  },
+  method: {
+    padding: '.85rem .5rem',
+    minHeight: 72,
+    borderRadius: 16,
+    border: '1px solid rgba(148,163,184,.18)',
+    background: 'rgba(124,107,255,.07)',
+    color: 'var(--text-intermediate-color)',
+    fontSize: '1rem',
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '.35rem',
+    width: '100%',
+    transition: 'all 0.18s ease',
+  },
+  methodActive: {
+    padding: '.85rem .5rem',
+    minHeight: 72,
+    borderRadius: 16,
+    border: '1.5px solid rgba(124,107,255,.7)',
+    background: 'rgba(124,107,255,.18)',
+    color: '#b9b0ff',
+    fontSize: '1rem',
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '.35rem',
+    width: '100%',
+    transition: 'all 0.18s ease',
+    boxShadow: '0 0 0 3px rgba(124,107,255,.15)',
   },
 };
 
