@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 
-export default function PhotoAnalysisMenu({ petProfile, onAnalyzePhoto, isAnalyzing }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function PhotoAnalysisMenu({ petProfile, onAnalyzePhoto, isAnalyzing, isOpen }) {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
   const [contextText, setContextText] = useState('');
@@ -59,14 +58,6 @@ export default function PhotoAnalysisMenu({ petProfile, onAnalyzePhoto, isAnalyz
 
   return (
     <div>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        aria-expanded={isOpen}
-        style={s.toggle}
-      >
-        {isOpen ? '▼' : '▶'} Analizar por foto
-      </button>
-
       {isOpen && (
         <div style={s.body}>
           <input
@@ -114,15 +105,6 @@ export default function PhotoAnalysisMenu({ petProfile, onAnalyzePhoto, isAnalyz
 }
 
 const s = {
-  toggle: {
-    color: 'var(--text-intermediate-color)',
-    fontSize: '.85rem',
-    cursor: 'pointer',
-    userSelect: 'none',
-    background: 'transparent',
-    border: 'none',
-    padding: 0,
-  },
   body: {
     marginTop: '.75rem',
     display: 'grid',
