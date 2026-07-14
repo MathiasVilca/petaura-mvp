@@ -5,7 +5,6 @@ import VoiceScreen       from './components/VoiceScreen';
 import LoadingScreen     from './components/LoadingScreen';
 import HistoryScreen     from './components/HistoryScreen';
 import PetDashboard      from './components/PetDashboard';
-// import { PayloadInjector } from './components/PayloadInyector.jsx';
 import { analyzeTranscriptWithAI } from './ai/analyzeTranscript';
 import { generateAuraFromPhoto } from './services/groqService';
 import PhotoAnalysisMenu from './components/PhotoAnalysisMenu';
@@ -123,68 +122,6 @@ function speakSummary(text, muted) {
   window.speechSynthesis.speak(utter);
 }
 
-//para summaries
-const DemoMenu = ({ simulateState }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  return (
-    <div style={{ 
-        marginTop: '.25rem',
-        position: 'relative', 
-        display: 'inline-block',
-        zIndex: 999,
-      }}
-    >
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        aria-expanded={isOpen} 
-        style={{ 
-          color: 'var(--text-intermediate-color)', 
-          fontSize: '.85rem', 
-          cursor: 'pointer', 
-          background: 'transparent', 
-          border: 'none',
-          padding: 0,
-          userSelect: 'none',
-          
-        }}
-      >
-        {isOpen ? '▼' : '▶'} Probar estados (demo)
-      </button>
-      <div 
-        className="state-buttons" 
-        role="group"
-        aria-label="Simular estados"
-        style={{ 
-          marginTop: '.75rem', 
-          display: isOpen? 'flex':'none',
-          gap: '0.5rem',
-          flexDirection: 'column',
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          zIndex: 999,
-          background: '#1a1a2e', 
-          padding: '0.75rem',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
-          marginTop: '0.5rem',
-          width:300
-        }}
-      >
-        {Object.keys(mockStates).map(key => (
-          <button
-            key={key}
-            className={`state-button`}
-            style={{ background: mockStates[key].color, color: '#fff' }}
-            onClick={() => {simulateState(key) ; setIsOpen(!isOpen)}}
-          >
-            {MOOD_ES[key] || key}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 const TextAnalysisMenu = ({transcript, setTranscript, handleTextAnalyze, analysisStatus, analysisError, isOpen}) => {
   return (
@@ -393,13 +330,6 @@ function App() {
     setAnalysisStatus('');
     setAnalysisError('');
     setScreen('onboarding');
-  };
-
-  const simulateState = (key) => {
-    setAuraState(mockStates[key]);
-    setIsDemoAura(true);
-    setAnalysisError('');
-    if (navigator.vibrate) navigator.vibrate([80]);
   };
 
   const handleSelectPet = (petId) => {
@@ -673,7 +603,6 @@ const shouldShowHint =
               isOpen={activeInput === 'text'}
             />
 
-            <DemoMenu simulateState={simulateState} />
 
           </div>
 
@@ -728,8 +657,6 @@ const shouldShowHint =
               })}
             </div>
           </section>
-
-          {/* <PayloadInjector applyAnalysisResult={applyAnalysisResult} /> */}
 
           {/* <button onClick={handleReset} style={btn.dangerSm} title="Borrar perfil e historial">
             Resetear cuenta
