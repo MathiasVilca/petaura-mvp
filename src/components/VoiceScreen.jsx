@@ -1,17 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import NavBackButton from './NavBackButton';
 
-const KEYFRAMES = `
-  @keyframes vs-idle {
-    0%, 100% { box-shadow: 0 0 0  0px rgba(124,107,255,.5); }
-    50%       { box-shadow: 0 0 0 18px rgba(124,107,255,.0); }
-  }
-  @keyframes vs-active {
-    0%, 100% { box-shadow: 0 0 0  0px rgba(248,113,113,.5); }
-    50%       { box-shadow: 0 0 0 22px rgba(248,113,113,.0); }
-  }
-`;
-
 const MicIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="9" y="1" width="6" height="11" rx="3" fill="white" stroke="none" />
@@ -27,12 +16,15 @@ const StopIcon = () => (
   </svg>
 );
 
+const formatDuration = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
 export default function VoiceScreen({ petName, onConfirm, onBack }) {
   const [isListening, setIsListening]   = useState(false);
   const [transcript, setTranscript]     = useState('');
   const [amplitude, setAmplitude]       = useState(0);
   const [supported, setSupported]       = useState(true);
   const [permError, setPermError]       = useState(false);
+  const [duration, setDuration]         = useState(0);
 
   const recognitionRef  = useRef(null);
   const isListeningRef  = useRef(false);
@@ -73,6 +65,14 @@ export default function VoiceScreen({ petName, onConfirm, onBack }) {
     recognitionRef.current = rec;
     return () => { rec.abort(); stopAmplitude(); };
   }, []);
+
+  /* ── Duration counter ─────────────────────────────────── */
+  useEffect(() => {
+    if (!isListening) return;
+    setDuration(0);
+    const id = setInterval(() => setDuration(d => d + 1), 1000);
+    return () => clearInterval(id);
+  }, [isListening]);
 
   /* ── Web Audio amplitude ──────────────────────────────── */
   const startAmplitude = async () => {
@@ -148,88 +148,108 @@ export default function VoiceScreen({ petName, onConfirm, onBack }) {
     onConfirm(transcript.trim());
   };
 
-  const micScale = isListening ? 1 + Math.min(amplitude, 1) * 0.28 : 1;
+  /* ── Derived state ────────────────────────────────────── */
+  const recState = isListening ? 'recording' : transcript ? 'reviewing' : 'idle';
+
+  const micScale = recState === 'recording' ? 1 + Math.min(amplitude, 1) * 0.28 : 1;
+
+  const micBg = recState === 'recording'
+    ? 'linear-gradient(135deg, #f87171, #ef4444)'
+    : 'linear-gradient(135deg, #7c6bff, #5b4de0)';
+
+  // Reactive double ring: inner border marks state color, outer spread reacts to amplitude
+  const micBoxShadow = recState === 'recording'
+    ? `0 0 0 3px #f87171, 0 0 0 ${Math.round(3 + Math.min(amplitude, 1.5) * 20)}px rgba(248,113,113,0.25)`
+    : recState === 'reviewing'
+    ? '0 0 0 2px rgba(124,107,255,0.45)'
+    : 'none';
+
+  const micAriaLabel = recState === 'recording' ? 'Detener grabación' : 'Iniciar grabación';
+
+  const micLabelText = !supported
+    ? 'Tu navegador no soporta reconocimiento de voz'
+    : permError
+    ? 'Permite el acceso al micrófono e intenta de nuevo'
+    : recState === 'recording'
+    ? `Grabando... ${formatDuration(duration)}`
+    : recState === 'reviewing'
+    ? 'Toca para seguir grabando'
+    : 'Toca el micrófono para empezar';
 
   return (
-    <>
-      <style>{KEYFRAMES}</style>
-      <div style={s.page}>
-        <div style={s.card}>
+    <div style={s.page}>
+      <div style={s.card}>
 
-          {/* Header */}
-          <div style={s.header}>
-            <NavBackButton onClick={onBack} />
-            <div>
-              <p style={s.eyebrow}>Registro de voz</p>
-              <h2 style={s.title}>¿Cómo estuvo {petName} hoy?</h2>
-            </div>
-          </div>
-
-          {/* Mic button */}
-          <div style={s.micZone}>
-            <button
-              onClick={toggleListening}
-              disabled={!supported}
-              aria-label={isListening ? 'Detener grabación' : 'Iniciar grabación'}
-              style={{
-                ...s.micBtn,
-                transform: `scale(${micScale})`,
-                background: isListening
-                  ? 'linear-gradient(135deg, #f87171, #ef4444)'
-                  : 'linear-gradient(135deg, #7c6bff, #5b4de0)',
-                animation: isListening
-                  ? 'vs-active 1s ease-in-out infinite'
-                  : 'vs-idle 2.5s ease-in-out infinite',
-              }}
-            >
-              {isListening ? <StopIcon /> : <MicIcon />}
-            </button>
-
-            <p style={s.micLabel}>
-              {!supported
-                ? 'Tu navegador no soporta reconocimiento de voz'
-                : permError
-                ? 'Permite el acceso al micrófono e intenta de nuevo'
-                : isListening
-                ? 'Escuchando — toca para detener'
-                : transcript
-                ? 'Toca para seguir grabando'
-                : 'Toca el micrófono para empezar'}
-            </p>
-          </div>
-
-          {/* Transcript */}
+        {/* Header */}
+        <div style={s.header}>
+          <NavBackButton onClick={onBack} />
           <div>
-            <label style={s.label} htmlFor="transcript-edit">
-              Transcripción{transcript ? '' : ' (aquí aparecerá lo que digas)'}
-            </label>
-            <textarea
-              id="transcript-edit"
-              className='voice-textarea'
-              value={transcript}
-              onChange={e => setTranscript(e.target.value)}
-              placeholder={`Cuenta cómo estuvo ${petName} hoy...`}
-              style={s.textarea}
-              rows={4}
-            />
-          </div>
-
-          {/* Actions */}
-          <div style={s.actions}>
-            <button
-              onClick={handleConfirm}
-              disabled={!transcript.trim()}
-              style={transcript.trim() ? s.confirmBtn : { ...s.confirmBtn, ...s.disabledBtn }}
-            >
-              Generar aura
-            </button>
-            <button onClick={onBack} style={s.cancelBtn}>
-              Cancelar
-            </button>
+            <p style={s.eyebrow}>Registro de voz</p>
+            <h2 style={s.title}>¿Cómo está {petName} ahora?</h2>
           </div>
         </div>
+
+        {/* Mic button */}
+        <div style={s.micZone}>
+          <button
+            onClick={toggleListening}
+            disabled={!supported}
+            aria-label={micAriaLabel}
+            style={{
+              ...s.micBtn,
+              transform: `scale(${micScale})`,
+              background: micBg,
+              boxShadow: micBoxShadow,
+            }}
+          >
+            {recState === 'recording' ? <StopIcon /> : <MicIcon />}
+          </button>
+
+          <p style={s.micLabel} aria-live="polite" aria-atomic="true">
+            {recState === 'recording' ? (
+              <>
+                {`Grabando... ${formatDuration(duration)}`}
+                <span style={s.micHint}>Toca para detener</span>
+              </>
+            ) : micLabelText}
+          </p>
+        </div>
+
+        {/* Transcript */}
+        <div>
+          <label style={s.label} htmlFor="transcript-edit">
+            Transcripción
+          </label>
+          <p id="voice-hint" style={s.hint}>
+            Describe qué hizo, cómo se comportó o qué llamó tu atención.
+          </p>
+          <textarea
+            id="transcript-edit"
+            className="voice-textarea"
+            aria-describedby="voice-hint"
+            value={transcript}
+            onChange={e => setTranscript(e.target.value)}
+            placeholder={`Cuenta cómo estuvo ${petName}...`}
+            style={s.textarea}
+            rows={4}
+          />
+        </div>
+
+        {/* Actions */}
+        <div style={s.actions}>
+          <button
+            onClick={handleConfirm}
+            disabled={!transcript.trim()}
+            style={transcript.trim() ? s.confirmBtn : { ...s.confirmBtn, ...s.disabledBtn }}
+          >
+            Generar aura
+          </button>
+          <button onClick={onBack} style={s.cancelBtn}>
+            Cancelar
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -275,7 +295,7 @@ const s = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    transition: 'transform .08s ease, background .3s ease',
+    transition: 'transform .08s ease, background .3s ease, box-shadow .1s ease',
   },
   micLabel: {
     margin: 0,
@@ -284,12 +304,25 @@ const s = {
     textAlign: 'center',
     fontWeight: 500,
   },
+  micHint: {
+    display: 'block',
+    fontSize: '.8rem',
+    fontWeight: 400,
+    marginTop: '.15rem',
+    opacity: 0.75,
+  },
   label: {
     display: 'block',
-    marginBottom: '.4rem',
+    marginBottom: '.25rem',
     color: 'var(--text-regular-color)',
     fontSize: '.85rem',
-    fontWeight:600,
+    fontWeight: 600,
+  },
+  hint: {
+    margin: '0 0 .6rem',
+    color: '#8899b0',
+    fontSize: '.82rem',
+    lineHeight: 1.5,
   },
   textarea: {
     width: '100%',
