@@ -9,7 +9,7 @@ export const MOODS= Object.freeze({
     IRRITABLE:'irritable'
 })
 
-export const COLORS_MOOD=Object.freeze({
+export const COLORS_MOOD_ALT=Object.freeze({
     [MOODS.HAPPY]: '#22c55e',
     [MOODS.CALM]: '#14b8a6',
     [MOODS.TIRED]: '#facc15',
@@ -19,6 +19,17 @@ export const COLORS_MOOD=Object.freeze({
     [MOODS.CURIOUS]: '#38bdf8',
     [MOODS.IRRITABLE]: '#dc2626',
 })
+
+export const COLORS_MOOD = Object.freeze({
+    [MOODS.HAPPY]: '#fbbf24',
+    [MOODS.CALM]: '#2dd4bf',
+    [MOODS.TIRED]: '#64748b',
+    [MOODS.ANXIOUS]: '#fb923c',
+    [MOODS.PLAYFUL]: '#d946ef',
+    [MOODS.AFFECTIONATE]: '#f472b6',
+    [MOODS.CURIOUS]: '#3b82f6',
+    [MOODS.IRRITABLE]: '#ef4444',
+});
 
 export const MOOD_ES = {
     [MOODS.HAPPY]: 'Feliz',
