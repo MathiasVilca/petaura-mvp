@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 3001;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b';
+const GROQ_MULTIMODAL_MODEL = 'qwen/qwen3.8-27b';
 const MAX_TOKENS = 1000;
 
 const ALLOWED_ORIGINS = [
@@ -333,7 +334,7 @@ Responde con este JSON:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        model: GROQ_MULTIMODAL_MODEL,
         messages: [
           {
             role: 'user',
