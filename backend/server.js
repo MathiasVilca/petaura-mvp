@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3001;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b';
-const MAX_TOKENS = 1600;
+const MAX_TOKENS = 1000;
 
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
@@ -179,6 +179,7 @@ app.post('/api/analyze', async (req, res) => {
     `- Devuelve EXACTAMENTE 3 acciones en "actions".\n` +
     `- Cada action debe ser breve, concreta y relacionada SOLO con el relato.\n` +
     `- Cada reason debe empezar con "Porque" y no con "para".\n` +
+    `- Tus respuestas SIEMPRE deben estar en ESPAÑOL.\n` +
     `- En actions/reasons tambien aplica NO inventar: juguetes, juego, atencion, compania, carino, dueno observa, salud/veterinario si no aparecen en el relato.\n` +
     `- Si health_concern es false, NO menciones ni recomiendes salud, veterinario, dieta, enfermedad, revision medica ni problema de salud.\n\n` +
     `{\n` +
@@ -215,6 +216,7 @@ app.post('/api/analyze', async (req, res) => {
             content: prompt,
           },
         ],
+        reasoning_effort: 'low',
         temperature: 0.3,
         max_tokens: MAX_TOKENS,
       }),
