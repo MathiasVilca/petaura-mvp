@@ -9,6 +9,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b';
+const GROQ_MULTIMODAL_MODEL = 'qwen/qwen3.8-27b';
+const MAX_TOKENS = 1000;
 
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
@@ -177,6 +180,7 @@ app.post('/api/analyze', async (req, res) => {
     `- Devuelve EXACTAMENTE 3 acciones en "actions".\n` +
     `- Cada action debe ser breve, concreta y relacionada SOLO con el relato.\n` +
     `- Cada reason debe empezar con "Porque" y no con "para".\n` +
+    `- Tus respuestas SIEMPRE deben estar en ESPAÑOL.\n` +
     `- En actions/reasons tambien aplica NO inventar: juguetes, juego, atencion, compania, carino, dueno observa, salud/veterinario si no aparecen en el relato.\n` +
     `- Si health_concern es false, NO menciones ni recomiendes salud, veterinario, dieta, enfermedad, revision medica ni problema de salud.\n\n` +
     `{\n` +
@@ -197,7 +201,7 @@ app.post('/api/analyze', async (req, res) => {
   try {
     console.log('Enviando petición a Groq API...');
     console.log('API Key presente:', !!GROQ_API_KEY);
-    console.log('Modelo:', 'llama-3.1-8b-instant');
+    console.log('Modelo:', GROQ_TEXT_MODEL);
 
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
@@ -206,15 +210,16 @@ app.post('/api/analyze', async (req, res) => {
         Authorization: `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: GROQ_TEXT_MODEL,
         messages: [
           {
             role: 'user',
             content: prompt,
           },
         ],
+        reasoning_effort: 'low',
         temperature: 0.3,
-        max_tokens: 800,
+        max_tokens: MAX_TOKENS,
       }),
     });
 
@@ -329,7 +334,7 @@ Responde con este JSON:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        model: GROQ_MULTIMODAL_MODEL,
         messages: [
           {
             role: 'user',
@@ -341,7 +346,7 @@ Responde con este JSON:
         ],
         response_format: { type: 'json_object' },
         temperature: 0.3,
-        max_tokens: 800,
+        max_tokens: MAX_TOKENS,
       }),
     });
 
